@@ -1,0 +1,13 @@
+<svg width="380" height="100" viewBox="0 0 380 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+  
+  <defs>
+    <clipPath id="s">
+      <path d="M42 13.7 L69.7 22.5 C72.1 23.3 73.5 25.5 73.5 28.1 L73.5 49.2 C73.5 70.1 60.3 82.7 42 89.4 C23.7 82.7 10.5 70.1 10.5 49.2 L10.5 28.1 C10.5 25.5 11.9 23.3 14.3 22.5 Z"></path>
+    </clipPath>
+  </defs>
+  <g clip-path="url(#s)">
+    <rect x="0" y="0" width="84" height="100" fill="#b4adbc"></rect>
+    <path d="M6.7 48.7 C25.2 34.4 42 34.4 50.4 42 C58.8 49.6 70.6 47 78.5 39.5 L78.5 95 L6.7 95 Z" fill="#eceaee"></path>
+  </g>
+  <text x="104" y="52" class="wm" dominant-baseline="central"><tspan fill="#eceaee">serva</tspan><tspan fill="#a298ab">sec</tspan></text>
+</svg>

@@ -1,0 +1,88 @@
+services:
+  frontend:
+    container_name: frontend
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: prod
+    environment:
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+      - INTERNAL_API_URL=http://backend:8080
+      - NODE_ENV=production
+    depends_on:
+      - backend
+    networks:
+      public:
+
+  backend:
+    container_name: backend
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: prod
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: 'postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?sslmode=disable'
+      SSC_SEED_DATABASE: ${SSC_SEED_DATABASE}
+      SSC_SEED_CASBIN_CSV: ${SSC_SEED_CASBIN_CSV}
+      JWT_SECRET: ${JWT_SECRET}
+      REFRESH_SECRET: ${REFRESH_SECRET}
+      CSRF_SECRET: ${CSRF_SECRET}
+      SSC_SITE_NAME: ${SSC_SITE_NAME}
+      SSC_REGISTRATION_ENABLED: ${SSC_REGISTRATION_ENABLED}
+      SSC_DEBUG_ENABLED: ${SSC_DEBUG_ENABLED}
+      SSC_ADMIN_PASSWORD: ${SSC_ADMIN_PASSWORD}
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+    networks:
+      public:
+      private:
+
+  db:
+    container_name: db
+    image: postgres:15
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      private:
+
+  caddy:
+    container_name: caddy
+    hostname: servasec.local
+    build:
+      context: caddy/
+      dockerfile: Dockerfile
+      args:
+        CADDY_ENV: ${CADDY_ENV}
+        SSC_PUBLIC_DOMAIN: ${SSC_PUBLIC_DOMAIN}
+    ports:
+      - "80:80"
+      - "443:443"
+    networks:
+      public:
+      private:
+
+volumes:
+  postgres_data:
+
+networks:
+  public:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.70.1.0/24
+  private:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.70.2.0/24

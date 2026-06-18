@@ -1,0 +1,93 @@
+services:
+  frontend:
+    container_name: frontend
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: dev
+    environment:
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+      - INTERNAL_API_URL=http://backend:8080
+      - NODE_ENV=development
+    depends_on:
+      - backend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    command: npm run dev
+    networks:
+      public:
+
+  backend:
+    container_name: backend
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: dev
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: 'postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?sslmode=disable'
+      SSC_SEED_DATABASE: ${SSC_SEED_DATABASE}
+      SSC_SEED_CASBIN_CSV: ${SSC_SEED_CASBIN_CSV}
+      JWT_SECRET: ${JWT_SECRET}
+      REFRESH_SECRET: ${REFRESH_SECRET}
+      CSRF_SECRET: ${CSRF_SECRET}
+      SSC_SITE_NAME: ${SSC_SITE_NAME}
+      SSC_REGISTRATION_ENABLED: ${SSC_REGISTRATION_ENABLED}
+      SSC_DEBUG_ENABLED: ${SSC_DEBUG_ENABLED}
+      SSC_ADMIN_PASSWORD: ${SSC_ADMIN_PASSWORD}
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+    volumes:
+      - ./backend:/app
+    networks:
+      public:
+      private:
+
+  db:
+    container_name: db
+    image: postgres:15
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "127.0.0.1:54322:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      private:
+
+  caddy:
+    container_name: caddy
+    hostname: servasec.local
+    build:
+      context: caddy/
+      dockerfile: Dockerfile
+      args:
+        CADDY_ENV: ${CADDY_ENV}
+        SSC_PUBLIC_DOMAIN: ${SSC_PUBLIC_DOMAIN}
+    ports:
+      - "8080:80"
+      - "443:443"
+    networks:
+      public:
+      private:
+
+networks:
+  public:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.70.1.0/24
+  private:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.70.2.0/24
