@@ -3,17 +3,21 @@
 import { useRouter } from "next/router";
 import { useAuth } from "@/context/AuthContext";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { BackToTop } from "@/components/back-to-top";
 import {
   AppWindow,
   FolderKanban,
   Users,
   UsersRound,
+  Shield,
   Sun,
   Moon,
   ChevronLeft,
   ChevronDown,
   User,
   LogOut,
+  Scan,
+  Bug,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useState, useEffect, useRef } from "react";
@@ -32,20 +36,23 @@ interface NavGroup {
 }
 
 const navGroups: NavGroup[] = [
-  {
-    label: "Security",
-    items: [
-      { label: "Applications", href: "/applications", icon: <AppWindow className="h-4 w-4" /> },
-      { label: "Groups", href: "/groups", icon: <FolderKanban className="h-4 w-4" /> },
-    ],
-  },
-  {
-    label: "Administration",
-    items: [
-      { label: "Users", href: "/users", icon: <Users className="h-4 w-4" />, adminOnly: true },
-      { label: "Teams", href: "/teams", icon: <UsersRound className="h-4 w-4" /> },
-    ],
-  },
+    {
+      label: "Security",
+      items: [
+        { label: "Applications", href: "/applications", icon: <AppWindow className="h-4 w-4" /> },
+        { label: "Groups", href: "/groups", icon: <FolderKanban className="h-4 w-4" /> },
+        { label: "Scans", href: "/scans", icon: <Scan className="h-4 w-4" /> },
+        { label: "Findings", href: "/findings", icon: <Bug className="h-4 w-4" /> },
+      ],
+    },
+    {
+      label: "Administration",
+      items: [
+        { label: "Users", href: "/users", icon: <Users className="h-4 w-4" />, adminOnly: true },
+        { label: "Teams", href: "/teams", icon: <UsersRound className="h-4 w-4" /> },
+        { label: "Permissions", href: "/admin/permissions", icon: <Shield className="h-4 w-4" />, adminOnly: true },
+      ],
+    },
 ];
 
 function UserDropdown({
@@ -169,13 +176,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <div className="min-h-[100dvh] bg-background flex">
+    <div className="h-screen overflow-hidden bg-background flex">
       <aside
         className={`flex flex-col bg-sidebar shrink-0 transition-all duration-200 ${
           collapsed ? "w-16" : "w-64"
         }`}
       >
-        <div className="h-14 flex items-center gap-3 px-4 shrink-0">
+        <Link href="/" className="h-14 flex items-center gap-3 px-4 shrink-0 hover:opacity-80 transition-opacity">
           <img
             src="/assets/servasec-mark.svg"
             alt="servasec"
@@ -186,7 +193,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               servasec
             </span>
           )}
-        </div>
+        </Link>
 
         <nav className="flex-1 overflow-y-auto py-3 space-y-1">
           {navGroups.map((group) => {
@@ -269,10 +276,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </div>
       </aside>
 
-      <main className="flex-1 flex flex-col min-w-0 overflow-auto pt-6 lg:pt-8 pr-6 lg:pr-8 pb-6 lg:pb-8">
-        <div className="bg-card rounded-xl border shadow-sm flex-1 p-6 lg:p-8">
+      <main className="flex-1 flex flex-col min-w-0 min-h-0 pt-6 lg:pt-8 pr-6 lg:pr-8 pb-6 lg:pb-8">
+        <div id="main-scroll" className="bg-card rounded-xl border shadow-sm flex-1 min-h-0 overflow-y-auto p-6 lg:p-8">
           {children}
         </div>
+        <BackToTop />
       </main>
     </div>
   );

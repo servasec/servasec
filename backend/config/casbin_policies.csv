@@ -15,4 +15,10 @@ p, member, /scans, *
 p, member, /scans/*, *
 p, member, /findings, *
 p, member, /findings/*, *
+p, member, /scanner-types, *
+p, member, /scanner-types/*, *
+p, member, /users/search, *
+p, anonymous, /api/ingest, *
+p, admin, /admin/permissions, *
+p, admin, /admin/permissions/*, *
 p, admin, /*, *

@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -11,8 +12,18 @@ import (
 )
 
 func GetTeams(c *gin.Context) {
+	user, _ := c.Get("user")
+	currentUser := user.(*models.User)
+
+	query := config.DB.Model(&models.Team{})
+	if currentUser.Role != "admin" {
+		userID, _ := c.Get("user_id")
+		query = query.Joins("JOIN team_members ON team_members.team_id = teams.id").
+			Where("team_members.user_id = ?", userID)
+	}
+
 	var teams []models.Team
-	if err := config.DB.Find(&teams).Error; err != nil {
+	if err := query.Find(&teams).Error; err != nil {
 		utils.InternalServerError(c, "failed to fetch teams")
 		return
 	}
@@ -21,11 +32,34 @@ func GetTeams(c *gin.Context) {
 
 func GetTeam(c *gin.Context) {
 	var team models.Team
-	if err := config.DB.First(&team, c.Param("id")).Error; err != nil {
+	if err := config.DB.Preload("Members.User").First(&team, c.Param("id")).Error; err != nil {
 		utils.NotFoundError(c, "Team not found")
 		return
 	}
-	utils.OKResponse(c, team)
+
+	type memberInfo struct {
+		UserID   uint   `json:"userId"`
+		Role     string `json:"role"`
+		UserName string `json:"userName"`
+	}
+	var members []memberInfo
+	for _, m := range team.Members {
+		members = append(members, memberInfo{
+			UserID:   m.UserID,
+			Role:     m.Role,
+			UserName: m.User.Username,
+		})
+	}
+
+	type teamResponse struct {
+		models.Team
+		Members []memberInfo `json:"members"`
+	}
+
+	utils.OKResponse(c, teamResponse{
+		Team:    team,
+		Members: members,
+	})
 }
 
 func CreateTeam(c *gin.Context) {
@@ -53,6 +87,11 @@ func CreateTeam(c *gin.Context) {
 		UserID: userID.(uint),
 		Role:   "admin",
 	})
+
+	sub := fmt.Sprintf("user:%v", userID)
+	config.CEF.AddPolicy(sub, fmt.Sprintf("/teams/%d", team.ID), "*")
+	config.CEF.AddPolicy(fmt.Sprintf("team:%d", team.ID), fmt.Sprintf("/teams/%d", team.ID), "read")
+	config.CEF.SavePolicy()
 
 	utils.CreatedResponse(c, team)
 }
@@ -137,6 +176,12 @@ func AddTeamMember(c *gin.Context) {
 		return
 	}
 
+	if input.Role == "admin" {
+		sub := fmt.Sprintf("user:%d", input.UserID)
+		config.CEF.AddPolicy(sub, fmt.Sprintf("/teams/%d", teamID), "*")
+		config.CEF.SavePolicy()
+	}
+
 	c.JSON(http.StatusCreated, gin.H{"message": "Member added"})
 }
 
@@ -161,5 +206,12 @@ func RemoveTeamMember(c *gin.Context) {
 		utils.NotFoundError(c, "Team member not found")
 		return
 	}
+
+	sub := fmt.Sprintf("user:%d", userID)
+	config.CEF.RemovePolicy(sub, fmt.Sprintf("/teams/%d", teamID), "*")
+	config.CEF.SavePolicy()
+
 	utils.OKResponse(c, gin.H{"message": "Member removed"})
 }
+
+

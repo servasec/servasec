@@ -8,4 +8,5 @@ type TeamMember struct {
 	UserID    uint      `gorm:"not null;uniqueIndex:idx_team_user" json:"userId"`
 	Role      string    `gorm:"not null;default:member;size:20" json:"role"`
 	CreatedAt time.Time `json:"createdAt"`
+	User      User      `gorm:"foreignKey:UserID" json:"-"`
 }

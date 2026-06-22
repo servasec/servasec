@@ -7,6 +7,7 @@ import { Toaster } from 'sonner'
 import { useEffect } from 'react'
 import { setCSRFToken, setCSRFReady } from '@/lib/api'
 import AppLayout from '@/components/layout/AppLayout'
+import { ErrorBoundary } from '@/components/error-boundary'
 import '@/styles/globals.css'
 
 function CSRFSyncComponent() {
@@ -36,7 +37,9 @@ export default function App({ Component, pageProps }: AppProps) {
             disableTransitionOnChange
           >
             <AppLayout>
-              <Component {...pageProps} />
+              <ErrorBoundary>
+                <Component {...pageProps} />
+              </ErrorBoundary>
             </AppLayout>
             <Toaster position="top-right" richColors />
           </ThemeProvider>

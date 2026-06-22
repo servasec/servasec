@@ -15,7 +15,7 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex min-h-[100dvh] bg-background">
-      <div className="relative flex w-full lg:w-[30%] items-center justify-center p-8 bg-background">
+      <div className="relative flex w-full lg:w-[30%] items-center justify-center p-8 bg-white dark:bg-card">
         {mounted && (
           <button
             onClick={() => setTheme(theme === "dark" ? "light" : "dark")}

@@ -68,6 +68,8 @@ func main() {
 	routes.RegisterScanRoutes(router)
 	routes.RegisterFindingRoutes(router)
 	routes.RegisterTeamRoutes(router)
+	routes.RegisterScannerTypeRoutes(router)
+	routes.RegisterPermissionRoutes(router)
 
 	port := os.Getenv("PORT")
 	if port == "" {
