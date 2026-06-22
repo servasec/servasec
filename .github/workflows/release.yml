@@ -27,12 +27,26 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            const { data: commits } = await github.rest.repos.compareCommits({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              base: '${{ steps.bump.outputs.last_tag }}',
-              head: 'main',
-            });
+            const baseTag = '${{ steps.bump.outputs.last_tag }}';
+            let commits;
+
+            if (baseTag) {
+              const { data } = await github.rest.repos.compareCommits({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                base: baseTag,
+                head: 'main',
+              });
+              commits = data;
+            } else {
+              const { data } = await github.rest.repos.listCommits({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                sha: 'main',
+                per_page: 100,
+              });
+              commits = { commits: data };
+            }
 
             const groups = { feat: [], fix: [], docs: [], chore: [], refactor: [], other: [] };
             for (const c of commits.commits) {
