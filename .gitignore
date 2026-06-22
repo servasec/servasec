@@ -113,3 +113,5 @@ static/generated/
 *.key
 *.crt
 secrets/
+
+docs/tasks

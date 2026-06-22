@@ -24,10 +24,14 @@ func ConnectDB() *gorm.DB {
 		&models.BlacklistedToken{},
 		&models.Group{},
 		&models.Application{},
+		&models.ApplicationVersion{},
+		&models.ScannerType{},
 		&models.Scan{},
 		&models.Finding{},
 		&models.Team{},
 		&models.TeamMember{},
+		&models.Comment{},
+		&models.Webhook{},
 	)
 	if err != nil {
 		debug.Log("Failed to migrate database: %v", err)

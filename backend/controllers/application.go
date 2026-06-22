@@ -9,6 +9,7 @@ import (
 	"github.com/servasec/servasec/backend/config"
 	"github.com/servasec/servasec/backend/models"
 	"github.com/servasec/servasec/backend/utils"
+	"gorm.io/gorm"
 )
 
 func generateApiToken() string {
@@ -28,11 +29,31 @@ func GetApplications(c *gin.Context) {
 
 func GetApplication(c *gin.Context) {
 	var app models.Application
-	if err := config.DB.First(&app, c.Param("id")).Error; err != nil {
+	query := config.DB.Preload("Versions", func(db *gorm.DB) *gorm.DB {
+		return db.Order("created_at DESC")
+	})
+
+	if slug := c.Param("slug"); slug != "" {
+		query = query.Where("slug = ?", slug)
+	} else {
+		query = query.Where("id = ?", c.Param("id"))
+	}
+
+	if err := query.First(&app).Error; err != nil {
 		utils.NotFoundError(c, "Application not found")
 		return
 	}
-	utils.OKResponse(c, app)
+	var defaultVersion models.ApplicationVersion
+	config.DB.Where("application_id = ? AND is_default = ?", app.ID, true).First(&defaultVersion)
+	type appResponse struct {
+		models.Application
+		DefaultVersion *models.ApplicationVersion `json:"defaultVersion"`
+	}
+	resp := appResponse{Application: app}
+	if defaultVersion.ID != 0 {
+		resp.DefaultVersion = &defaultVersion
+	}
+	utils.OKResponse(c, resp)
 }
 
 func CreateApplication(c *gin.Context) {

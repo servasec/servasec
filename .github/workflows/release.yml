@@ -1,0 +1,65 @@
+name: Release
+on:
+  push:
+    branches: [main]
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Auto-bump SemVer
+        id: bump
+        uses: anothrNick/github-tag-action@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DEFAULT_BUMP: patch
+          RELEASE_BRANCHES: main
+          WITH_V: true
+
+      - name: Generate release notes
+        id: notes
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: commits } = await github.rest.repos.compareCommits({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              base: '${{ steps.bump.outputs.last_tag }}',
+              head: 'main',
+            });
+
+            const groups = { feat: [], fix: [], docs: [], chore: [], refactor: [], other: [] };
+            for (const c of commits.commits) {
+              const msg = c.commit.message.split('\n')[0];
+              if (msg.startsWith('feat')) groups.feat.push(msg);
+              else if (msg.startsWith('fix')) groups.fix.push(msg);
+              else if (msg.startsWith('docs')) groups.docs.push(msg);
+              else if (msg.startsWith('chore')) groups.chore.push(msg);
+              else if (msg.startsWith('refactor')) groups.refactor.push(msg);
+              else groups.other.push(msg);
+            }
+
+            let body = '';
+            if (groups.feat.length) body += '## 🚀 Features\n' + groups.feat.map(m => '- ' + m).join('\n') + '\n\n';
+            if (groups.fix.length) body += '## 🐛 Bug Fixes\n' + groups.fix.map(m => '- ' + m).join('\n') + '\n\n';
+            if (groups.docs.length) body += '## 📖 Documentation\n' + groups.docs.map(m => '- ' + m).join('\n') + '\n\n';
+            if (groups.refactor.length) body += '## ♻️ Refactoring\n' + groups.refactor.map(m => '- ' + m).join('\n') + '\n\n';
+            if (groups.chore.length) body += '## 🔧 Maintenance\n' + groups.chore.map(m => '- ' + m).join('\n') + '\n\n';
+            if (groups.other.length) body += '## Other\n' + groups.other.map(m => '- ' + m).join('\n') + '\n\n';
+
+            return body.trim();
+
+      - name: Create Release
+        if: steps.bump.outputs.new_tag
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.bump.outputs.new_tag }}
+          name: ${{ steps.bump.outputs.new_tag }}
+          body: ${{ steps.notes.outputs.result }}
+          generate_release_notes: false

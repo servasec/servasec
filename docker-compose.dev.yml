@@ -1,6 +1,7 @@
 services:
   frontend:
     container_name: frontend
+    user: "${USER_UID:-1000}:${USER_GID:-1000}"
     build:
       context: ./frontend
       dockerfile: Dockerfile
@@ -22,6 +23,7 @@ services:
 
   backend:
     container_name: backend
+    user: "${USER_UID:-1000}:${USER_GID:-1000}"
     build:
       context: ./backend
       dockerfile: Dockerfile

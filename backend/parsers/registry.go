@@ -1,0 +1,71 @@
+package parsers
+
+import (
+	"encoding/json"
+	"strings"
+)
+
+type FindingInput struct {
+	RuleID      string `json:"ruleId"`
+	Title       string `json:"title"`
+	Severity    string `json:"severity"`
+	Description string `json:"description"`
+	FilePath    string `json:"filePath"`
+	LineStart   *int   `json:"lineStart"`
+	LineEnd     *int   `json:"lineEnd"`
+	CWEID       string `json:"cweId"`
+	Remediation string `json:"remediation"`
+}
+
+type ParserFunc func(data []byte, filename string) ([]FindingInput, error)
+
+var registry = map[string]ParserFunc{
+	"semgrep":   ParseSemgrep,
+	"trivy":     ParseTrivy,
+	"gitleaks":  ParseGitleaks,
+	"grype":     ParseGrype,
+	"snyk":      ParseSnyk,
+	"checkov":   ParseCheckov,
+}
+
+func Get(name string) (ParserFunc, bool) {
+	f, ok := registry[name]
+	return f, ok
+}
+
+func Register(name string, fn ParserFunc) {
+	registry[name] = fn
+}
+
+func DetectScannerType(data []byte) string {
+	var raw any
+	if err := json.Unmarshal(data, &raw); err != nil {
+		return ""
+	}
+
+	str := string(data)
+	switch {
+	case strings.Contains(str, `"check_id":`):
+		return "semgrep"
+	case strings.Contains(str, `"Target":`) && strings.Contains(str, `"Type":`):
+		return "trivy"
+	case strings.Contains(str, `"Description":`) && strings.Contains(str, `"StartLine":`) && strings.Contains(str, `"RuleID":`):
+		return "gitleaks"
+	case strings.Contains(str, `"vulnerabilities":`) && strings.Contains(str, `"matches":`):
+		return "grype"
+	case strings.Contains(str, `"vulns":`):
+		return "snyk"
+	case strings.Contains(str, `"results":`) && strings.Contains(str, `"passed_checks":`):
+		return "checkov"
+	}
+
+	if arr, ok := raw.([]any); ok && len(arr) > 0 {
+		if first, ok := arr[0].(map[string]any); ok {
+			if _, ok := first["check_id"]; ok {
+				return "semgrep"
+			}
+		}
+	}
+
+	return ""
+}

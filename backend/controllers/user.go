@@ -72,6 +72,30 @@ func UpdateUser(c *gin.Context) {
 	})
 }
 
+func SearchUsers(c *gin.Context) {
+	q := c.Query("q")
+	if len(q) < 2 {
+		utils.BadRequestError(c, "query 'q' must be at least 2 characters")
+		return
+	}
+
+	var users []struct {
+		ID       uint   `json:"id"`
+		Username string `json:"username"`
+	}
+	like := "%" + q + "%"
+	if err := config.DB.Model(&models.User{}).
+		Select("id, username").
+		Where("username ILIKE ? OR email ILIKE ?", like, like).
+		Limit(20).
+		Scan(&users).Error; err != nil {
+		utils.InternalServerError(c, "failed to search users")
+		return
+	}
+
+	utils.OKResponse(c, users)
+}
+
 func DeleteUser(c *gin.Context) {
 	var user models.User
 	id := c.Param("id")

@@ -4,9 +4,10 @@ import { useAuth } from "@/context/AuthContext";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Shield, ShieldCheck, Ban } from "lucide-react";
+import { Shield, ShieldCheck, Ban, ShieldAlert } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import axios from "@/lib/api";
+import { toast } from "sonner";
 
 interface User {
   id: number;
@@ -22,6 +23,7 @@ export default function UsersPage() {
   const { loggedIn, user, authChecked } = useAuth();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
 
   useEffect(() => {
     if (authChecked && !loggedIn) {
@@ -33,8 +35,8 @@ export default function UsersPage() {
     if (authChecked && loggedIn) {
       axios
         .get("/api/users")
-        .then((res) => setUsers(res.data))
-        .catch(() => {})
+        .then((res) => { setUsers(res.data); setLoadError(false); })
+        .catch(() => { toast.error("Failed to load users"); setLoadError(true); })
         .finally(() => setLoading(false));
     }
   }, [authChecked, loggedIn]);
@@ -82,6 +84,14 @@ export default function UsersPage() {
                     ))}
                   </tr>
                 ))
+              ) : loadError ? (
+                <tr>
+                  <td colSpan={5} className="px-4 py-12 text-center text-muted-foreground">
+                    <ShieldAlert className="h-8 w-8 mx-auto mb-2 opacity-40" />
+                    <p>Failed to load users</p>
+                    <p className="text-xs mt-1">The server may be unavailable</p>
+                  </td>
+                </tr>
               ) : users.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="px-4 py-12 text-center text-muted-foreground">

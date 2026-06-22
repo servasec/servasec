@@ -1,12 +1,9 @@
-.PHONY: dev dev-d down down-clean prod down-prod logs ps help
+.PHONY: dev down down-clean prod down-prod logs ps help
 
-COMPOSE_DEV  := docker compose -f docker-compose.dev.yml
+COMPOSE_DEV  := USER_UID=$(shell id -u) USER_GID=$(shell id -g) docker compose -f docker-compose.dev.yml
 COMPOSE_PROD := docker compose -f docker-compose.prod.yml
 
-dev: ## Start dev stack (foreground)
-	$(COMPOSE_DEV) up --build
-
-dev-d: ## Start dev stack (background)
+dev: ## Start dev stack
 	$(COMPOSE_DEV) up --build -d
 
 down: ## Stop dev stack

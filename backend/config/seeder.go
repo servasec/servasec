@@ -87,7 +87,62 @@ func SeedCasbinFromCsv(enforcer *casbin.Enforcer) {
 	debug.Println("Seeding: Casbin from CSV finished")
 }
 
+func seedScannerTypes() {
+	scannerTypes := []models.ScannerType{
+		{Name: "semgrep", Description: "Semgrep SAST (JSON)", Parser: "semgrep"},
+		{Name: "trivy", Description: "Trivy vulnerability scanner (SARIF/JSON)", Parser: "trivy"},
+		{Name: "gitleaks", Description: "Gitleaks secret detection (JSON)", Parser: "gitleaks"},
+		{Name: "grype", Description: "Grype vulnerability scanner (JSON)", Parser: "grype"},
+		{Name: "snyk", Description: "Snyk (SARIF/JSON)", Parser: "snyk"},
+		{Name: "checkov", Description: "Checkov IaC scan (SARIF)", Parser: "checkov"},
+	}
+
+	for _, st := range scannerTypes {
+		var existing models.ScannerType
+		err := DB.Where("name = ?", st.Name).First(&existing).Error
+		if err != nil && err != gorm.ErrRecordNotFound {
+			debug.Log("Failed to check scanner type %s: %v\n", st.Name, err)
+			continue
+		}
+		if err == nil {
+			continue
+		}
+		if err := DB.Create(&st).Error; err != nil {
+			debug.Log("Failed to seed scanner type %s: %v\n", st.Name, err)
+		}
+	}
+	debug.Println("Seeding: scanner types finished")
+}
+
+func seedDefaultVersions() {
+	var apps []models.Application
+	if err := DB.Find(&apps).Error; err != nil {
+		debug.Log("Failed to fetch applications for version seeding: %v\n", err)
+		return
+	}
+
+	for _, app := range apps {
+		var count int64
+		DB.Model(&models.ApplicationVersion{}).Where("application_id = ?", app.ID).Count(&count)
+		if count > 0 {
+			continue
+		}
+
+		version := models.ApplicationVersion{
+			ApplicationID: app.ID,
+			Name:          "v0.0.0",
+			IsDefault:     true,
+		}
+		if err := DB.Create(&version).Error; err != nil {
+			debug.Log("Failed to seed default version for app %d: %v\n", app.ID, err)
+		}
+	}
+	debug.Println("Seeding: default versions finished")
+}
+
 func SeedDatabase() {
 	debug.Println("Seeding: Database..")
 	seedDefaultUsers()
+	seedScannerTypes()
+	seedDefaultVersions()
 }
