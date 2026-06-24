@@ -27,6 +27,26 @@
         }
     }
 
+    handle /.well-known/* {
+        reverse_proxy backend:8080 {
+            header_up X-Real-IP {remote_host}
+            header_up X-Forwarded-For {remote_host}
+            header_up X-Forwarded-Proto {scheme}
+            header_down -Server
+            header_down -X-Powered-By
+        }
+    }
+
+    handle /oauth/* {
+        reverse_proxy backend:8080 {
+            header_up X-Real-IP {remote_host}
+            header_up X-Forwarded-For {remote_host}
+            header_up X-Forwarded-Proto {scheme}
+            header_down -Server
+            header_down -X-Powered-By
+        }
+    }
+
     handle {
         reverse_proxy frontend:3000 {
             header_up X-Real-IP {remote_host}
