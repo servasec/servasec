@@ -12,6 +12,7 @@ func GetScans(c *gin.Context) {
 	versionID := c.Query("applicationVersionId")
 	var scans []models.Scan
 	query := config.DB.
+		Select("scans.*, (SELECT COUNT(*) FROM findings WHERE findings.scan_id = scans.id) as findings_count").
 		Preload("ScannerType").
 		Preload("ApplicationVersion").
 		Joins("JOIN application_versions ON application_versions.id = scans.application_version_id").

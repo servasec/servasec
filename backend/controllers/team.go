@@ -15,7 +15,9 @@ func GetTeams(c *gin.Context) {
 	user, _ := c.Get("user")
 	currentUser := user.(*models.User)
 
-	query := config.DB.Model(&models.Team{})
+	query := config.DB.
+		Model(&models.Team{}).
+		Select("teams.*, (SELECT COUNT(*) FROM team_members WHERE team_members.team_id = teams.id) as member_count")
 	if currentUser.Role != "admin" {
 		userID, _ := c.Get("user_id")
 		query = query.Joins("JOIN team_members ON team_members.team_id = teams.id").

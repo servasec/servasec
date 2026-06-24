@@ -8,8 +8,10 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/servasec/servasec/backend/config"
+	"github.com/servasec/servasec/backend/features"
 	"github.com/servasec/servasec/backend/models"
 	"github.com/servasec/servasec/backend/parsers"
+	"github.com/servasec/servasec/backend/services"
 	"github.com/servasec/servasec/backend/utils"
 )
 
@@ -188,6 +190,11 @@ func IngestScan(c *gin.Context) {
 			CWEID:                f.CWEID,
 			Remediation:          f.Remediation,
 			Status:               "open",
+		}
+		if features.F.IsEnabled(features.FeatureRiskScoring) {
+			now := time.Now()
+			score := services.CalculateRiskScore(f.Severity, nil, app.AssetCriticality, now)
+			finding.RiskScore = &score
 		}
 		if err := config.DB.Create(&finding).Error; err != nil {
 			utils.InternalServerError(c, "failed to record findings")

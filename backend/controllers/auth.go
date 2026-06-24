@@ -7,11 +7,12 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
+	"golang.org/x/crypto/bcrypt"
 	"github.com/servasec/servasec/backend/config"
 	"github.com/servasec/servasec/backend/dto"
+	"github.com/servasec/servasec/backend/features"
 	"github.com/servasec/servasec/backend/models"
 	"github.com/servasec/servasec/backend/utils"
-	"golang.org/x/crypto/bcrypt"
 )
 
 func Register(c *gin.Context) {
@@ -106,6 +107,11 @@ func Login(c *gin.Context) {
 	c.SetCookie("access_token", accessToken, 3600, "/", "", true, true)
 	c.SetCookie("refresh_token", refreshToken, 7*24*3600, "/", "", true, true)
 
+	var enabledFeatures []string
+	if features.F != nil {
+		enabledFeatures = features.F.EnabledFeatures()
+	}
+
 	utils.OKResponse(c, gin.H{
 		"message":  "Login successful",
 		"user": gin.H{
@@ -113,6 +119,7 @@ func Login(c *gin.Context) {
 			"username": user.Username,
 			"email":    user.Email,
 			"role":     user.Role,
+			"features": enabledFeatures,
 		},
 	})
 }
@@ -196,12 +203,18 @@ func GetCurrentUser(c *gin.Context) {
 		return
 	}
 
+	var enabledFeatures []string
+	if features.F != nil {
+		enabledFeatures = features.F.EnabledFeatures()
+	}
+
 	utils.OKResponse(c, gin.H{
 		"id":       user.ID,
 		"username": user.Username,
 		"email":    user.Email,
 		"role":     user.Role,
 		"banned":   user.Banned,
+		"features": enabledFeatures,
 	})
 }
 

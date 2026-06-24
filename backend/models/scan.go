@@ -13,6 +13,7 @@ type Scan struct {
 	ApplicationVersion    ApplicationVersion   `gorm:"foreignKey:ApplicationVersionID" json:"applicationVersion"`
 	ScannerType           ScannerType          `gorm:"foreignKey:ScannerTypeID" json:"scannerType"`
 	Findings              []Finding            `gorm:"foreignKey:ScanID" json:"-"`
+	FindingsCount         int64                `gorm:"-" json:"findingsCount"`
 	CreatedAt             time.Time            `json:"createdAt"`
 	UpdatedAt             time.Time            `json:"updatedAt"`
 }

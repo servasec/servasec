@@ -8,7 +8,9 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/servasec/servasec/backend/config"
 	"github.com/servasec/servasec/backend/debug"
+	"github.com/servasec/servasec/backend/features"
 	"github.com/servasec/servasec/backend/middleware"
+	"github.com/servasec/servasec/backend/services"
 	"github.com/servasec/servasec/backend/routes"
 	"github.com/servasec/servasec/backend/utils"
 )
@@ -26,6 +28,13 @@ func main() {
 	config.InitCasbin()
 	utils.ValidateSecrets()
 	utils.StartBlacklistCleanup()
+
+	features.Init(os.Getenv("SSC_LICENSE_KEY"))
+	debug.Log("Enabled features: %v", features.F.EnabledFeatures())
+
+	if features.F.IsEnabled(features.FeatureRiskScoring) {
+		services.StartEPSSSync(services.NewEPSSClient())
+	}
 
 	var gReleaseMode string
 	if os.Getenv("SSC_DEBUG_ENABLED") == "true" {
@@ -56,11 +65,17 @@ func main() {
 		AllowCredentials: true,
 	}))
 
+	if features.F.IsEnabled(features.FeatureAuditLog) {
+		router.Use(middleware.AuditLog())
+	}
+
 	router.GET("/ping", func(c *gin.Context) {
 		c.JSON(200, gin.H{"message": "pong"})
 	})
 
+	routes.RegisterWellKnownRoutes(router)
 	routes.RegisterAuthRoutes(router)
+	routes.RegisterOAuthRoutes(router)
 	routes.RegisterUserRoutes(router)
 	routes.RegisterDashboardRoutes(router)
 	routes.RegisterGroupRoutes(router)
@@ -70,6 +85,15 @@ func main() {
 	routes.RegisterTeamRoutes(router)
 	routes.RegisterScannerTypeRoutes(router)
 	routes.RegisterPermissionRoutes(router)
+
+	if features.F.IsEnabled(features.FeatureAuditLog) {
+		routes.RegisterAuditRoutes(router)
+	}
+
+	if features.F.IsEnabled(features.FeatureMCPServer) {
+		routes.RegisterMCPRoutes(router)
+		debug.Log("MCP server routes registered")
+	}
 
 	port := os.Getenv("PORT")
 	if port == "" {
