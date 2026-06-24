@@ -18,6 +18,7 @@ import {
   LogOut,
   Scan,
   Bug,
+  ScrollText,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useState, useEffect, useRef } from "react";
@@ -28,6 +29,7 @@ interface NavItem {
   href: string;
   icon: React.ReactNode;
   adminOnly?: boolean;
+  feature?: string;
 }
 
 interface NavGroup {
@@ -51,6 +53,7 @@ const navGroups: NavGroup[] = [
         { label: "Users", href: "/users", icon: <Users className="h-4 w-4" />, adminOnly: true },
         { label: "Teams", href: "/teams", icon: <UsersRound className="h-4 w-4" /> },
         { label: "Permissions", href: "/admin/permissions", icon: <Shield className="h-4 w-4" />, adminOnly: true },
+        { label: "Audit Log", href: "/admin/audit-log", icon: <ScrollText className="h-4 w-4" />, adminOnly: true, feature: "audit_log" },
       ],
     },
 ];
@@ -197,9 +200,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
         <nav className="flex-1 overflow-y-auto py-3 space-y-1">
           {navGroups.map((group) => {
-            const visibleItems = group.items.filter(
-              (item) => !item.adminOnly || user?.role === "admin"
-            );
+            const visibleItems = group.items.filter((item) => {
+              if (item.adminOnly && user?.role !== "admin") return false;
+              if (item.feature && !user?.features?.includes(item.feature)) return false;
+              return true;
+            });
             if (visibleItems.length === 0) return null;
 
             return (

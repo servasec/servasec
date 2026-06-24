@@ -12,55 +12,30 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Bug, ChevronDown, User as UserIcon, Clock, ChevronLeft, ChevronRight } from "lucide-react";
+import { Bug, ChevronDown, User as UserIcon, Clock, ChevronLeft, ChevronRight, ShieldAlert } from "lucide-react";
 import Link from "next/link";
 import axios from "@/lib/api";
 import { toast } from "sonner";
 import type { Finding, Application, ScannerType } from "@/lib/types";
+import { severityBadgeColors, statusColors, statusLabels, nextStatuses, severityOptions, riskScoreColor } from "@/lib/constants";
 
-const severityColors: Record<string, string> = {
-  Critical: "bg-red-500/15 text-red-600 dark:text-red-400 border-red-500/30",
-  High: "bg-orange-500/15 text-orange-600 dark:text-orange-400 border-orange-500/30",
-  Medium: "bg-yellow-500/15 text-yellow-600 dark:text-yellow-400 border-yellow-500/30",
-  Low: "bg-green-500/15 text-green-600 dark:text-green-400 border-green-500/30",
-  Info: "bg-blue-500/15 text-blue-600 dark:text-blue-400 border-blue-500/30",
-};
-
-const statusColors: Record<string, string> = {
-  open: "text-red-500",
-  confirmed: "text-amber-500",
-  false_positive: "text-emerald-500",
-  fixed: "text-blue-500",
-};
-
-const statusLabels: Record<string, string> = {
-  open: "Open",
-  confirmed: "Confirmed",
-  false_positive: "False Positive",
-  fixed: "Fixed",
-};
-
-const nextStatuses: Record<string, string[]> = {
-  open: ["confirmed", "false_positive"],
-  confirmed: ["fixed", "false_positive"],
-  false_positive: ["open"],
-  fixed: ["open"],
-};
-
-const severityOptions = ["Critical", "High", "Medium", "Low", "Info"];
 const filterKeys = ["applicationId", "applicationVersionId", "severity", "status", "scannerTypeId", "assignedTo"] as const;
 
 export default function FindingsPage() {
   const router = useRouter();
-  const { loggedIn, authChecked } = useAuth();
+  const { loggedIn, user, authChecked } = useAuth();
+  const hasRisk = user?.features?.includes("risk_scoring");
   const [findings, setFindings] = useState<Finding[]>([]);
   const [apps, setApps] = useState<Application[]>([]);
   const [scannerTypes, setScannerTypes] = useState<ScannerType[]>([]);
   const [versions, setVersions] = useState<Application["versions"] extends undefined ? { id: number; applicationId: number; name: string }[] : any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const perPage = 50;
+  const [sortBy, setSortBy] = useState("");
+  const [order, setOrder] = useState("desc");
 
   const filters: Record<string, string> = {};
   for (const key of filterKeys) {
@@ -68,13 +43,17 @@ export default function FindingsPage() {
     filters[key] = typeof val === "string" ? val : "";
   }
 
-  const fetchFindings = (p: number) => {
+  const fetchFindings = (p: number, sort?: string, ord?: string) => {
     const params = new URLSearchParams();
     for (const key of filterKeys) {
       if (filters[key]) params.set(key, filters[key]);
     }
     params.set("page", String(p));
     params.set("perPage", String(perPage));
+    if (sort && hasRisk) {
+      params.set("sortBy", sort);
+      params.set("order", ord || "desc");
+    }
 
     Promise.all([
       axios.get(`/api/findings?${params}`),
@@ -88,7 +67,7 @@ export default function FindingsPage() {
         setApps(appsRes.data);
         setScannerTypes(stRes.data);
       })
-      .catch(() => toast.error("Failed to load findings"))
+      .catch(() => { toast.error("Failed to load findings"); setLoadError(true); })
       .finally(() => setLoading(false));
   };
 
@@ -113,9 +92,9 @@ export default function FindingsPage() {
 
   useEffect(() => {
     if (authChecked && loggedIn && router.isReady) {
-      fetchFindings(1);
+      fetchFindings(1, sortBy, order);
     }
-  }, [authChecked, loggedIn, router.isReady, filters.applicationId, filters.applicationVersionId, filters.severity, filters.status, filters.scannerTypeId, filters.assignedTo]);
+  }, [authChecked, loggedIn, router.isReady, filters.applicationId, filters.applicationVersionId, filters.severity, filters.status, filters.scannerTypeId, filters.assignedTo, sortBy, order]);
 
   useEffect(() => {
     if (authChecked && loggedIn && router.isReady) {
@@ -125,11 +104,20 @@ export default function FindingsPage() {
 
   const appMap = Object.fromEntries(apps.map((a) => [a.id, a.name]));
 
+  const toggleSort = () => {
+    if (sortBy === "risk_score") {
+      setOrder(order === "desc" ? "asc" : "desc");
+    } else {
+      setSortBy("risk_score");
+      setOrder("desc");
+    }
+  };
+
   const handleStatusChange = async (findingId: number, newStatus: string) => {
     try {
       await axios.patch(`/api/findings/${findingId}/status`, { status: newStatus });
       toast.success(`Status updated to ${statusLabels[newStatus] || newStatus}`);
-      fetchFindings(page);
+      fetchFindings(page, sortBy, order);
     } catch (error: any) {
       toast.error(error?.response?.data?.error || "Failed to update status");
     }
@@ -168,6 +156,15 @@ export default function FindingsPage() {
     <div className="space-y-6">
       <PageHeader crumbs={[{ label: "Findings" }]} />
 
+      {loadError ? (
+        <Card>
+          <div className="p-8 text-center">
+            <ShieldAlert className="h-8 w-8 mx-auto mb-3 text-destructive opacity-60" />
+            <p className="text-sm font-medium text-foreground">Failed to load findings</p>
+            <p className="text-xs text-muted-foreground mt-1">The server may be unavailable. Try refreshing the page.</p>
+          </div>
+        </Card>
+      ) : (
       <Card>
         <div className="p-4 flex flex-wrap gap-3 border-b items-center">
           <div className="w-44">
@@ -251,6 +248,11 @@ export default function FindingsPage() {
               <tr className="border-b bg-muted/50">
                 <th className="text-left px-4 py-3.5 font-medium text-muted-foreground">Finding</th>
                 <th className="text-left px-4 py-3.5 font-medium text-muted-foreground hidden sm:table-cell">Severity</th>
+                {hasRisk && (
+                  <th className="text-left px-4 py-3.5 font-medium text-muted-foreground hidden md:table-cell cursor-pointer hover:text-foreground select-none" onClick={toggleSort}>
+                    Risk {sortBy === "risk_score" ? (order === "desc" ? "↓" : "↑") : ""}
+                  </th>
+                )}
                 <th className="text-left px-4 py-3.5 font-medium text-muted-foreground hidden md:table-cell">Status</th>
                 <th className="text-left px-4 py-3.5 font-medium text-muted-foreground hidden lg:table-cell">Assigned to</th>
                 <th className="text-left px-4 py-3.5 font-medium text-muted-foreground hidden lg:table-cell">Due date</th>
@@ -262,7 +264,7 @@ export default function FindingsPage() {
               {loading ? (
                 Array.from({ length: 4 }).map((_, i) => (
                   <tr key={i} className="border-b last:border-0">
-                    {Array.from({ length: 7 }).map((_, j) => (
+                    {Array.from({ length: hasRisk ? 8 : 7 }).map((_, j) => (
                       <td key={j} className="px-4 py-3">
                         <Skeleton className="h-5 w-full max-w-[140px]" />
                       </td>
@@ -271,7 +273,7 @@ export default function FindingsPage() {
                 ))
               ) : findings.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-12 text-center text-muted-foreground">
+                  <td colSpan={hasRisk ? 8 : 7} className="px-4 py-12 text-center text-muted-foreground">
                     <Bug className="h-8 w-8 mx-auto mb-2 opacity-40" />
                     <p>No findings found</p>
                     <p className="text-xs mt-1">Run a scan or adjust your filters</p>
@@ -293,10 +295,17 @@ export default function FindingsPage() {
                       )}
                     </td>
                     <td className="px-4 py-3 hidden sm:table-cell">
-                      <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border ${severityColors[f.severity] || ""}`}>
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border ${severityBadgeColors[f.severity] || ""}`}>
                         {f.severity}
                       </span>
                     </td>
+                    {hasRisk && (
+                      <td className="px-4 py-3 hidden md:table-cell">
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border ${riskScoreColor(f.riskScore)}`}>
+                          {f.riskScore != null ? f.riskScore.toFixed(2) : "N/A"}
+                        </span>
+                      </td>
+                    )}
                     <td className="px-4 py-3 hidden md:table-cell" onClick={(e) => e.stopPropagation()}>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -384,6 +393,7 @@ export default function FindingsPage() {
           </div>
         )}
       </Card>
+      )}
     </div>
   );
 }

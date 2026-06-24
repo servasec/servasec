@@ -42,9 +42,10 @@ interface FormData {
   slug: string;
   groupId: string;
   repositoryUrl: string;
+  assetCriticality: string;
 }
 
-const emptyForm: FormData = { name: "", description: "", slug: "", groupId: "", repositoryUrl: "" };
+const emptyForm: FormData = { name: "", description: "", slug: "", groupId: "", repositoryUrl: "", assetCriticality: "medium" };
 
 export default function ApplicationsListPage() {
   const router = useRouter();
@@ -105,6 +106,7 @@ export default function ApplicationsListPage() {
       slug: a.slug,
       groupId: String(a.groupId),
       repositoryUrl: a.repositoryUrl || "",
+      assetCriticality: (a as any).assetCriticality || "medium",
     });
     setSlugManuallyEdited(true);
     setDialogOpen(true);
@@ -289,6 +291,20 @@ export default function ApplicationsListPage() {
               <div className="grid gap-2">
                 <Label htmlFor="repositoryUrl">Repository URL</Label>
                 <Input id="repositoryUrl" value={form.repositoryUrl} onChange={(e) => setForm({ ...form, repositoryUrl: e.target.value })} placeholder="https://github.com/org/repo" maxLength={500} autoComplete="off" data-1p-ignore />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="assetCriticality">Asset criticality</Label>
+                <Select value={form.assetCriticality} onValueChange={(v) => setForm({ ...form, assetCriticality: v })}>
+                  <SelectTrigger id="assetCriticality">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="critical">Critical</SelectItem>
+                    <SelectItem value="high">High</SelectItem>
+                    <SelectItem value="medium">Medium</SelectItem>
+                    <SelectItem value="low">Low</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
             <DialogFooter>

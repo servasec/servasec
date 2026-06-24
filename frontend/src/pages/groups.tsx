@@ -45,6 +45,9 @@ export default function GroupsPage() {
   const [deleteTarget, setDeleteTarget] = useState<Group | null>(null);
   const [form, setForm] = useState<FormData>(emptyForm);
   const [saving, setSaving] = useState(false);
+  const [pathManuallyEdited, setPathManuallyEdited] = useState(false);
+
+  const slugify = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 100);
 
   const fetchGroups = () => {
     axios
@@ -69,12 +72,14 @@ export default function GroupsPage() {
   const openCreate = () => {
     setEditing(null);
     setForm(emptyForm);
+    setPathManuallyEdited(false);
     setDialogOpen(true);
   };
 
   const openEdit = (g: Group) => {
     setEditing(g);
     setForm({ name: g.name, description: g.description || "", path: g.path });
+    setPathManuallyEdited(true);
     setDialogOpen(true);
   };
 
@@ -202,7 +207,10 @@ export default function GroupsPage() {
             <div className="grid gap-4 py-4">
               <div className="grid gap-2">
                 <Label htmlFor="name">Name</Label>
-                <Input id="name" type="text" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="My Group" required maxLength={100} autoComplete="off" data-1p-ignore />
+                <Input id="name" type="text" value={form.name} onChange={(e) => {
+                  const newName = e.target.value;
+                  setForm({ ...form, name: newName, path: pathManuallyEdited ? form.path : slugify(newName) });
+                }} placeholder="My Group" required maxLength={100} autoComplete="off" data-1p-ignore />
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="description">Description</Label>
@@ -210,7 +218,10 @@ export default function GroupsPage() {
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="path">Path</Label>
-                <Input id="path" type="text" value={form.path} onChange={(e) => setForm({ ...form, path: e.target.value })} placeholder="my-group" required maxLength={100} autoComplete="off" data-1p-ignore />
+                <Input id="path" type="text" value={form.path} onChange={(e) => {
+                  setPathManuallyEdited(true);
+                  setForm({ ...form, path: e.target.value });
+                }} placeholder="my-group" required maxLength={100} autoComplete="off" data-1p-ignore />
               </div>
             </div>
             <DialogFooter>

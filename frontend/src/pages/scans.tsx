@@ -10,6 +10,7 @@ import { Scan, ArrowRight, ShieldAlert } from "lucide-react";
 import Link from "next/link";
 import axios from "@/lib/api";
 import { toast } from "sonner";
+import { statusScanColors } from "@/lib/constants";
 
 interface ApplicationVersion {
   id: number;
@@ -39,13 +40,6 @@ interface Application {
   id: number;
   name: string;
 }
-
-const statusColors: Record<string, string> = {
-  pending: "text-amber-500",
-  running: "text-blue-500",
-  completed: "text-emerald-500",
-  failed: "text-red-500",
-};
 
 export default function ScansPage() {
   const router = useRouter();
@@ -226,7 +220,7 @@ export default function ScansPage() {
                       {s.applicationVersion?.name || `#${s.applicationVersionId}`}
                     </td>
                     <td className="px-4 py-3 hidden sm:table-cell">
-                      <span className={`inline-flex items-center gap-1.5 text-sm ${statusColors[s.status] || ""}`}>
+                      <span className={`inline-flex items-center gap-1.5 text-sm ${statusScanColors[s.status] || ""}`}>
                         <span className="h-1.5 w-1.5 rounded-full bg-current" />
                         {s.status}
                       </span>

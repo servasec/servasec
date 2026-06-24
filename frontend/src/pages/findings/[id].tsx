@@ -23,6 +23,8 @@ import Link from "next/link";
 import axios from "@/lib/api";
 import { toast } from "sonner";
 import type { Finding, Comment } from "@/lib/types";
+import { statusLabels, statusColors, nextStatuses } from "@/lib/constants";
+import { UserSearch } from "@/components/user-search";
 
 const severityConfig: Record<string, { icon: any; color: string; bg: string }> = {
   Critical: { icon: ShieldAlert, color: "text-red-600 dark:text-red-400", bg: "bg-red-500/10" },
@@ -30,27 +32,6 @@ const severityConfig: Record<string, { icon: any; color: string; bg: string }> =
   Medium: { icon: AlertTriangle, color: "text-yellow-600 dark:text-yellow-400", bg: "bg-yellow-500/10" },
   Low: { icon: Info, color: "text-green-600 dark:text-green-400", bg: "bg-green-500/10" },
   Info: { icon: Info, color: "text-blue-600 dark:text-blue-400", bg: "bg-blue-500/10" },
-};
-
-const statusLabels: Record<string, string> = {
-  open: "Open",
-  confirmed: "Confirmed",
-  false_positive: "False Positive",
-  fixed: "Fixed",
-};
-
-const statusColors: Record<string, string> = {
-  open: "text-red-500",
-  confirmed: "text-amber-500",
-  false_positive: "text-emerald-500",
-  fixed: "text-blue-500",
-};
-
-const nextStatuses: Record<string, string[]> = {
-  open: ["confirmed", "false_positive"],
-  confirmed: ["fixed", "false_positive"],
-  false_positive: ["open"],
-  fixed: ["open"],
 };
 
 export default function FindingDetailPage() {
@@ -63,9 +44,6 @@ export default function FindingDetailPage() {
   const [assignUserId, setAssignUserId] = useState("");
   const [assignDueDate, setAssignDueDate] = useState("");
   const [assigning, setAssigning] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState<{ id: number; username: string }[]>([]);
-  const [searching, setSearching] = useState(false);
 
   const [comments, setComments] = useState<Comment[]>([]);
   const [commentBody, setCommentBody] = useState("");
@@ -106,20 +84,7 @@ export default function FindingDetailPage() {
     }
   }, [authChecked, loggedIn, id]);
 
-  useEffect(() => {
-    if (searchQuery.length < 2) {
-      setSearchResults([]);
-      return;
-    }
-    const timer = setTimeout(() => {
-      setSearching(true);
-      axios.get(`/api/users/search?q=${encodeURIComponent(searchQuery)}`)
-        .then((res) => setSearchResults(res.data || []))
-        .catch(() => setSearchResults([]))
-        .finally(() => setSearching(false));
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [searchQuery]);
+
 
   const handleStatusChange = async (newStatus: string) => {
     if (!finding) return;
@@ -378,39 +343,12 @@ export default function FindingDetailPage() {
               )}
               <div className="space-y-2">
                 <Label>Assign to</Label>
-                <Input
-                  value={searchQuery}
-                  onChange={(e) => { setSearchQuery(e.target.value); setAssignUserId(""); }}
+                <UserSearch
+                  value={assignUserId}
+                  onSelect={(userId) => setAssignUserId(userId)}
+                  onClear={() => setAssignUserId("")}
                   placeholder="Search users (min 2 chars)..."
-                  autoComplete="off"
-                  data-1p-ignore
                 />
-                {searching && (
-                  <p className="text-xs text-muted-foreground">Searching...</p>
-                )}
-                {searchResults.length > 0 && !assignUserId && (
-                  <div className="border rounded-md divide-y max-h-40 overflow-y-auto">
-                    {searchResults.map((u) => (
-                      <button
-                        key={u.id}
-                        type="button"
-                        className="w-full text-left px-3 py-2 text-sm hover:bg-accent transition-colors"
-                        onClick={() => { setAssignUserId(String(u.id)); setSearchResults([]); setSearchQuery(u.username); }}
-                      >
-                        {u.username} <span className="text-muted-foreground">(id: {u.id})</span>
-                      </button>
-                    ))}
-                  </div>
-                )}
-                {searchQuery.length >= 2 && !searching && searchResults.length === 0 && !assignUserId && (
-                  <p className="text-xs text-muted-foreground">No users found</p>
-                )}
-                {assignUserId && (
-                  <p className="text-sm text-muted-foreground">
-                    Selected: <span className="font-medium text-foreground">{searchQuery}</span>
-                    {" "}<button type="button" className="text-xs text-primary hover:underline" onClick={() => { setAssignUserId(""); setSearchQuery(""); }}>Change</button>
-                  </p>
-                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="assignDueDate">Due date</Label>
@@ -440,6 +378,68 @@ export default function FindingDetailPage() {
               )}
             </CardContent>
           </Card>
+
+          {user?.features?.includes("risk_scoring") && finding.riskScore != null && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Risk Breakdown</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Risk score</span>
+                  <span className={`text-lg font-bold ${finding.riskScore >= 0.6 ? "text-red-500" : finding.riskScore >= 0.3 ? "text-orange-500" : "text-emerald-500"}`}>
+                    {finding.riskScore.toFixed(2)}
+                  </span>
+                </div>
+                {finding.epssScore != null && (
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">EPSS</span>
+                    <span className="font-medium">{finding.epssScore.toFixed(5)}</span>
+                  </div>
+                )}
+                <Separator />
+                <div className="space-y-2 text-sm">
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Contributions</p>
+                  {(() => {
+                    const sevMap: Record<string, number> = { critical: 1, high: 0.7, medium: 0.4, low: 0.1, info: 0 };
+                    const sevVal = sevMap[finding.severity?.toLowerCase()] || 0;
+                    const epssVal = finding.epssScore ?? 0;
+                    const daysSinceCreation = Math.max(1, (Date.now() - new Date(finding.createdAt).getTime()) / 86400000);
+                    const ageVal = Math.min(1, daysSinceCreation / 365);
+                    const sevContrib = +(sevVal * 0.4).toFixed(2);
+                    const epssContrib = +(epssVal * 0.35).toFixed(2);
+                    const ageContrib = +(ageVal * 0.15).toFixed(2);
+                    const assetContrib = +(0.4 * 0.1).toFixed(2);
+                    const maxBar = Math.max(sevContrib, epssContrib, ageContrib, assetContrib, 0.01);
+                    const items = [
+                      { label: `Severity (40%) · ${finding.severity}`, value: sevContrib, color: "bg-red-500" },
+                      { label: `EPSS (35%) · ${finding.epssScore != null ? (finding.epssScore * 100).toFixed(1) + "%" : "N/A"}`, value: epssContrib, color: "bg-blue-500" },
+                      { label: `Age (15%) · ${Math.round(daysSinceCreation)} days`, value: ageContrib, color: "bg-amber-500" },
+                      { label: `Asset (10%) · medium`, value: assetContrib, color: "bg-violet-500" },
+                    ];
+                    return items.map((item) => (
+                      <div key={item.label}>
+                        <div className="flex items-center justify-between text-xs text-muted-foreground mb-0.5">
+                          <span>{item.label}</span>
+                          <span className="font-medium text-foreground">{item.value.toFixed(2)}</span>
+                        </div>
+                        <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+                          <div className={`h-full rounded-full ${item.color}`} style={{ width: `${(item.value / maxBar) * 100}%` }} />
+                        </div>
+                      </div>
+                    ));
+                  })()}
+                </div>
+                <Separator />
+                <div className="flex items-center justify-between text-sm font-medium">
+                  <span>Total</span>
+                  <span className={finding.riskScore >= 0.6 ? "text-red-500" : finding.riskScore >= 0.3 ? "text-orange-500" : "text-emerald-500"}>
+                    {finding.riskScore.toFixed(2)}
+                  </span>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           <Card>
             <CardHeader>
