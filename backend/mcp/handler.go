@@ -1,6 +1,7 @@
 package mcp
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -74,7 +75,12 @@ func HandleMessage(c *gin.Context) {
 		return
 	}
 
-	go func() {
+	go func(reqCtx context.Context) {
+		select {
+		case <-reqCtx.Done():
+			return
+		default:
+		}
 		ctx := HandlerContext{
 			DB:            config.DB,
 			UserID:        userID,
@@ -84,10 +90,10 @@ func HandleMessage(c *gin.Context) {
 		resp := dispatchRequest(ctx, &req)
 		data, _ := json.Marshal(resp)
 		select {
+		case <-reqCtx.Done():
 		case session.Ch <- data:
-		default:
 		}
-	}()
+	}(c.Request.Context())
 
 	c.JSON(http.StatusAccepted, gin.H{"status": "accepted"})
 }

@@ -26,13 +26,15 @@ func CheckPolicy(obj string, act string) gin.HandlerFunc {
 		claims := resolveClaims(c)
 
 		var sub string
-		if claims == nil {
-			sub = "anonymous"
-		} else {
-			sub = fmt.Sprint(claims.Role)
-			if sub == "" {
-				sub = "anonymous"
+		if claims != nil {
+			if user, exists := c.Get("user"); exists {
+				sub = fmt.Sprint(user.(*models.User).Role)
+			} else {
+				sub = fmt.Sprint(claims.Role)
 			}
+		}
+		if sub == "" {
+			sub = "anonymous"
 		}
 
 		ok, err := config.CEF.Enforce(sub, obj, act)

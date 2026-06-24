@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"gorm.io/gorm"
+	"github.com/servasec/servasec/backend/config"
 	"github.com/servasec/servasec/backend/models"
 )
 
@@ -535,6 +536,27 @@ func handleGetFinding(ctx HandlerContext, args map[string]any) (string, bool) {
 	return dumpJSON(finding)
 }
 
+func resolveFindingAppID(db *gorm.DB, findingID string) (uint, error) {
+	var appID uint
+	err := db.Model(&models.Finding{}).
+		Select("application_versions.application_id").
+		Joins("JOIN application_versions ON application_versions.id = findings.application_version_id").
+		Where("findings.id = ?", findingID).
+		Scan(&appID).Error
+	return appID, err
+}
+
+func requireWriteAccess(ctx HandlerContext, appID uint) (bool, string) {
+	if ctx.User.Role == "admin" {
+		return true, ""
+	}
+	ok, _ := config.CEF.Enforce(fmt.Sprintf("user:%d", ctx.UserID), fmt.Sprintf("/applications/%d", appID), "write")
+	if !ok {
+		return false, "access denied"
+	}
+	return true, ""
+}
+
 func handleUpdateFindingStatus(ctx HandlerContext, args map[string]any) (string, bool) {
 	id := getString(args, "id")
 	status := getString(args, "status")
@@ -549,6 +571,14 @@ func handleUpdateFindingStatus(ctx HandlerContext, args map[string]any) (string,
 	var finding models.Finding
 	if err := ctx.DB.First(&finding, id).Error; err != nil {
 		return fmt.Sprintf("finding not found: %v", err), true
+	}
+
+	appID, err := resolveFindingAppID(ctx.DB, id)
+	if err != nil {
+		return fmt.Sprintf("finding not found: %v", err), true
+	}
+	if ok, msg := requireWriteAccess(ctx, appID); !ok {
+		return msg, true
 	}
 
 	finding.Status = status
@@ -572,6 +602,14 @@ func handleAssignFinding(ctx HandlerContext, args map[string]any) (string, bool)
 	var finding models.Finding
 	if err := ctx.DB.First(&finding, id).Error; err != nil {
 		return fmt.Sprintf("finding not found: %v", err), true
+	}
+
+	appID, err := resolveFindingAppID(ctx.DB, id)
+	if err != nil {
+		return fmt.Sprintf("finding not found: %v", err), true
+	}
+	if ok, msg := requireWriteAccess(ctx, appID); !ok {
+		return msg, true
 	}
 
 	if v, ok := args["userId"]; ok {
