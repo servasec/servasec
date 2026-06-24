@@ -1,0 +1,16 @@
+[Unit]
+Description=Servasec Frontend
+Wants=servasec-backend.service
+After=servasec-backend.service
+
+[Container]
+Image=localhost/servasec-frontend:latest
+ContainerName=frontend
+Network=servasec.network
+Environment=NEXT_PUBLIC_API_URL=https://servasec.local
+Environment=INTERNAL_API_URL=http://backend:8080
+Environment=NODE_ENV=production
+
+[Service]
+Restart=always
+RestartSec=5

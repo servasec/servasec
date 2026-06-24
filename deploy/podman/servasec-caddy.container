@@ -1,0 +1,17 @@
+[Unit]
+Description=Servasec Reverse Proxy
+Wants=servasec-frontend.service
+After=servasec-frontend.service
+
+[Container]
+Image=localhost/servasec-caddy:latest
+ContainerName=caddy
+Network=servasec.network
+PublishPort=80:80
+PublishPort=443:443
+Volume=servasec-caddy-data.volume:/data
+Volume=servasec-caddy-config.volume:/config
+
+[Service]
+Restart=always
+RestartSec=5

@@ -1,0 +1,21 @@
+[Unit]
+Description=Servasec Database
+Wants=network-online.target
+After=network-online.target
+
+[Container]
+Image=docker.io/postgres:15
+ContainerName=db
+Network=servasec.network
+Volume=servasec-pg.volume:/var/lib/postgresql/data
+Environment=POSTGRES_USER=servasec
+Environment=POSTGRES_PASSWORD=servasec
+Environment=POSTGRES_DB=servasec-db
+HealthCmd=pg_isready -U servasec -d servasec-db
+HealthInterval=15s
+HealthRetries=10
+HealthStartPeriod=30s
+
+[Service]
+Restart=always
+RestartSec=10

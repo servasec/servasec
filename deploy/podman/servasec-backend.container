@@ -1,0 +1,25 @@
+[Unit]
+Description=Servasec Backend
+Wants=servasec-db.service
+After=servasec-db.service
+
+[Container]
+Image=localhost/servasec-backend:latest
+ContainerName=backend
+Network=servasec.network
+Environment=DATABASE_URL=postgres://servasec:servasec@db:5432/servasec-db?sslmode=disable
+Environment=SSC_SEED_DATABASE=true
+Environment=SSC_SEED_CASBIN_CSV=true
+Environment=SSC_SITE_NAME=servasec
+Environment=SSC_REGISTRATION_ENABLED=true
+Environment=SSC_DEBUG_ENABLED=false
+Environment=SSC_ADMIN_PASSWORD=Admin1234!
+Environment=SSC_LICENSE_KEY=
+Environment=JWT_SECRET=
+Environment=REFRESH_SECRET=
+Environment=CSRF_SECRET=
+Environment=SSC_API_PREFIX=/api
+
+[Service]
+Restart=always
+RestartSec=5
