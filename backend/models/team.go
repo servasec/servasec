@@ -9,4 +9,5 @@ type Team struct {
 	CreatedAt   time.Time    `json:"createdAt"`
 	UpdatedAt   time.Time    `json:"updatedAt"`
 	Members     []TeamMember `gorm:"foreignKey:TeamID" json:"-"`
+	MemberCount int64        `gorm:"-" json:"memberCount"`
 }

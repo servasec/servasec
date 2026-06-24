@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/dialog";
 import axios from "@/lib/api";
 import { toast } from "sonner";
+import { UserSearch } from "@/components/user-search";
 
 interface Team {
   id: number;
@@ -36,11 +37,6 @@ interface Member {
   userName: string;
 }
 
-interface SearchUser {
-  id: number;
-  username: string;
-}
-
 export default function TeamDetailPage() {
   const router = useRouter();
   const { id } = router.query;
@@ -52,9 +48,6 @@ export default function TeamDetailPage() {
   const [removeTarget, setRemoveTarget] = useState<Member | null>(null);
   const [addForm, setAddForm] = useState({ userId: "", role: "member" });
   const [saving, setSaving] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState<SearchUser[]>([]);
-  const [searching, setSearching] = useState(false);
 
   const currentMemberRole = useMemo(() => {
     if (!user || !team) return null;
@@ -91,26 +84,9 @@ export default function TeamDetailPage() {
 
   useEffect(() => {
     if (!addDialogOpen) {
-      setSearchQuery("");
-      setSearchResults([]);
       setAddForm({ userId: "", role: "member" });
     }
   }, [addDialogOpen]);
-
-  useEffect(() => {
-    if (searchQuery.length < 2) {
-      setSearchResults([]);
-      return;
-    }
-    const timer = setTimeout(() => {
-      setSearching(true);
-      axios.get(`/api/users/search?q=${encodeURIComponent(searchQuery)}`)
-        .then((res) => setSearchResults(res.data || []))
-        .catch(() => setSearchResults([]))
-        .finally(() => setSearching(false));
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [searchQuery]);
 
   const handleAddMember = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -262,43 +238,13 @@ export default function TeamDetailPage() {
             <div className="grid gap-4 py-4">
               <div className="grid gap-2">
                 <Label>User</Label>
-                <Input
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                <UserSearch
+                  value={addForm.userId}
+                  onSelect={(userId) => setAddForm({ ...addForm, userId })}
+                  onClear={() => setAddForm({ ...addForm, userId: "" })}
                   placeholder="Search users (min 2 characters)..."
-                  autoComplete="off"
-                  data-1p-ignore
+                  existingIds={(members || []).map((m) => m.userId)}
                 />
-                {searching && (
-                  <p className="text-xs text-muted-foreground">Searching...</p>
-                )}
-                {searchResults.length > 0 && !addForm.userId && (
-                  <div className="border rounded-md divide-y max-h-40 overflow-y-auto">
-                    {searchResults.filter((u) => !(members || []).some((m) => m.userId === u.id)).map((u) => (
-                      <button
-                        key={u.id}
-                        type="button"
-                        className="w-full text-left px-3 py-2 text-sm hover:bg-accent transition-colors"
-                        onClick={() => {
-                          setAddForm({ ...addForm, userId: String(u.id) });
-                          setSearchResults([]);
-                          setSearchQuery(u.username);
-                        }}
-                      >
-                        {u.username} <span className="text-muted-foreground">(id: {u.id})</span>
-                      </button>
-                    ))}
-                  </div>
-                )}
-                {searchQuery.length >= 2 && !searching && searchResults.length === 0 && !addForm.userId && (
-                  <p className="text-xs text-muted-foreground">No users found</p>
-                )}
-                {addForm.userId && (
-                  <p className="text-sm text-muted-foreground">
-                    Selected: <span className="font-medium text-foreground">{searchQuery}</span>
-                    {" "}<button type="button" className="text-xs text-primary hover:underline" onClick={() => { setAddForm({ ...addForm, userId: "" }); setSearchQuery(""); }}>Change</button>
-                  </p>
-                )}
               </div>
               <div className="grid gap-2">
                 <Label>Role</Label>

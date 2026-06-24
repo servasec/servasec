@@ -20,12 +20,13 @@ type FindingInput struct {
 type ParserFunc func(data []byte, filename string) ([]FindingInput, error)
 
 var registry = map[string]ParserFunc{
-	"semgrep":   ParseSemgrep,
-	"trivy":     ParseTrivy,
-	"gitleaks":  ParseGitleaks,
-	"grype":     ParseGrype,
-	"snyk":      ParseSnyk,
-	"checkov":   ParseCheckov,
+	"semgrep":    ParseSemgrep,
+	"trivy":      ParseTrivy,
+	"gitleaks":   ParseGitleaks,
+	"grype":      ParseGrype,
+	"snyk":       ParseSnyk,
+	"checkov":    ParseCheckov,
+	"trufflehog": ParseTrufflehog,
 }
 
 func Get(name string) (ParserFunc, bool) {
@@ -57,6 +58,8 @@ func DetectScannerType(data []byte) string {
 		return "snyk"
 	case strings.Contains(str, `"results":`) && strings.Contains(str, `"passed_checks":`):
 		return "checkov"
+	case strings.Contains(str, `"DetectorName":`) && strings.Contains(str, `"SourceMetadata":`):
+		return "trufflehog"
 	}
 
 	if arr, ok := raw.([]any); ok && len(arr) > 0 {

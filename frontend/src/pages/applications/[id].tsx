@@ -9,7 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { PageHeader } from "@/components/page-header";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
-  ChevronLeft, Plus, Pencil, Trash2, Upload, Bug, Star, StarOff, Globe, GitCompare, Shield,
+  ChevronLeft, Plus, Pencil, Trash2, Upload, Bug, Star, StarOff, Globe, GitCompare, Shield, Scan as ScanIcon, Calendar,
 } from "lucide-react";
 import {
   Dialog,
@@ -21,7 +21,9 @@ import {
 } from "@/components/ui/dialog";
 import axios from "@/lib/api";
 import { toast } from "sonner";
-import type { Webhook } from "@/lib/types";
+import type { Webhook, ScanItem } from "@/lib/types";
+import { statusScanColors } from "@/lib/constants";
+import { UserSearch } from "@/components/user-search";
 import { SeverityChart } from "@/components/findings/severity-chart";
 
 interface ApplicationVersion {
@@ -67,11 +69,6 @@ interface AppPermission {
   action: string;
 }
 
-interface PermSearchUser {
-  id: number;
-  username: string;
-}
-
 export default function ApplicationDetailPage() {
   const router = useRouter();
   const { id } = router.query;
@@ -105,14 +102,13 @@ export default function ApplicationDetailPage() {
   const [permDialogOpen, setPermDialogOpen] = useState(false);
   const [permForm, setPermForm] = useState({ subjectType: "user", subjectValue: "", action: "read" });
   const [savingPerm, setSavingPerm] = useState(false);
-  const [permSearchQuery, setPermSearchQuery] = useState("");
-  const [permSearchResults, setPermSearchResults] = useState<PermSearchUser[]>([]);
-  const [permSearching, setPermSearching] = useState(false);
   const [permTeams, setPermTeams] = useState<{ id: number; name: string }[]>([]);
 
   const [activeTab, setActiveTab] = useState<"overview" | "versions" | "settings">("overview");
   const [versionFindings, setVersionFindings] = useState<{ severity: string }[]>([]);
   const [loadingFindings, setLoadingFindings] = useState(false);
+  const [latestScan, setLatestScan] = useState<ScanItem | null>(null);
+  const [loadingScan, setLoadingScan] = useState(false);
 
   const groupMap = Object.fromEntries(groups.map((g) => [g.id, g.name]));
 
@@ -152,6 +148,18 @@ export default function ApplicationDetailPage() {
       .catch(() => setVersionFindings([]))
       .finally(() => setLoadingFindings(false));
   }, [id, app?.defaultVersion?.id]);
+
+  useEffect(() => {
+    if (!id) return;
+    setLoadingScan(true);
+    axios.get(`/api/scans?applicationId=${id}`)
+      .then((res) => {
+        const scans = res.data || [];
+        setLatestScan(scans.length > 0 ? scans[0] : null);
+      })
+      .catch(() => setLatestScan(null))
+      .finally(() => setLoadingScan(false));
+  }, [id]);
 
   const openCreateVersion = () => {
     setEditingVersion(null);
@@ -300,27 +308,9 @@ export default function ApplicationDetailPage() {
   useEffect(() => {
     if (!permDialogOpen) {
       setPermForm({ subjectType: "user", subjectValue: "", action: "read" });
-      setPermSearchQuery("");
-      setPermSearchResults([]);
       setPermTeams([]);
     }
   }, [permDialogOpen]);
-
-  useEffect(() => {
-    if (permForm.subjectType !== "user") return;
-    if (permSearchQuery.length < 2) {
-      setPermSearchResults([]);
-      return;
-    }
-    const timer = setTimeout(() => {
-      setPermSearching(true);
-      axios.get(`/api/users/search?q=${encodeURIComponent(permSearchQuery)}`)
-        .then((res) => setPermSearchResults(res.data || []))
-        .catch(() => setPermSearchResults([]))
-        .finally(() => setPermSearching(false));
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [permSearchQuery, permForm.subjectType]);
 
   const openPermGrant = () => {
     if (permForm.subjectType === "team") {
@@ -361,16 +351,6 @@ export default function ApplicationDetailPage() {
       toast.error(error?.response?.data?.error || "Failed to revoke permission");
     }
   };
-
-  const permSubjectLabel = (() => {
-    if (!permForm.subjectValue) return "";
-    if (permForm.subjectType === "user") {
-      const u = permSearchResults.find((u) => String(u.id) === permForm.subjectValue);
-      return u?.username || `user:${permForm.subjectValue}`;
-    }
-    const t = permTeams.find((t) => String(t.id) === permForm.subjectValue);
-    return t?.name || `team:${permForm.subjectValue}`;
-  })();
 
   if (!authChecked || !loggedIn) {
     return (
@@ -457,12 +437,59 @@ export default function ApplicationDetailPage() {
             </div>
           </Card>
 
-          <Card>
-            <div className="p-6">
-              <h3 className="text-lg font-semibold mb-4">Findings severity</h3>
-              <SeverityChart findings={versionFindings} loading={loadingFindings} />
-            </div>
-          </Card>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card>
+              <div className="p-6">
+                <h3 className="text-lg font-semibold mb-4">Latest scan</h3>
+                {loadingScan ? (
+                  <div className="space-y-3">
+                    <Skeleton className="h-5 w-32" />
+                    <Skeleton className="h-5 w-48" />
+                    <Skeleton className="h-5 w-24" />
+                  </div>
+                ) : latestScan ? (
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">Scanner</span>
+                      <span className="font-medium">{latestScan.scannerType?.name || "-"}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">Status</span>
+                      <span className={`inline-flex items-center gap-1.5 text-sm ${statusScanColors[latestScan.status] || ""}`}>
+                        <span className="h-1.5 w-1.5 rounded-full bg-current" />
+                        {latestScan.status}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">Version</span>
+                      <span className="font-medium">{latestScan.applicationVersion?.name || `#${latestScan.applicationVersionId}`}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">Findings</span>
+                      <span className="font-medium">{latestScan.findingsCount}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">Date</span>
+                      <span className="text-muted-foreground">{new Date(latestScan.createdAt).toLocaleDateString()}</span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-6 text-muted-foreground">
+                    <ScanIcon className="h-8 w-8 mx-auto mb-2 opacity-40" />
+                    <p className="text-sm">No scans yet</p>
+                    <p className="text-xs mt-1">Upload a scan to get started</p>
+                  </div>
+                )}
+              </div>
+            </Card>
+
+            <Card>
+              <div className="p-6">
+                <h3 className="text-lg font-semibold mb-4">Findings severity</h3>
+                <SeverityChart findings={versionFindings} loading={loadingFindings} />
+              </div>
+            </Card>
+          </div>
         </div>
       )}
 
@@ -682,7 +709,7 @@ export default function ApplicationDetailPage() {
                       type="radio"
                       name="permSubjectType"
                       checked={permForm.subjectType === "user"}
-                      onChange={() => { setPermForm({ ...permForm, subjectType: "user", subjectValue: "" }); setPermSearchQuery(""); setPermSearchResults([]); }}
+                      onChange={() => { setPermForm({ ...permForm, subjectType: "user", subjectValue: "" }); }}
                       className="text-purple-600 focus:ring-purple-500"
                     />
                     User
@@ -692,7 +719,7 @@ export default function ApplicationDetailPage() {
                       type="radio"
                       name="permSubjectType"
                       checked={permForm.subjectType === "team"}
-                      onChange={() => { setPermForm({ ...permForm, subjectType: "team", subjectValue: "" }); setPermSearchQuery(""); setPermSearchResults([]); }}
+                      onChange={() => { setPermForm({ ...permForm, subjectType: "team", subjectValue: "" }); }}
                       className="text-purple-600 focus:ring-purple-500"
                     />
                     Team
@@ -703,40 +730,12 @@ export default function ApplicationDetailPage() {
               {permForm.subjectType === "user" ? (
                 <div className="grid gap-2">
                   <Label>User</Label>
-                  <Input
-                    value={permSearchQuery}
-                    onChange={(e) => setPermSearchQuery(e.target.value)}
+                  <UserSearch
+                    value={permForm.subjectValue}
+                    onSelect={(userId) => setPermForm({ ...permForm, subjectValue: userId })}
+                    onClear={() => setPermForm({ ...permForm, subjectValue: "" })}
                     placeholder="Search users (min 2 characters)..."
-                    autoComplete="off"
-                    data-1p-ignore
-                    required
                   />
-                  {permSearching && (
-                    <p className="text-xs text-muted-foreground">Searching...</p>
-                  )}
-                  {permSearchResults.length > 0 && !permForm.subjectValue && (
-                    <div className="border rounded-md divide-y max-h-40 overflow-y-auto">
-                      {permSearchResults.map((u) => (
-                        <button
-                          key={u.id}
-                          type="button"
-                          className="w-full text-left px-3 py-2 text-sm hover:bg-accent transition-colors"
-                          onClick={() => { setPermForm({ ...permForm, subjectValue: String(u.id) }); setPermSearchResults([]); setPermSearchQuery(u.username); }}
-                        >
-                          {u.username} <span className="text-muted-foreground">(id: {u.id})</span>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                  {permSearchQuery.length >= 2 && !permSearching && permSearchResults.length === 0 && !permForm.subjectValue && (
-                    <p className="text-xs text-muted-foreground">No users found</p>
-                  )}
-                  {permForm.subjectValue && (
-                    <p className="text-sm text-muted-foreground">
-                      Selected: <span className="font-medium text-foreground">{permSearchQuery}</span>
-                      {" "}<button type="button" className="text-xs text-primary hover:underline" onClick={() => { setPermForm({ ...permForm, subjectValue: "" }); setPermSearchQuery(""); }}>Change</button>
-                    </p>
-                  )}
                 </div>
               ) : (
                 <div className="grid gap-2">

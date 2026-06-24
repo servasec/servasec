@@ -10,14 +10,7 @@ import { ChevronLeft, GitCompare, Bug, CheckCircle2, PlusCircle, MinusCircle } f
 import axios from "@/lib/api";
 import { toast } from "sonner";
 import type { ApplicationVersion, Finding, CompareResult } from "@/lib/types";
-
-const severityColors: Record<string, string> = {
-  Critical: "bg-red-500/15 text-red-600 dark:text-red-400 border-red-500/30",
-  High: "bg-orange-500/15 text-orange-600 dark:text-orange-400 border-orange-500/30",
-  Medium: "bg-yellow-500/15 text-yellow-600 dark:text-yellow-400 border-yellow-500/30",
-  Low: "bg-green-500/15 text-green-600 dark:text-green-400 border-green-500/30",
-  Info: "bg-blue-500/15 text-blue-600 dark:text-blue-400 border-blue-500/30",
-};
+import { severityBadgeColors } from "@/lib/constants";
 
 export default function CompareVersionsPage() {
   const router = useRouter();
@@ -107,7 +100,7 @@ export default function CompareVersionsPage() {
                       </td>
                       <td className="px-4 py-2.5 max-w-[300px] truncate">{f.title}</td>
                       <td className="px-4 py-2.5 hidden sm:table-cell">
-                        <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium border ${severityColors[f.severity] || ""}`}>
+                        <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium border ${severityBadgeColors[f.severity] || ""}`}>
                           {f.severity}
                         </span>
                       </td>

@@ -17,6 +17,8 @@ p, member, /findings, *
 p, member, /findings/*, *
 p, member, /scanner-types, *
 p, member, /scanner-types/*, *
+p, member, /mcp, *
+p, member, /mcp/message, *
 p, member, /users/search, *
 p, anonymous, /api/ingest, *
 p, admin, /admin/permissions, *

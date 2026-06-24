@@ -17,6 +17,7 @@ export interface Application {
   apiToken?: string;
   versions?: ApplicationVersion[];
   defaultVersion?: ApplicationVersion | null;
+  assetCriticality?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -62,6 +63,8 @@ export interface Finding {
   reviewedBy: number | null;
   reviewedByUser: User | null;
   fixedAt: string | null;
+  riskScore: number | null;
+  epssScore: number | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -75,7 +78,20 @@ export interface ScanItem {
   status: string;
   startedAt: string | null;
   completedAt: string | null;
+  findingsCount: number;
   createdAt: string;
+}
+
+export interface TopRiskyFinding {
+  id: number;
+  title: string;
+  riskScore: number;
+  severity: string;
+}
+
+export interface RiskDistribution {
+  label: string;
+  count: number;
 }
 
 export interface DashboardStats {
@@ -92,6 +108,9 @@ export interface DashboardStats {
   topFindings: { ruleId: string; title: string; count: number }[];
   myOpenFindings: number;
   overdueFindings: number;
+  avgRiskScore?: number;
+  topRiskyFindings?: TopRiskyFinding[];
+  riskDistribution?: RiskDistribution[];
 }
 
 export interface Comment {

@@ -6,36 +6,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageHeader } from "@/components/page-header";
 import {
-  Bug, Activity, User, Clock, ArrowUpRight, Plus, Scan, FileText, Server, ShieldAlert, AlertTriangle, Info,
+  Bug, Activity, User, Clock, ArrowUpRight, Plus, Server, ShieldAlert,
 } from "lucide-react";
 import Link from "next/link";
 import axios from "@/lib/api";
 import type { DashboardStats } from "@/lib/types";
-
-const severityColors: Record<string, string> = {
-  critical: "bg-red-500/15 text-red-600 dark:text-red-400",
-  high: "bg-orange-500/15 text-orange-600 dark:text-orange-400",
-  medium: "bg-yellow-500/15 text-yellow-600 dark:text-yellow-400",
-  low: "bg-green-500/15 text-green-600 dark:text-green-400",
-};
-
-const severityBarColors: Record<string, string> = {
-  critical: "bg-red-500 dark:bg-red-600",
-  high: "bg-orange-500 dark:bg-orange-600",
-  medium: "bg-yellow-500 dark:bg-yellow-600",
-  low: "bg-green-500 dark:bg-green-600",
-};
-
-const statusColors: Record<string, string> = {
-  open: "text-red-500",
-  confirmed: "text-amber-500",
-  false_positive: "text-emerald-500",
-  fixed: "text-blue-500",
-};
+import { severityBarColors, severityColors, statusColors } from "@/lib/constants";
 
 const kpiConfig = [
   { label: "Total findings", key: "totalFindings" as const, icon: Bug, color: "text-blue-500", bg: "bg-blue-500/10" },
-  { label: "My open", key: "myOpenFindings" as const, icon: User, color: "text-amber-500", bg: "bg-amber-500/10" },
+  { label: "Assigned to me & still open", key: "myOpenFindings" as const, icon: User, color: "text-amber-500", bg: "bg-amber-500/10" },
   { label: "Overdue", key: "overdueFindings" as const, icon: Clock, color: "text-red-500", bg: "bg-red-500/10" },
   { label: "Recent scans", key: "recentScans" as const, icon: Activity, color: "text-emerald-500", bg: "bg-emerald-500/10" },
 ];
@@ -241,44 +221,69 @@ export default function Dashboard() {
               </CardContent>
             </Card>
 
-            <div className="space-y-3">
-              <h3 className="text-base font-semibold">Quick actions</h3>
-              <div className="grid gap-3">
-                <Link href="/applications">
-                  <Button variant="outline" className="justify-start gap-3 h-auto py-3 px-4 w-full">
-                    <div className="rounded-lg bg-primary/10 p-2">
-                      <Scan className="h-4 w-4 text-primary" />
+            {user?.features?.includes("risk_scoring") && stats.avgRiskScore != null && (
+              <>
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm font-medium text-muted-foreground">Average risk score</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className={`text-3xl font-bold ${stats.avgRiskScore >= 0.6 ? "text-red-500" : stats.avgRiskScore >= 0.3 ? "text-orange-500" : "text-emerald-500"}`}>
+                      {stats.avgRiskScore.toFixed(2)}
                     </div>
-                    <div className="text-left">
-                      <p className="text-sm font-medium">Start a scan</p>
-                      <p className="text-xs text-muted-foreground">Upload scanner output</p>
-                    </div>
-                  </Button>
-                </Link>
-                <Link href="/findings">
-                  <Button variant="outline" className="justify-start gap-3 h-auto py-3 px-4 w-full">
-                    <div className="rounded-lg bg-emerald-500/10 p-2">
-                      <Bug className="h-4 w-4 text-emerald-500" />
-                    </div>
-                    <div className="text-left">
-                      <p className="text-sm font-medium">View findings</p>
-                      <p className="text-xs text-muted-foreground">Browse and triage results</p>
-                    </div>
-                  </Button>
-                </Link>
-                <Link href="/applications?new=true">
-                  <Button variant="outline" className="justify-start gap-3 h-auto py-3 px-4 w-full">
-                    <div className="rounded-lg bg-violet-500/10 p-2">
-                      <Server className="h-4 w-4 text-violet-500" />
-                    </div>
-                    <div className="text-left">
-                      <p className="text-sm font-medium">Add project</p>
-                      <p className="text-xs text-muted-foreground">Register a new application</p>
-                    </div>
-                  </Button>
-                </Link>
-              </div>
-            </div>
+                  </CardContent>
+                </Card>
+                {stats.riskDistribution && stats.riskDistribution.length > 0 && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-base">Risk distribution</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                      {[...stats.riskDistribution].reverse().map((d) => {
+                        const maxCount = Math.max(...stats.riskDistribution!.map((r) => r.count), 1);
+                        return (
+                          <div key={d.label} className="space-y-0.5">
+                            <div className="flex items-center justify-between text-sm">
+                              <span className="text-muted-foreground">{d.label}</span>
+                              <span className="font-medium">{d.count}</span>
+                            </div>
+                            <div className="h-2 rounded-full bg-muted overflow-hidden">
+                              <div
+                                className="h-full rounded-full bg-primary transition-all"
+                                style={{ width: `${(d.count / maxCount) * 100}%` }}
+                              />
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </CardContent>
+                  </Card>
+                )}
+                {stats.topRiskyFindings && stats.topRiskyFindings.length > 0 && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-base">Top risky findings</CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-0">
+                      <div className="divide-y">
+                        {stats.topRiskyFindings.map((f) => (
+                          <Link key={f.id} href={`/findings/${f.id}`} className="flex items-center gap-3 px-4 py-2.5 hover:bg-muted/30 transition-colors">
+                            <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium border ${severityColors[f.severity?.toLowerCase()] || ""}`}>
+                              {f.severity}
+                            </span>
+                            <span className="flex-1 min-w-0 text-sm truncate">{f.title}</span>
+                            <span className={`text-xs font-medium shrink-0 ${f.riskScore >= 0.6 ? "text-red-500" : f.riskScore >= 0.3 ? "text-orange-500" : "text-emerald-500"}`}>
+                              {f.riskScore.toFixed(2)}
+                            </span>
+                          </Link>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+              </>
+            )}
+
           </div>
         </div>
       ) : null}

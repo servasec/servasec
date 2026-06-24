@@ -1,7 +1,10 @@
-.PHONY: dev down down-clean prod down-prod logs ps help
+.PHONY: dev down down-clean prod down-prod logs ps help podman-build podman-install podman-up podman-down podman-logs
 
 COMPOSE_DEV  := USER_UID=$(shell id -u) USER_GID=$(shell id -g) docker compose -f docker-compose.dev.yml
 COMPOSE_PROD := docker compose -f docker-compose.prod.yml
+
+PODMAN_QUADLET_DIR := $(HOME)/.config/containers/systemd
+SSC_PUBLIC_DOMAIN  ?= servasec.local
 
 dev: ## Start dev stack
 	$(COMPOSE_DEV) up --build -d
@@ -23,6 +26,34 @@ logs: ## Show all logs (dev)
 
 ps: ## Show container status (dev)
 	$(COMPOSE_DEV) ps
+
+podman-build: ## Build all Podman images
+	podman build -t servasec-backend:latest -f backend/Dockerfile --target prod backend/
+	podman build -t servasec-frontend:latest -f frontend/Dockerfile --target prod frontend/
+	podman build -t servasec-caddy:latest \
+		-f caddy/Dockerfile \
+		--build-arg CADDY_ENV=default \
+		--build-arg SSC_PUBLIC_DOMAIN=$(SSC_PUBLIC_DOMAIN) \
+		caddy/
+
+podman-install: ## Install Quadlet files for current user
+	@mkdir -p $(PODMAN_QUADLET_DIR)
+	cp deploy/podman/* $(PODMAN_QUADLET_DIR)/
+	@echo "Files installed to $(PODMAN_QUADLET_DIR)"
+	@echo "Edit secrets in $(PODMAN_QUADLET_DIR)/servasec-backend.container (JWT_SECRET, REFRESH_SECRET, CSRF_SECRET, SSC_ADMIN_PASSWORD)"
+	@echo "Then run: make podman-up"
+
+podman-up: podman-build podman-install ## Build, install and start all Quadlet units
+	systemctl --user daemon-reload
+	systemctl --user start servasec-caddy.service
+	@echo "Started. Check status with: systemctl --user status servasec-*"
+
+podman-down: ## Stop all Quadlet units
+	systemctl --user stop servasec-caddy.service servasec-frontend.service servasec-backend.service servasec-db.service 2>/dev/null || true
+	systemctl --user daemon-reload
+
+podman-logs: ## Tail logs from all servasec units
+	journalctl --user -u servasec-caddy -u servasec-frontend -u servasec-backend -u servasec-db -f
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
