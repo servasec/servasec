@@ -65,6 +65,24 @@ func GetFindings(c *gin.Context) {
 
 	base := buildFindingsQuery(c)
 
+	sortBy := c.Query("sortBy")
+	sortOrder := c.DefaultQuery("order", "desc")
+	if sortOrder != "asc" && sortOrder != "desc" {
+		sortOrder = "desc"
+	}
+
+	orderClause := "findings.created_at DESC"
+	switch sortBy {
+	case "risk_score":
+		orderClause = "findings.risk_score " + sortOrder + " NULLS LAST"
+	case "severity":
+		orderClause = "findings.severity " + sortOrder
+	case "title":
+		orderClause = "findings.title " + sortOrder
+	case "created_at":
+		orderClause = "findings.created_at " + sortOrder
+	}
+
 	var total int64
 	if err := base.Session(&gorm.Session{}).Count(&total).Error; err != nil {
 		utils.InternalServerError(c, "failed to count findings")
@@ -78,7 +96,7 @@ func GetFindings(c *gin.Context) {
 		Preload("ApplicationVersion").
 		Preload("AssignedToUser").
 		Preload("ReviewedByUser").
-		Order("findings.created_at DESC").
+		Order(orderClause).
 		Offset(offset).
 		Limit(perPage).
 		Find(&findings).Error; err != nil {

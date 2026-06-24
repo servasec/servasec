@@ -19,8 +19,18 @@ func generateApiToken() string {
 }
 
 func GetApplications(c *gin.Context) {
+	accessibleIDs := utils.GetAccessibleAppIDs(c)
+	query := config.DB.Model(&models.Application{})
+	if accessibleIDs != nil {
+		if len(accessibleIDs) == 0 {
+			utils.OKResponse(c, []models.Application{})
+			return
+		}
+		query = query.Where("id IN ?", accessibleIDs)
+	}
+
 	var apps []models.Application
-	if err := config.DB.Find(&apps).Error; err != nil {
+	if err := query.Find(&apps).Error; err != nil {
 		utils.InternalServerError(c, "failed to fetch applications")
 		return
 	}
@@ -58,11 +68,12 @@ func GetApplication(c *gin.Context) {
 
 func CreateApplication(c *gin.Context) {
 	var input struct {
-		Name          string `json:"name" binding:"required,max=200"`
-		Description   string `json:"description" binding:"max=1000"`
-		Slug          string `json:"slug" binding:"required,max=100"`
-		GroupID       uint   `json:"groupId" binding:"required"`
-		RepositoryURL string `json:"repositoryUrl" binding:"max=500"`
+		Name             string `json:"name" binding:"required,max=200"`
+		Description      string `json:"description" binding:"max=1000"`
+		Slug             string `json:"slug" binding:"required,max=100"`
+		GroupID          uint   `json:"groupId" binding:"required"`
+		RepositoryURL    string `json:"repositoryUrl" binding:"max=500"`
+		AssetCriticality string `json:"assetCriticality" binding:"omitempty,oneof=critical high medium low"`
 	}
 	if err := c.ShouldBindJSON(&input); err != nil {
 		utils.BadRequestError(c, "Invalid input")
@@ -76,12 +87,16 @@ func CreateApplication(c *gin.Context) {
 	}
 
 	app := models.Application{
-		Name:          input.Name,
-		Description:   input.Description,
-		Slug:          input.Slug,
-		GroupID:       input.GroupID,
-		RepositoryURL: input.RepositoryURL,
-		ApiToken:      generateApiToken(),
+		Name:             input.Name,
+		Description:      input.Description,
+		Slug:             input.Slug,
+		GroupID:          input.GroupID,
+		RepositoryURL:    input.RepositoryURL,
+		ApiToken:         generateApiToken(),
+		AssetCriticality: input.AssetCriticality,
+	}
+	if app.AssetCriticality == "" {
+		app.AssetCriticality = "medium"
 	}
 	if err := config.DB.Create(&app).Error; err != nil {
 		utils.InternalServerError(c, "failed to create application")
@@ -104,11 +119,12 @@ func UpdateApplication(c *gin.Context) {
 	}
 
 	var input struct {
-		Name          *string `json:"name" binding:"omitempty,max=200"`
-		Description   *string `json:"description" binding:"omitempty,max=1000"`
-		Slug          *string `json:"slug" binding:"omitempty,max=100"`
-		GroupID       *uint   `json:"groupId"`
-		RepositoryURL *string `json:"repositoryUrl" binding:"omitempty,max=500"`
+		Name             *string `json:"name" binding:"omitempty,max=200"`
+		Description      *string `json:"description" binding:"omitempty,max=1000"`
+		Slug             *string `json:"slug" binding:"omitempty,max=100"`
+		GroupID          *uint   `json:"groupId"`
+		RepositoryURL    *string `json:"repositoryUrl" binding:"omitempty,max=500"`
+		AssetCriticality *string `json:"assetCriticality" binding:"omitempty,oneof=critical high medium low"`
 	}
 	if err := c.ShouldBindJSON(&input); err != nil {
 		utils.BadRequestError(c, "Invalid input")
@@ -129,6 +145,9 @@ func UpdateApplication(c *gin.Context) {
 	}
 	if input.RepositoryURL != nil {
 		app.RepositoryURL = *input.RepositoryURL
+	}
+	if input.AssetCriticality != nil {
+		app.AssetCriticality = *input.AssetCriticality
 	}
 
 	if err := config.DB.Save(&app).Error; err != nil {

@@ -22,6 +22,8 @@ type Finding struct {
 	DueDate               *time.Time           `json:"dueDate"`
 	ReviewedBy            *uint                `gorm:"index" json:"reviewedBy"`
 	ReviewedByUser        *User                `gorm:"foreignKey:ReviewedBy" json:"reviewedByUser,omitempty"`
+	RiskScore             *float64             `gorm:"index" json:"riskScore"`
+	EPSSScore             *float64             `json:"epssScore"`
 	FixedAt               *time.Time           `json:"fixedAt"`
 	Scan                  Scan                 `gorm:"foreignKey:ScanID" json:"-"`
 	ApplicationVersion    ApplicationVersion   `gorm:"foreignKey:ApplicationVersionID" json:"applicationVersion"`
