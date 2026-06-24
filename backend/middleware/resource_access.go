@@ -103,3 +103,57 @@ func RequireResourceAccessByParam(resourceType string, paramName string, action 
 		RequireResourceAccess(resourcePath, action)(c)
 	}
 }
+
+func resolveFindingAppID(c *gin.Context) (uint, bool) {
+	findingID := c.Param("id")
+	var appID uint
+	err := config.DB.Model(&models.Finding{}).
+		Select("application_versions.application_id").
+		Joins("JOIN application_versions ON application_versions.id = findings.application_version_id").
+		Where("findings.id = ?", findingID).
+		Scan(&appID).Error
+	if err != nil {
+		return 0, false
+	}
+	return appID, true
+}
+
+func RequireFindingAccess(action string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		appID, ok := resolveFindingAppID(c)
+		if !ok {
+			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": "finding not found"})
+			return
+		}
+		RequireResourceAccess(fmt.Sprintf("/applications/%d", appID), action)(c)
+	}
+}
+
+func RequireScanAccess(action string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		scanID := c.Param("id")
+		var appID uint
+		err := config.DB.Model(&models.Scan{}).
+			Select("application_versions.application_id").
+			Joins("JOIN application_versions ON application_versions.id = scans.application_version_id").
+			Where("scans.id = ?", scanID).
+			Scan(&appID).Error
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": "scan not found"})
+			return
+		}
+		RequireResourceAccess(fmt.Sprintf("/applications/%d", appID), action)(c)
+	}
+}
+
+func RequireSlugAccess(action string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		slug := c.Param("slug")
+		var app models.Application
+		if err := config.DB.Where("slug = ?", slug).First(&app).Error; err != nil {
+			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": "application not found"})
+			return
+		}
+		RequireResourceAccess(fmt.Sprintf("/applications/%d", app.ID), action)(c)
+	}
+}
