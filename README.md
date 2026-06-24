@@ -14,8 +14,9 @@
 | Resource-level permissions | ✓ | ✓ |
 | Scanner ingest (Semgrep, Trivy, etc.) | ✓ | ✓ |
 | Version comparison | ✓ | ✓ |
+| SSO / OIDC (planned) | ? | ✓ |
 | Audit log |  | ✓ |
-| SSO / OIDC (planned) |  | ✓ |
+| MCP Server |  | ✓ |
 | SLA management (planned) |  | ✓ |
 | Advanced reporting (planned) |  | ✓ |
 
@@ -35,9 +36,9 @@ Default admin: `admin` / password from `SSC_ADMIN_PASSWORD` (random hex if unset
 | Scanner | Type | Parser |
 |---------|------|--------|
 | Semgrep | SAST | ✅ Implemented |
-| Trivy | Vulnerability | ⏳ In progress |
-| Gitleaks | Secrets | ⏳ In progress |
-| Grype | Vulnerability | ⏳ In progress |
+| Trivy | Vulnerability | ✅ Implemented |
+| Gitleaks | Secrets | ✅ Implemented |
+| Grype | Vulnerability | ✅ Implemented |
 | Snyk | SCA | ⏳ In progress |
 | Checkov | IaC | ⏳ In progress |
 
