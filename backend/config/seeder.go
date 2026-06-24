@@ -95,6 +95,7 @@ func seedScannerTypes() {
 		{Name: "grype", Description: "Grype vulnerability scanner (JSON)", Parser: "grype"},
 		{Name: "snyk", Description: "Snyk (SARIF/JSON)", Parser: "snyk"},
 		{Name: "checkov", Description: "Checkov IaC scan (SARIF)", Parser: "checkov"},
+		{Name: "trufflehog", Description: "TruffleHog secret detection (JSON)", Parser: "trufflehog"},
 	}
 
 	for _, st := range scannerTypes {
