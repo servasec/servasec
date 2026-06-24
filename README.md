@@ -25,7 +25,7 @@
 | Dashboard with enriched stats | ✓ | ✓ |
 | Team-based collaboration | ✓ | ✓ |
 | Webhook notifications | ✓ | ✓ |
-| Role-based access control (Casbin) | ✓ | ✓ |
+| RBAC | ✓ | ✓ |
 | Resource-level permissions | ✓ | ✓ |
 | Scanner ingest (Semgrep, Trivy, etc.) | ✓ | ✓ |
 | Version comparison | ✓ | ✓ |
@@ -81,7 +81,7 @@ Default admin: `admin` / password from `SSC_ADMIN_PASSWORD` (random hex if unset
 **servasec** is dual-licensed:
 
 - **AGPLv3** - Free, open-source. All standard features included.
-- **Commercial License** - Required for pro features (audit log, SSO, SLA management, advanced reporting).
+- **Commercial License** - Required for pro features (audit log, MCP, SLA management, advanced reporting).
 
 See [`LICENSE`](./LICENSE) and [`COMMERCIAL_LICENSE.md`](./COMMERCIAL_LICENSE.md).
 
