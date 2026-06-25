@@ -175,7 +175,30 @@ func IngestScan(c *gin.Context) {
 		return
 	}
 
+	// Deduplicate within the application: a finding's identity is the hash of
+	// (scanner, rule, file, line, severity). Skip any finding whose hash already
+	// exists for this application (across versions) or repeats within this upload.
+	var existingHashes []string
+	config.DB.Model(&models.Finding{}).
+		Joins("JOIN application_versions ON application_versions.id = findings.application_version_id").
+		Where("application_versions.application_id = ?", app.ID).
+		Where("findings.dedupe_hash <> ''").
+		Pluck("findings.dedupe_hash", &existingHashes)
+	seen := make(map[string]bool, len(existingHashes))
+	for _, h := range existingHashes {
+		seen[h] = true
+	}
+
+	var inserted []parsers.FindingInput
+	skipped := 0
 	for _, f := range findingsInput {
+		hash := services.DedupeHash(scannerType.Name, f.RuleID, f.FilePath, f.LineStart, f.Severity)
+		if seen[hash] {
+			skipped++
+			continue
+		}
+		seen[hash] = true
+
 		finding := models.Finding{
 			ScanID:               scan.ID,
 			ApplicationVersionID: version.ID,
@@ -190,6 +213,7 @@ func IngestScan(c *gin.Context) {
 			CWEID:                f.CWEID,
 			Remediation:          f.Remediation,
 			Status:               "open",
+			DedupeHash:           hash,
 		}
 		if features.F.IsEnabled(features.FeatureRiskScoring) {
 			now := time.Now()
@@ -200,18 +224,20 @@ func IngestScan(c *gin.Context) {
 			utils.InternalServerError(c, "failed to record findings")
 			return
 		}
+		inserted = append(inserted, f)
 	}
 
 	scan.Status = "completed"
 	scan.CompletedAt = &now
 	config.DB.Save(&scan)
 
-	FireWebhooks(app.ID, scan.ID, findingsInput)
+	FireWebhooks(app.ID, scan.ID, inserted)
 
 	utils.CreatedResponse(c, gin.H{
-		"id":            scan.ID,
-		"status":        scan.Status,
-		"versionId":     version.ID,
-		"findingsCount": len(findingsInput),
+		"id":                scan.ID,
+		"status":            scan.Status,
+		"versionId":         version.ID,
+		"findingsCount":     len(inserted),
+		"skippedDuplicates": skipped,
 	})
 }

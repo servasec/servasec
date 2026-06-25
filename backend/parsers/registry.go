@@ -27,6 +27,7 @@ var registry = map[string]ParserFunc{
 	"snyk":       ParseSnyk,
 	"checkov":    ParseCheckov,
 	"trufflehog": ParseTrufflehog,
+	"nuclei":     ParseNuclei,
 }
 
 func Get(name string) (ParserFunc, bool) {
@@ -60,6 +61,8 @@ func DetectScannerType(data []byte) string {
 		return "checkov"
 	case strings.Contains(str, `"DetectorName":`) && strings.Contains(str, `"SourceMetadata":`):
 		return "trufflehog"
+	case strings.Contains(str, `"template-id":`) && strings.Contains(str, `"matched-at":`):
+		return "nuclei"
 	}
 
 	if arr, ok := raw.([]any); ok && len(arr) > 0 {
