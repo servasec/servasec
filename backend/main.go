@@ -86,6 +86,7 @@ func main() {
 	routes.RegisterTeamRoutes(router)
 	routes.RegisterScannerTypeRoutes(router)
 	routes.RegisterPermissionRoutes(router)
+	routes.RegisterPolicyRoutes(router)
 
 	if features.F.IsEnabled(features.FeatureAuditLog) {
 		routes.RegisterAuditRoutes(router)

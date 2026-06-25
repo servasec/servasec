@@ -175,6 +175,7 @@ func IngestScan(c *gin.Context) {
 		return
 	}
 
+	var createdFindings []models.Finding
 	for _, f := range findingsInput {
 		finding := models.Finding{
 			ScanID:               scan.ID,
@@ -200,13 +201,16 @@ func IngestScan(c *gin.Context) {
 			utils.InternalServerError(c, "failed to record findings")
 			return
 		}
+		createdFindings = append(createdFindings, finding)
 	}
 
 	scan.Status = "completed"
 	scan.CompletedAt = &now
 	config.DB.Save(&scan)
 
-	FireWebhooks(app.ID, scan.ID, findingsInput)
+	for i := range createdFindings {
+		services.EvaluatePolicies("finding.created", &createdFindings[i], app, 0)
+	}
 
 	utils.CreatedResponse(c, gin.H{
 		"id":            scan.ID,

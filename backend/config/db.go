@@ -33,6 +33,8 @@ func ConnectDB() *gorm.DB {
 		&models.Comment{},
 		&models.Webhook{},
 		&models.AuditLog{},
+		&models.Policy{},
+		&models.PolicyLog{},
 	)
 	if err != nil {
 		debug.Log("Failed to migrate database: %v", err)
