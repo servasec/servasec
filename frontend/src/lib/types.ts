@@ -4,6 +4,8 @@ export interface User {
   email: string;
   role: string;
   banned: boolean;
+  avatarUrl?: string;
+  oauthProvider?: string;
   createdAt: string;
 }
 

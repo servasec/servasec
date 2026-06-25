@@ -75,6 +75,7 @@ func main() {
 
 	routes.RegisterWellKnownRoutes(router)
 	routes.RegisterAuthRoutes(router)
+	routes.RegisterSSORoutes(router)
 	routes.RegisterOAuthRoutes(router)
 	routes.RegisterUserRoutes(router)
 	routes.RegisterDashboardRoutes(router)

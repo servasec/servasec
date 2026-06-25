@@ -11,6 +11,7 @@ Environment=DATABASE_URL=postgres://servasec:servasec@db:5432/servasec-db?sslmod
 Environment=SSC_SEED_DATABASE=true
 Environment=SSC_SEED_CASBIN_CSV=true
 Environment=SSC_SITE_NAME=servasec
+Environment=SSC_PUBLIC_URL=https://servasec.local
 Environment=SSC_REGISTRATION_ENABLED=true
 Environment=SSC_DEBUG_ENABLED=false
 Environment=SSC_ADMIN_PASSWORD=Admin1234!
@@ -19,6 +20,15 @@ Environment=JWT_SECRET=
 Environment=REFRESH_SECRET=
 Environment=CSRF_SECRET=
 Environment=SSC_API_PREFIX=/api
+Environment=SSO_GITHUB_CLIENT_ID=
+Environment=SSO_GITHUB_CLIENT_SECRET=
+Environment=SSO_GITLAB_CLIENT_ID=
+Environment=SSO_GITLAB_CLIENT_SECRET=
+Environment=SSO_GITLAB_BASE_URL=
+Environment=SSO_OIDC_CLIENT_ID=
+Environment=SSO_OIDC_CLIENT_SECRET=
+Environment=SSO_OIDC_ISSUER_URL=
+Environment=SSO_OIDC_SCOPES=openid profile email
 
 [Service]
 Restart=always
