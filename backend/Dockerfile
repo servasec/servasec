@@ -1,7 +1,7 @@
 # ============================================
 # Build main application
 # ============================================
-FROM golang:1.24-alpine AS go_builder
+FROM golang:1.25-alpine AS go_builder
 
 WORKDIR /app
 
@@ -14,7 +14,7 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o servasec
 # ============================================
 # Dev stage
 # ============================================
-FROM golang:1.24-alpine AS dev
+FROM golang:1.25-alpine AS dev
 
 WORKDIR /app
 
