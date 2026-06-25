@@ -10,7 +10,7 @@ import (
 	"github.com/servasec/servasec/backend/debug"
 	"github.com/servasec/servasec/backend/features"
 	"github.com/servasec/servasec/backend/middleware"
-	"github.com/servasec/servasec/backend/services"
+	"github.com/servasec/servasec/backend/pro"
 	"github.com/servasec/servasec/backend/routes"
 	"github.com/servasec/servasec/backend/utils"
 )
@@ -32,9 +32,7 @@ func main() {
 	features.Init(os.Getenv("SSC_LICENSE_KEY"))
 	debug.Log("Enabled features: %v", features.F.EnabledFeatures())
 
-	if features.F.IsEnabled(features.FeatureRiskScoring) {
-		services.StartEPSSSync(services.NewEPSSClient())
-	}
+	pro.Risk.StartEPSSSync()
 
 	var gReleaseMode string
 	if os.Getenv("SSC_DEBUG_ENABLED") == "true" {
@@ -65,9 +63,7 @@ func main() {
 		AllowCredentials: true,
 	}))
 
-	if features.F.IsEnabled(features.FeatureAuditLog) {
-		router.Use(middleware.AuditLog())
-	}
+	router.Use(pro.Audit.Middleware())
 
 	router.GET("/ping", func(c *gin.Context) {
 		c.JSON(200, gin.H{"message": "pong"})
@@ -75,7 +71,7 @@ func main() {
 
 	routes.RegisterWellKnownRoutes(router)
 	routes.RegisterAuthRoutes(router)
-	routes.RegisterSSORoutes(router)
+	pro.SSO.RegisterRoutes(router)
 	routes.RegisterOAuthRoutes(router)
 	routes.RegisterUserRoutes(router)
 	routes.RegisterDashboardRoutes(router)
@@ -88,14 +84,8 @@ func main() {
 	routes.RegisterPermissionRoutes(router)
 	routes.RegisterPolicyRoutes(router)
 
-	if features.F.IsEnabled(features.FeatureAuditLog) {
-		routes.RegisterAuditRoutes(router)
-	}
-
-	if features.F.IsEnabled(features.FeatureMCPServer) {
-		routes.RegisterMCPRoutes(router)
-		debug.Log("MCP server routes registered")
-	}
+	pro.Audit.RegisterRoutes(router)
+	pro.MCP.RegisterRoutes(router)
 
 	port := os.Getenv("PORT")
 	if port == "" {

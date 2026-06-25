@@ -3,13 +3,15 @@
 # ============================================
 FROM golang:1.25-alpine AS go_builder
 
+ARG BUILD_TAGS=""
+
 WORKDIR /app
 
 COPY go.mod go.sum ./
 COPY . .
 RUN go mod download
 
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o servasec
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -tags "${BUILD_TAGS}" -o servasec
 
 # ============================================
 # Dev stage

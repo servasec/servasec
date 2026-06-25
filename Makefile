@@ -1,10 +1,11 @@
-.PHONY: dev down down-clean prod down-prod logs ps help podman-build podman-install podman-up podman-down podman-logs
+.PHONY: dev down down-clean prod down-prod community pro down-prod logs ps help podman-build podman-install podman-up podman-down podman-logs
 
 COMPOSE_DEV  := USER_UID=$(shell id -u) USER_GID=$(shell id -g) docker compose -f docker-compose.dev.yml
 COMPOSE_PROD := docker compose -f docker-compose.prod.yml
 
 PODMAN_QUADLET_DIR := $(HOME)/.config/containers/systemd
 SSC_PUBLIC_DOMAIN  ?= servasec.local
+PRO_REPO_DIR       ?= ../servasec-pro
 
 dev: ## Start dev stack
 	$(COMPOSE_DEV) up --build -d
@@ -15,8 +16,14 @@ down: ## Stop dev stack
 down-clean: ## Stop dev stack and remove volumes
 	$(COMPOSE_DEV) down -v --remove-orphans
 
-prod: ## Build and start prod stack
+prod: community ## (alias) Build and start community prod stack
+
+community: ## Build and start community prod stack (free features only)
 	$(COMPOSE_PROD) up --build -d
+
+pro: ## Build and start enterprise prod stack (requires servasec-pro repo)
+	cp $(PRO_REPO_DIR)/backend/pro/*.go backend/pro/
+	BUILD_TAGS=pro $(COMPOSE_PROD) up --build -d
 
 down-prod: ## Stop prod stack
 	$(COMPOSE_PROD) down
