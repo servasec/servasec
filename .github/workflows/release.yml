@@ -25,7 +25,7 @@ jobs:
             const { data: refs } = await github.rest.git.listMatchingRefs({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              ref: 'refs/tags/v',
+              ref: 'tags/v',
             });
 
             let lastTag = null;
