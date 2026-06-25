@@ -77,8 +77,12 @@ const LoginPage = () => {
         <div className="p-8">
           <div className="flex flex-col gap-6">
             <div className="flex flex-col items-center gap-3 text-center">
+              <img
+                src="/assets/servasec-mark.svg"
+                alt="servasec"
+                className="w-10 h-10"
+              />
               <div>
-                <h1 className="text-xl font-bold tracking-tight">servasec</h1>
                 <p className="text-sm text-muted-foreground mt-0.5">
                   Sign in to your account
                 </p>
@@ -104,16 +108,7 @@ const LoginPage = () => {
                   })}
                 </div>
 
-                <div className="relative">
-                  <div className="absolute inset-0 flex items-center">
-                    <span className="w-full border-t" />
-                  </div>
-                  <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-card px-2 text-muted-foreground">
-                      Or continue with
-                    </span>
-                  </div>
-                </div>
+                <div className="border-t border-border/40" />
               </>
             )}
 
