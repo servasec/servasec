@@ -250,7 +250,7 @@ func UpdateCurrentUser(c *gin.Context) {
 		return
 	}
 
-	if input.Email != "" {
+	if input.Email != "" && input.Email != user.Email {
 		if user.OAuthProvider != "" {
 			utils.ForbiddenError(c, "SSO users cannot change their email")
 			return
