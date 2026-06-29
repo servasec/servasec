@@ -11,4 +11,9 @@ func RegisterScannerTypeRoutes(router *gin.Engine) {
 	{
 		s.GET("", middleware.CheckPolicy("/scanner-types", "read"), controllers.GetScannerTypes)
 	}
+
+	admin := router.Group("/admin/scanner-types", middleware.AuthRequired(), middleware.CheckPolicy("/admin/scanner-types", "write"))
+	{
+		admin.PUT("/:id", controllers.UpdateScannerType)
+	}
 }

@@ -124,6 +124,11 @@ func IngestScan(c *gin.Context) {
 		return
 	}
 
+	if !scannerType.Enabled {
+		utils.BadRequestError(c, fmt.Sprintf("scanner type '%s' has been disabled by an administrator", scannerType.Name))
+		return
+	}
+
 	file, header, err := c.Request.FormFile("file")
 	if err != nil {
 		utils.BadRequestError(c, "file is required")
@@ -189,7 +194,7 @@ func IngestScan(c *gin.Context) {
 		seen[h] = true
 	}
 
-	var inserted []parsers.FindingInput
+	var inserted []models.Finding
 	skipped := 0
 	for _, f := range findingsInput {
 		hash := services.DedupeHash(scannerType.Name, f.RuleID, f.FilePath, f.LineStart, f.Severity)
@@ -222,7 +227,7 @@ func IngestScan(c *gin.Context) {
 			utils.InternalServerError(c, "failed to record findings")
 			return
 		}
-		inserted = append(inserted, f)
+		inserted = append(inserted, finding)
 	}
 
 	scan.Status = "completed"

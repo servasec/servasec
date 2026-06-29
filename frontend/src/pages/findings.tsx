@@ -58,7 +58,7 @@ export default function FindingsPage() {
     Promise.all([
       axios.get(`/api/findings?${params}`),
       axios.get("/api/applications"),
-      axios.get("/api/scanner-types"),
+      axios.get("/api/scanner-types", { params: { enabled: "true" } }),
     ])
       .then(([findingsRes, appsRes, stRes]) => {
         setFindings(findingsRes.data.data || []);
