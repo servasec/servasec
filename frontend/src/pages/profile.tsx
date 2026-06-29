@@ -111,6 +111,11 @@ export default function ProfilePage() {
               <p className="text-sm text-muted-foreground mt-0.5">
                 Manage your personal information
               </p>
+              {authUser?.oauthProvider && (
+                <span className="inline-flex items-center gap-1 text-xs text-muted-foreground mt-1">
+                  Connected via {authUser.oauthProvider === "github" ? "GitHub" : authUser.oauthProvider === "gitlab" ? "GitLab" : authUser.oauthProvider}
+                </span>
+              )}
             </div>
           </div>
         </CardHeader>
@@ -157,7 +162,13 @@ export default function ProfilePage() {
                     }
                     className="pl-9"
                     required
+                    disabled={!!authUser?.oauthProvider}
                   />
+                  {authUser?.oauthProvider && (
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Email managed by {authUser.oauthProvider === "github" ? "GitHub" : authUser.oauthProvider === "gitlab" ? "GitLab" : "your SSO provider"}
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -170,96 +181,98 @@ export default function ProfilePage() {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Change password</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handlePasswordChange} className="space-y-5">
-            <div className="grid gap-2">
-              <Label htmlFor="currentPassword" className="text-sm font-medium">
-                Current password
-              </Label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="currentPassword"
-                  name="currentPassword"
-                  type="password"
-                  value={passwordForm.currentPassword}
-                  onChange={(e) =>
-                    setPasswordForm({
-                      ...passwordForm,
-                      currentPassword: e.target.value,
-                    })
-                  }
-                  className="pl-9"
-                  required
-                />
+      {!authUser?.oauthProvider && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Change password</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handlePasswordChange} className="space-y-5">
+              <div className="grid gap-2">
+                <Label htmlFor="currentPassword" className="text-sm font-medium">
+                  Current password
+                </Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="currentPassword"
+                    name="currentPassword"
+                    type="password"
+                    value={passwordForm.currentPassword}
+                    onChange={(e) =>
+                      setPasswordForm({
+                        ...passwordForm,
+                        currentPassword: e.target.value,
+                      })
+                    }
+                    className="pl-9"
+                    required
+                  />
+                </div>
               </div>
-            </div>
 
-            <div className="grid gap-2">
-              <Label htmlFor="newPassword" className="text-sm font-medium">
-                New password
-              </Label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="newPassword"
-                  name="newPassword"
-                  type="password"
-                  value={passwordForm.newPassword}
-                  onChange={(e) =>
-                    setPasswordForm({
-                      ...passwordForm,
-                      newPassword: e.target.value,
-                    })
-                  }
-                  className="pl-9"
-                  placeholder="Min 8 characters"
-                  required
-                  minLength={8}
-                />
+              <div className="grid gap-2">
+                <Label htmlFor="newPassword" className="text-sm font-medium">
+                  New password
+                </Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="newPassword"
+                    name="newPassword"
+                    type="password"
+                    value={passwordForm.newPassword}
+                    onChange={(e) =>
+                      setPasswordForm({
+                        ...passwordForm,
+                        newPassword: e.target.value,
+                      })
+                    }
+                    className="pl-9"
+                    placeholder="Min 8 characters"
+                    required
+                    minLength={8}
+                  />
+                </div>
               </div>
-            </div>
 
-            <div className="grid gap-2">
-              <Label htmlFor="confirmPassword" className="text-sm font-medium">
-                Confirm new password
-              </Label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="confirmPassword"
-                  name="confirmPassword"
-                  type="password"
-                  value={passwordForm.confirmPassword}
-                  onChange={(e) =>
-                    setPasswordForm({
-                      ...passwordForm,
-                      confirmPassword: e.target.value,
-                    })
-                  }
-                  className="pl-9"
-                  placeholder="Repeat your new password"
-                  required
-                />
+              <div className="grid gap-2">
+                <Label htmlFor="confirmPassword" className="text-sm font-medium">
+                  Confirm new password
+                </Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="confirmPassword"
+                    name="confirmPassword"
+                    type="password"
+                    value={passwordForm.confirmPassword}
+                    onChange={(e) =>
+                      setPasswordForm({
+                        ...passwordForm,
+                        confirmPassword: e.target.value,
+                      })
+                    }
+                    className="pl-9"
+                    placeholder="Repeat your new password"
+                    required
+                  />
+                </div>
               </div>
-            </div>
 
-            <Button
-              type="submit"
-              disabled={changingPassword}
-              variant="outline"
-              className="gap-2"
-            >
-              <Lock className="h-4 w-4" />
-              {changingPassword ? "Updating..." : "Change password"}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+              <Button
+                type="submit"
+                disabled={changingPassword}
+                variant="outline"
+                className="gap-2"
+              >
+                <Lock className="h-4 w-4" />
+                {changingPassword ? "Updating..." : "Change password"}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

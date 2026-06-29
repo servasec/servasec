@@ -2,6 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  * {
+    @apply border-border;
+  }
+}
+
 html, body {
   width: 100%;
   min-height: 100%;
@@ -39,26 +45,26 @@ html, body {
 .dark {
   --background: 270 6% 8%;
   --foreground: 270 15% 90%;
-  --card: 270 5% 11%;
+  --card: 270 4% 18%;
   --card-foreground: 270 15% 90%;
-  --popover: 270 5% 11%;
+  --popover: 270 4% 18%;
   --popover-foreground: 270 15% 90%;
   --primary: 270 60% 65%;
   --primary-foreground: 270 20% 98%;
-  --secondary: 270 5% 20%;
+  --secondary: 270 4% 16%;
   --secondary-foreground: 270 15% 85%;
-  --muted: 270 5% 14%;
+  --muted: 270 4% 22%;
   --muted-foreground: 270 5% 55%;
   --accent: 270 60% 65%;
   --accent-foreground: 270 20% 98%;
   --destructive: 0 70% 50%;
   --destructive-foreground: 0 0% 100%;
-  --border: 270 6% 18%;
-  --input: 270 6% 20%;
+  --border: 270 4% 14%;
+  --input: 270 4% 20%;
   --ring: 270 60% 65%;
-  --sidebar: 270 6% 7%;
+  --sidebar: 270 6% 8%;
   --sidebar-foreground: 270 15% 85%;
-  --sidebar-border: 270 6% 16%;
+  --sidebar-border: 270 4% 10%;
   --sidebar-accent: 270 60% 65%;
   --sidebar-accent-foreground: 270 20% 98%;
 }

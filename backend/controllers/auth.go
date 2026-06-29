@@ -112,15 +112,20 @@ func Login(c *gin.Context) {
 		enabledFeatures = features.F.EnabledFeatures()
 	}
 
+	userResp := gin.H{
+		"id":        user.ID,
+		"username":  user.Username,
+		"email":     user.Email,
+		"role":      user.Role,
+		"avatarUrl": user.AvatarURL,
+		"features":  enabledFeatures,
+	}
+	if user.OAuthProvider != "" {
+		userResp["oauthProvider"] = user.OAuthProvider
+	}
 	utils.OKResponse(c, gin.H{
-		"message":  "Login successful",
-		"user": gin.H{
-			"id":       user.ID,
-			"username": user.Username,
-			"email":    user.Email,
-			"role":     user.Role,
-			"features": enabledFeatures,
-		},
+		"message": "Login successful",
+		"user":    userResp,
 	})
 }
 
@@ -208,14 +213,19 @@ func GetCurrentUser(c *gin.Context) {
 		enabledFeatures = features.F.EnabledFeatures()
 	}
 
-	utils.OKResponse(c, gin.H{
+	resp := gin.H{
 		"id":       user.ID,
 		"username": user.Username,
 		"email":    user.Email,
 		"role":     user.Role,
 		"banned":   user.Banned,
+		"avatarUrl": user.AvatarURL,
 		"features": enabledFeatures,
-	})
+	}
+	if user.OAuthProvider != "" {
+		resp["oauthProvider"] = user.OAuthProvider
+	}
+	utils.OKResponse(c, resp)
 }
 
 func UpdateCurrentUser(c *gin.Context) {
@@ -232,20 +242,29 @@ func UpdateCurrentUser(c *gin.Context) {
 	}
 
 	var input struct {
-		Email string `json:"email" binding:"omitempty,email,max=254"`
+		Username string `json:"username" binding:"omitnil,min=1,max=32"`
+		Email    string `json:"email" binding:"omitnil,email,max=254"`
 	}
 	if err := c.ShouldBindJSON(&input); err != nil {
-		utils.BadRequestError(c, "Invalid email")
+		utils.BadRequestError(c, "Invalid input")
 		return
 	}
 
-	if input.Email != "" {
+	if input.Email != "" && input.Email != user.Email {
+		if user.OAuthProvider != "" {
+			utils.ForbiddenError(c, "SSO users cannot change their email")
+			return
+		}
 		var existing models.User
-		if err := config.DB.Where("email = ?", input.Email).First(&existing).Error; err == nil {
+		if err := config.DB.Where("email = ? AND id != ?", input.Email, user.ID).First(&existing).Error; err == nil {
 			utils.ConflictError(c, "Email already taken")
 			return
 		}
 		user.Email = input.Email
+	}
+
+	if input.Username != "" {
+		user.Username = input.Username
 	}
 
 	if err := config.DB.Save(&user).Error; err != nil {
@@ -275,6 +294,11 @@ func UpdateCurrentUserPassword(c *gin.Context) {
 	var user models.User
 	if err := config.DB.First(&user, userID).Error; err != nil {
 		utils.NotFoundError(c, "User not found")
+		return
+	}
+
+	if user.OAuthProvider != "" {
+		utils.ForbiddenError(c, "SSO users cannot change their password")
 		return
 	}
 
