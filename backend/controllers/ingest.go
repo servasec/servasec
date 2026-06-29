@@ -124,6 +124,11 @@ func IngestScan(c *gin.Context) {
 		return
 	}
 
+	if !scannerType.Enabled {
+		utils.BadRequestError(c, fmt.Sprintf("scanner type '%s' has been disabled by an administrator", scannerType.Name))
+		return
+	}
+
 	file, header, err := c.Request.FormFile("file")
 	if err != nil {
 		utils.BadRequestError(c, "file is required")

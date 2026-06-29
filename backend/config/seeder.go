@@ -89,14 +89,14 @@ func SeedCasbinFromCsv(enforcer *casbin.Enforcer) {
 
 func seedScannerTypes() {
 	scannerTypes := []models.ScannerType{
-		{Name: "semgrep", Description: "Semgrep SAST (JSON)", Parser: "semgrep"},
-		{Name: "trivy", Description: "Trivy vulnerability scanner (SARIF/JSON)", Parser: "trivy"},
-		{Name: "gitleaks", Description: "Gitleaks secret detection (JSON)", Parser: "gitleaks"},
-		{Name: "grype", Description: "Grype vulnerability scanner (JSON)", Parser: "grype"},
-		{Name: "snyk", Description: "Snyk (SARIF/JSON)", Parser: "snyk"},
-		{Name: "checkov", Description: "Checkov IaC scan (SARIF)", Parser: "checkov"},
-		{Name: "trufflehog", Description: "TruffleHog secret detection (JSON)", Parser: "trufflehog"},
-		{Name: "nuclei", Description: "Nuclei DAST/template scanner (JSON/JSONL)", Parser: "nuclei"},
+		{Name: "semgrep", Description: "Semgrep SAST (JSON)", Parser: "semgrep", Enabled: true},
+		{Name: "trivy", Description: "Trivy vulnerability scanner (SARIF/JSON)", Parser: "trivy", Enabled: true},
+		{Name: "gitleaks", Description: "Gitleaks secret detection (JSON)", Parser: "gitleaks", Enabled: true},
+		{Name: "grype", Description: "Grype vulnerability scanner (JSON)", Parser: "grype", Enabled: true},
+		{Name: "snyk", Description: "Snyk (SARIF/JSON)", Parser: "snyk", Enabled: true},
+		{Name: "checkov", Description: "Checkov IaC scan (SARIF)", Parser: "checkov", Enabled: true},
+		{Name: "trufflehog", Description: "TruffleHog secret detection (JSON)", Parser: "trufflehog", Enabled: true},
+		{Name: "nuclei", Description: "Nuclei DAST/template scanner (JSON/JSONL)", Parser: "nuclei", Enabled: true},
 	}
 
 	for _, st := range scannerTypes {

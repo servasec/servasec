@@ -29,6 +29,7 @@ export interface ScannerType {
   name: string;
   description: string;
   parser: string;
+  enabled: boolean;
 }
 
 export interface ApplicationVersion {

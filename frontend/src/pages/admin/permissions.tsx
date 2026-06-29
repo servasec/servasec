@@ -259,7 +259,7 @@ export default function PermissionsPage() {
                           {p.createdAt ? new Date(p.createdAt).toLocaleDateString() : "-"}
                         </td>
                         <td className="px-4 py-3">
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => handleRevoke(p)} title="Revoke">
+                          <Button variant="destructive-ghost" size="icon" className="h-8 w-8" onClick={() => handleRevoke(p)} title="Revoke">
                             <Trash2 className="h-3.5 w-3.5" />
                           </Button>
                         </td>
