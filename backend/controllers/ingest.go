@@ -194,7 +194,7 @@ func IngestScan(c *gin.Context) {
 		seen[h] = true
 	}
 
-	var inserted []parsers.FindingInput
+	var inserted []models.Finding
 	skipped := 0
 	for _, f := range findingsInput {
 		hash := services.DedupeHash(scannerType.Name, f.RuleID, f.FilePath, f.LineStart, f.Severity)
@@ -227,7 +227,7 @@ func IngestScan(c *gin.Context) {
 			utils.InternalServerError(c, "failed to record findings")
 			return
 		}
-		inserted = append(inserted, f)
+		inserted = append(inserted, finding)
 	}
 
 	scan.Status = "completed"

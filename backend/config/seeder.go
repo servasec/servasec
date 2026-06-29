@@ -107,6 +107,10 @@ func seedScannerTypes() {
 			continue
 		}
 		if err == nil {
+			if !existing.Enabled {
+				existing.Enabled = true
+				DB.Save(&existing)
+			}
 			continue
 		}
 		if err := DB.Create(&st).Error; err != nil {
