@@ -9,6 +9,7 @@ import (
 	"gorm.io/gorm"
 	"github.com/servasec/servasec/backend/config"
 	"github.com/servasec/servasec/backend/models"
+	"github.com/servasec/servasec/backend/services"
 	"github.com/servasec/servasec/backend/utils"
 )
 
@@ -154,6 +155,11 @@ func UpdateFindingStatus(c *gin.Context) {
 		utils.InternalServerError(c, "failed to update finding status")
 		return
 	}
+
+	if app := findingApp(finding.ID); app != nil {
+		services.EvaluatePolicies("finding.status_changed", &finding, app, 0)
+	}
+
 	utils.OKResponse(c, finding)
 }
 
@@ -189,6 +195,11 @@ func AssignFinding(c *gin.Context) {
 		utils.InternalServerError(c, "failed to assign finding")
 		return
 	}
+
+	if app := findingApp(finding.ID); app != nil {
+		services.EvaluatePolicies("finding.reassigned", &finding, app, 0)
+	}
+
 	utils.OKResponse(c, finding)
 }
 
@@ -223,6 +234,11 @@ func ReviewFinding(c *gin.Context) {
 		utils.InternalServerError(c, "failed to review finding")
 		return
 	}
+
+	if app := findingApp(finding.ID); app != nil {
+		services.EvaluatePolicies("finding.status_changed", &finding, app, 0)
+	}
+
 	config.DB.Preload("ReviewedByUser").First(&finding, finding.ID)
 	utils.OKResponse(c, finding)
 }
@@ -255,6 +271,18 @@ func CreateComment(c *gin.Context) {
 	}
 	config.DB.Preload("User").First(&comment, comment.ID)
 	utils.CreatedResponse(c, comment)
+}
+
+func findingApp(findingID uint) *models.Application {
+	var finding models.Finding
+	if err := config.DB.Preload("ApplicationVersion").First(&finding, findingID).Error; err != nil {
+		return nil
+	}
+	var app models.Application
+	if err := config.DB.First(&app, finding.ApplicationVersion.ApplicationID).Error; err != nil {
+		return nil
+	}
+	return &app
 }
 
 func GetComments(c *gin.Context) {

@@ -74,6 +74,9 @@ coverage.out
 # Go workspace
 go.work.sum
 
+# Pro implementation files (copied from servasec-pro during build)
+backend/pro/impl_*.go
+
 # Vendor (uncomment if generated)
 # vendor/
 

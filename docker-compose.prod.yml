@@ -20,6 +20,8 @@ services:
       context: ./backend
       dockerfile: Dockerfile
       target: prod
+      args:
+        BUILD_TAGS: ${BUILD_TAGS:-}
     depends_on:
       db:
         condition: service_healthy

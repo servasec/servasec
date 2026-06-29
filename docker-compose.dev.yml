@@ -28,6 +28,8 @@ services:
       context: ./backend
       dockerfile: Dockerfile
       target: dev
+      args:
+        BUILD_TAGS: ${BUILD_TAGS:-}
     depends_on:
       db:
         condition: service_healthy
@@ -46,6 +48,7 @@ services:
       SSC_LICENSE_KEY: ${SSC_LICENSE_KEY}
       NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
       SSC_API_PREFIX: /api
+      BUILD_TAGS: ${BUILD_TAGS:-}
       SSO_GITHUB_CLIENT_ID: ${SSO_GITHUB_CLIENT_ID}
       SSO_GITHUB_CLIENT_SECRET: ${SSO_GITHUB_CLIENT_SECRET}
       SSO_GITLAB_CLIENT_ID: ${SSO_GITLAB_CLIENT_ID}
