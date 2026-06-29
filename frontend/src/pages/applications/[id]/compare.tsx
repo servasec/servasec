@@ -154,7 +154,7 @@ export default function CompareVersionsPage() {
                 </SelectContent>
               </Select>
             </div>
-            <Button onClick={handleCompare} disabled={!fromId || !toId || fromId === toId || comparing} className="gap-2">
+            <Button size="sm" onClick={handleCompare} disabled={!fromId || !toId || fromId === toId || comparing} className="gap-2">
               <GitCompare className="h-4 w-4" />
               {comparing ? "Comparing..." : "Compare"}
             </Button>

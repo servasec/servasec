@@ -398,7 +398,7 @@ export default function ApplicationDetailPage() {
 
       {activeTab === "overview" && (
         <div key="overview" className="animate-in fade-in duration-200">
-          <Card>
+          <Card className="border-0 shadow-none">
             <div className="p-6">
               <div className="flex items-start justify-between gap-4">
                 <div className="min-w-0">
@@ -438,7 +438,7 @@ export default function ApplicationDetailPage() {
           </Card>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card>
+            <Card className="border-0 shadow-none">
               <div className="p-6">
                 <h3 className="text-lg font-semibold mb-4">Latest scan</h3>
                 {loadingScan ? (
@@ -483,7 +483,7 @@ export default function ApplicationDetailPage() {
               </div>
             </Card>
 
-            <Card>
+            <Card className="border-0 shadow-none">
               <div className="p-6">
                 <h3 className="text-lg font-semibold mb-4">Findings severity</h3>
                 <SeverityChart findings={versionFindings} loading={loadingFindings} />
@@ -495,15 +495,15 @@ export default function ApplicationDetailPage() {
 
       {activeTab === "versions" && (
         <div key="versions" className="animate-in fade-in duration-200">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold">Versions</h3>
             <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" onClick={() => router.push(`/applications/${id}/compare`)} className="gap-1.5">
-                <GitCompare className="h-4 w-4" />
+              <Button variant="outline" onClick={() => router.push(`/applications/${id}/compare`)} className="h-8 px-2.5 text-xs gap-1">
+                <GitCompare className="h-3.5 w-3.5" />
                 Compare
               </Button>
-              <Button size="sm" onClick={openCreateVersion} className="gap-1.5">
-                <Plus className="h-4 w-4" />
+              <Button onClick={openCreateVersion} className="h-8 px-2.5 text-xs gap-1">
+                <Plus className="h-3.5 w-3.5" />
                 New version
               </Button>
             </div>
@@ -582,10 +582,10 @@ export default function ApplicationDetailPage() {
 
       {activeTab === "settings" && (
         <div key="settings" className="animate-in fade-in duration-200">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold">Webhooks</h3>
-            <Button size="sm" onClick={openCreateWebhook} className="gap-1.5">
-              <Plus className="h-4 w-4" />
+            <Button onClick={openCreateWebhook} className="h-8 px-2.5 text-xs gap-1">
+              <Plus className="h-3.5 w-3.5" />
               Add webhook
             </Button>
           </div>
@@ -642,10 +642,10 @@ export default function ApplicationDetailPage() {
 
           {canManagePerms && (
             <>
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-semibold">Permissions</h3>
-                <Button size="sm" onClick={openPermGrant} className="gap-1.5">
-                  <Plus className="h-4 w-4" />
+                <Button onClick={openPermGrant} className="h-8 px-2.5 text-xs gap-1">
+                  <Plus className="h-3.5 w-3.5" />
                   Add permission
                 </Button>
               </div>

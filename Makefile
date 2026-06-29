@@ -25,6 +25,10 @@ pro: ## Build and start enterprise prod stack (requires servasec-pro repo)
 	cp $(PRO_REPO_DIR)/backend/pro/*.go backend/pro/
 	BUILD_TAGS=pro $(COMPOSE_PROD) up --build -d
 
+dev-pro: ## Start dev stack with pro features (requires servasec-pro repo)
+	cp $(PRO_REPO_DIR)/backend/pro/*.go backend/pro/
+	BUILD_TAGS=pro $(COMPOSE_DEV) up --build -d
+
 down-prod: ## Stop prod stack
 	$(COMPOSE_PROD) down
 

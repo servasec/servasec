@@ -164,12 +164,12 @@ export default function ProfilePage() {
                     required
                     disabled={!!authUser?.oauthProvider}
                   />
-                  {authUser?.oauthProvider && (
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Email managed by {authUser.oauthProvider === "github" ? "GitHub" : authUser.oauthProvider === "gitlab" ? "GitLab" : "your SSO provider"}
-                    </p>
-                  )}
                 </div>
+                {authUser?.oauthProvider && (
+                  <p className="text-xs text-muted-foreground">
+                    Email managed by {authUser.oauthProvider === "github" ? "GitHub" : authUser.oauthProvider === "gitlab" ? "GitLab" : "your SSO provider"}
+                  </p>
+                )}
               </div>
 
               <Button type="submit" disabled={saving} className="gap-2">

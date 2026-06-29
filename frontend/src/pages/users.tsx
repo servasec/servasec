@@ -15,6 +15,7 @@ interface User {
   email: string;
   role: string;
   banned: boolean;
+  oauthProvider?: string;
   createdAt: string;
 }
 
@@ -108,7 +109,14 @@ export default function UsersPage() {
                             {u.username.charAt(0).toUpperCase()}
                           </AvatarFallback>
                         </Avatar>
-                        <span className="font-medium">{u.username}</span>
+                        <span className="font-medium">
+                          {u.username}
+                          {u.oauthProvider && (
+                            <span className="ml-2 inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
+                              {u.oauthProvider === "github" ? "GitHub" : u.oauthProvider === "gitlab" ? "GitLab" : u.oauthProvider}
+                            </span>
+                          )}
+                        </span>
                       </div>
                     </td>
                     <td className="px-4 py-3 text-muted-foreground hidden md:table-cell">
