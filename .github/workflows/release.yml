@@ -8,6 +8,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      pull-requests: read
     steps:
       - uses: actions/checkout@v4
         with:
@@ -139,15 +140,45 @@ jobs:
             }
 
             const groups = { feat: [], fix: [], docs: [], chore: [], refactor: [], other: [] };
+
+            const labelGroupMap = {
+              enhancement: 'feat', feature: 'feat', feat: 'feat',
+              bug: 'fix', fix: 'fix',
+              documentation: 'docs', docs: 'docs',
+              chore: 'chore', maintenance: 'chore', dependencies: 'chore',
+              refactor: 'refactor',
+            };
+
             for (const c of commits) {
-              const msg = c.commit.message.split('\n')[0];
-              if (/^Merge\s/.test(msg)) continue;
-              if (/^feat/.test(msg)) groups.feat.push(msg);
-              else if (/^fix/.test(msg)) groups.fix.push(msg);
-              else if (/^docs/.test(msg)) groups.docs.push(msg);
-              else if (/^chore/.test(msg)) groups.chore.push(msg);
-              else if (/^refactor/.test(msg)) groups.refactor.push(msg);
-              else groups.other.push(msg);
+              const firstLine = c.commit.message.split('\n')[0];
+
+              // Merge commit → fetch PR title
+              const mergeMatch = firstLine.match(/^Merge pull request #(\d+)/);
+              if (mergeMatch) {
+                const prNumber = mergeMatch[1];
+                try {
+                  const { data: pr } = await github.rest.pulls.get({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    pull_number: prNumber,
+                  });
+                  const prTitle = pr.title;
+                  const label = (pr.labels || []).find(l => labelGroupMap[l.name]);
+                  const group = labelGroupMap[label ? label.name : ''] || 'other';
+                  groups[group].push(`${prTitle} (#${prNumber})`);
+                } catch {
+                  groups.other.push(`#${prNumber} — ${firstLine.replace(/^Merge pull request #\d+ from .+/, '').trim() || firstLine}`);
+                }
+                continue;
+              }
+
+              // Regular commit
+              if (/^feat/.test(firstLine)) groups.feat.push(firstLine);
+              else if (/^fix/.test(firstLine)) groups.fix.push(firstLine);
+              else if (/^docs/.test(firstLine)) groups.docs.push(firstLine);
+              else if (/^chore/.test(firstLine)) groups.chore.push(firstLine);
+              else if (/^refactor/.test(firstLine)) groups.refactor.push(firstLine);
+              else groups.other.push(firstLine);
             }
 
             let body = '';
