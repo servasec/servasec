@@ -6,6 +6,7 @@
   "packages": {
     ".": {
       "release-type": "simple",
+      "target-branch": "main",
       "pull-request-title-pattern": "chore(main): release v${version}",
       "changelog-path": "CHANGELOG.md",
       "changelog-host": "https://github.com",
