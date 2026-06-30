@@ -1,8 +1,27 @@
 {
+  "include-v-in-tag": true,
+  "plugins": [
+    "sentence-case"
+  ],
   "packages": {
     ".": {
       "release-type": "simple",
-      "include-component-in-tag": false
+      "pull-request-title-pattern": "chore(main): release v${version}",
+      "changelog-path": "CHANGELOG.md",
+      "changelog-host": "https://github.com",
+      "changelog-sections": [
+        { "type": "feat", "section": "🧩 Features" },
+        { "type": "fix", "section": "🐛 Bug fixes" },
+        { "type": "perf", "section": "⚡ Performance improvements" },
+        { "type": "revert", "section": "⏪ Reverts" },
+        { "type": "docs", "section": "📝 Documentation" },
+        { "type": "style", "section": "💎 Styles", "hidden": true },
+        { "type": "chore", "section": "🔧 Miscellaneous chores", "hidden": true },
+        { "type": "refactor", "section": "♻ Code refactoring", "hidden": true },
+        { "type": "test", "section": "✅ Tests", "hidden": true },
+        { "type": "build", "section": "🔨 Build System", "hidden": true },
+        { "type": "ci", "section": "🤖 Continuous integration" }
+      ]
     }
   }
 }
