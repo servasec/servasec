@@ -640,6 +640,10 @@ export default function ApplicationDetailPage() {
             </div>
           </Card>
 
+          <p className="text-xs text-muted-foreground mt-2">
+            Webhooks are triggered by Policies. Create a policy with action type &quot;webhook&quot; to send data to this URL.
+          </p>
+
           {canManagePerms && (
             <>
               <div className="flex items-center justify-between mb-4">

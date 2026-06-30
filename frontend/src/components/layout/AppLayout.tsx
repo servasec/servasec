@@ -20,6 +20,7 @@ import {
   Bug,
   ScrollText,
   ScanLine,
+  ShieldAlert,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useState, useEffect, useRef } from "react";
@@ -46,6 +47,7 @@ const navGroups: NavGroup[] = [
         { label: "Groups", href: "/groups", icon: <FolderKanban className="h-4 w-4" /> },
         { label: "Scans", href: "/scans", icon: <Scan className="h-4 w-4" /> },
         { label: "Findings", href: "/findings", icon: <Bug className="h-4 w-4" /> },
+        { label: "Policies", href: "/policies", icon: <ShieldAlert className="h-4 w-4" /> },
       ],
     },
     {
