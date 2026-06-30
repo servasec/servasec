@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.3.1](https://github.com/servasec/servasec/compare/v0.3.0...v0.3.1) (2026-06-30)
+
+
+### 🤖 Continuous integration
+
+* Fix release please target branch ([55b22e9](https://github.com/servasec/servasec/commit/55b22e989b27ad02e5cf338936885eb078196684))
+* Fix release please target branch ([56ea036](https://github.com/servasec/servasec/commit/56ea036de678eb006f8c64ee81d6d1abe12ebcdf))
+* Release please target branch in action input ([0471dd9](https://github.com/servasec/servasec/commit/0471dd988dd84598be4044db0522e11b1f5250e6))
+* Release please target branch in action input ([7a0f669](https://github.com/servasec/servasec/commit/7a0f669560e601e28cdb5f2e714c8d09735573ae))
+
 ## [0.3.0](https://github.com/servasec/servasec/compare/v0.2.0...v0.3.0) (2026-06-30)
 
 
