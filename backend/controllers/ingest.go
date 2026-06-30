@@ -180,15 +180,16 @@ func IngestScan(c *gin.Context) {
 		return
 	}
 
-	// Deduplicate within the application: a finding's identity is the hash of
-	// (scanner, rule, file, line, severity). Skip any finding whose hash already
-	// exists for this application (across versions) or repeats within this upload.
+	// Deduplicate within the application version: a finding's identity is the
+	// hash of (scanner, rule, file, line, severity). Skip any finding whose hash
+	// already exists for this version or repeats within this upload. The same
+	// finding may reappear in a newer version (e.g. after a code change) and
+	// should not be suppressed.
 	var existingHashes []string
 	config.DB.Model(&models.Finding{}).
-		Joins("JOIN application_versions ON application_versions.id = findings.application_version_id").
-		Where("application_versions.application_id = ?", app.ID).
-		Where("findings.dedupe_hash <> ''").
-		Pluck("findings.dedupe_hash", &existingHashes)
+		Where("application_version_id = ?", version.ID).
+		Where("dedupe_hash <> ''").
+		Pluck("dedupe_hash", &existingHashes)
 	seen := make(map[string]bool, len(existingHashes))
 	for _, h := range existingHashes {
 		seen[h] = true
