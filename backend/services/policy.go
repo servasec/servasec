@@ -7,11 +7,13 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"regexp"
 	"strconv"
 	"strings"
+	"text/template"
 	"time"
 
 	"github.com/servasec/servasec/backend/config"
@@ -26,9 +28,19 @@ type Condition struct {
 	Value interface{} `json:"value"`
 }
 
+type webhookTemplateData struct {
+	Event         string
+	ApplicationID uint
+	Finding       *models.Finding
+	Timestamp     string
+}
+
 type Action struct {
-	Type   string `json:"type"`
-	Target string `json:"target,omitempty"`
+	Type    string `json:"type"`
+	Target  string `json:"target,omitempty"`
+	URL     string `json:"url,omitempty"`
+	Secret  string `json:"secret,omitempty"`
+	Payload string `json:"payload,omitempty"`
 }
 
 func EvaluatePolicies(eventType string, finding *models.Finding, app *models.Application, depth int) {
@@ -203,7 +215,7 @@ func toFloat64(v interface{}) (float64, bool) {
 func executeAction(action Action, finding *models.Finding, app *models.Application, eventType string) (result, detail string) {
 	switch action.Type {
 	case "webhook":
-		return executeWebhookAction(finding, app, eventType)
+		return executeWebhookAction(action, finding, app, eventType)
 	case "change_status":
 		return executeChangeStatusAction(finding, action.Target)
 	case "assign_to":
@@ -213,22 +225,23 @@ func executeAction(action Action, finding *models.Finding, app *models.Applicati
 	}
 }
 
-func executeWebhookAction(finding *models.Finding, app *models.Application, eventType string) (string, string) {
+func executeWebhookAction(action Action, finding *models.Finding, app *models.Application, eventType string) (string, string) {
+	body, err := buildWebhookPayload(action.Payload, eventType, app, finding)
+	if err != nil {
+		return "failed", fmt.Sprintf("build payload: %v", err)
+	}
+
+	if action.URL != "" {
+		if err := doSendWebhook(action.URL, action.Secret, body); err != nil {
+			return "failed", fmt.Sprintf("direct webhook: %v", err)
+		}
+		return "ok", "sent to policy webhook target"
+	}
+
 	var webhooks []models.Webhook
 	config.DB.Where("application_id = ? AND is_active = ?", app.ID, true).Find(&webhooks)
 	if len(webhooks) == 0 {
 		return "skip", "no active webhooks"
-	}
-
-	payload := map[string]interface{}{
-		"event":         eventType,
-		"applicationId": app.ID,
-		"finding":       finding,
-		"timestamp":     time.Now().UTC().Format(time.RFC3339),
-	}
-	body, err := json.Marshal(payload)
-	if err != nil {
-		return "failed", fmt.Sprintf("marshal: %v", err)
 	}
 
 	sent := 0
@@ -286,17 +299,55 @@ func executeAssignAction(finding *models.Finding, target string) (string, string
 	return "ok", fmt.Sprintf("assigned to user %d", uid)
 }
 
-func sendWebhook(w models.Webhook, body []byte) error {
-	req, err := http.NewRequest("POST", w.URL, bytes.NewReader(body))
+func buildWebhookPayload(payloadTemplate string, eventType string, app *models.Application, finding *models.Finding) ([]byte, error) {
+	if payloadTemplate == "" {
+		log.Printf("webhook: using default payload for finding %d, event %s", finding.ID, eventType)
+		payload := map[string]interface{}{
+			"event":         eventType,
+			"applicationId": app.ID,
+			"finding":       finding,
+			"timestamp":     time.Now().UTC().Format(time.RFC3339),
+		}
+		return json.Marshal(payload)
+	}
+
+	tmpl, err := template.New("webhook").Parse(payloadTemplate)
 	if err != nil {
-		log.Printf("webhook: failed to create request for %s: %v", w.URL, err)
+		return nil, fmt.Errorf("template parse: %w", err)
+	}
+
+	data := webhookTemplateData{
+		Event:         eventType,
+		ApplicationID: app.ID,
+		Finding:       finding,
+		Timestamp:     time.Now().UTC().Format(time.RFC3339),
+	}
+
+	var buf bytes.Buffer
+	if err := tmpl.Execute(&buf, data); err != nil {
+		return nil, fmt.Errorf("template execute: %w", err)
+	}
+
+	result := buf.Bytes()
+	log.Printf("webhook: rendered custom payload (%d bytes) for finding %d: %s", len(result), finding.ID, string(result))
+	return result, nil
+}
+
+func sendWebhook(w models.Webhook, body []byte) error {
+	return doSendWebhook(w.URL, w.Secret, body)
+}
+
+func doSendWebhook(url, secret string, body []byte) error {
+	req, err := http.NewRequest("POST", url, bytes.NewReader(body))
+	if err != nil {
+		log.Printf("webhook: failed to create request for %s: %v", url, err)
 		return err
 	}
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("X-Servasec-Event", "policy.evaluation")
 
-	if w.Secret != "" {
-		mac := hmac.New(sha256.New, []byte(w.Secret))
+	if secret != "" {
+		mac := hmac.New(sha256.New, []byte(secret))
 		mac.Write(body)
 		sig := hex.EncodeToString(mac.Sum(nil))
 		req.Header.Set("X-Servasec-Signature", sig)
@@ -305,13 +356,14 @@ func sendWebhook(w models.Webhook, body []byte) error {
 	client := &http.Client{Timeout: 10 * time.Second}
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Printf("webhook: failed to send to %s: %v", w.URL, err)
+		log.Printf("webhook: failed to send to %s: %v", url, err)
 		return err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode >= 300 {
-		log.Printf("webhook: %s returned %d", w.URL, resp.StatusCode)
+		respBody, _ := io.ReadAll(resp.Body)
+		log.Printf("webhook: %s returned %d — body: %s", url, resp.StatusCode, string(respBody))
 		return fmt.Errorf("status %d", resp.StatusCode)
 	}
 	return nil

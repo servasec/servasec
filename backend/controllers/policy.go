@@ -68,7 +68,7 @@ func CreatePolicy(c *gin.Context) {
 		Name        string `json:"name" binding:"required,min=1,max=200"`
 		Description string `json:"description" binding:"max=1000"`
 		ScopeType   string `json:"scopeType" binding:"required,oneof=application group global"`
-		ScopeValue  string `json:"scopeValue" binding:"required"`
+		ScopeValue  string `json:"scopeValue" binding:"max=50"`
 		EventTypes  string `json:"eventTypes" binding:"required"`
 		Conditions  string `json:"conditions"`
 		Actions     string `json:"actions" binding:"required"`
@@ -78,6 +78,11 @@ func CreatePolicy(c *gin.Context) {
 
 	if err := c.ShouldBindJSON(&input); err != nil {
 		utils.BadRequestError(c, "Invalid input")
+		return
+	}
+
+	if input.ScopeType != "global" && input.ScopeValue == "" {
+		utils.BadRequestError(c, "Scope value is required for application or group scope")
 		return
 	}
 

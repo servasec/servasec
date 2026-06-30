@@ -143,6 +143,33 @@ export interface CompareResult {
   stillPresent: Finding[];
 }
 
+export interface Policy {
+  id: number;
+  name: string;
+  description: string;
+  scopeType: "application" | "group" | "global";
+  scopeValue: string;
+  eventTypes: string;
+  conditions: string;
+  actions: string;
+  isActive: boolean;
+  priority: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PolicyLog {
+  id: number;
+  policyId: number;
+  findingId: number;
+  eventType: string;
+  conditionsMet: boolean;
+  actionType: string;
+  actionResult: string;
+  detail: string;
+  createdAt: string;
+}
+
 export interface Permission {
   userId: number;
   user: User;

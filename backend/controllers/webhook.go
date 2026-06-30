@@ -30,7 +30,7 @@ func CreateWebhook(c *gin.Context) {
 	var input struct {
 		URL      string `json:"url" binding:"required,max=500"`
 		Secret   string `json:"secret" binding:"max=64"`
-		Events   string `json:"events" binding:"required"`
+		Events   string `json:"events" binding:"max=64"`
 		IsActive *bool  `json:"isActive"`
 	}
 	if err := c.ShouldBindJSON(&input); err != nil {
