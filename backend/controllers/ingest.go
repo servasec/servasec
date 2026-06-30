@@ -103,19 +103,33 @@ func IngestScan(c *gin.Context) {
 	}
 
 	var scannerType models.ScannerType
+	var format string
 	if scannerTypeName != "" {
 		if err := config.DB.Where("name = ?", scannerTypeName).First(&scannerType).Error; err != nil {
 			utils.BadRequestError(c, fmt.Sprintf("unknown scanner type: %s", scannerTypeName))
 			return
+		}
+		if scannerTypeName == "sarif" {
+			format = "sarif"
 		}
 	} else {
 		file, _, err := c.Request.FormFile("file")
 		if err == nil {
 			data, _ := io.ReadAll(file)
 			file.Close()
-			detected := parsers.DetectScannerType(data)
-			if detected != "" {
-				config.DB.Where("name = ?", detected).First(&scannerType)
+			format = parsers.DetectScannerType(data)
+			if format == "sarif" {
+				if toolName := parsers.ExtractSarifToolName(data); toolName != "" {
+					var st models.ScannerType
+					if err := config.DB.Where("name = ?", toolName).First(&st).Error; err == nil && st.Enabled {
+						scannerType = st
+					}
+				}
+				if scannerType.ID == 0 {
+					config.DB.Where("name = ?", "sarif").First(&scannerType)
+				}
+			} else if format != "" {
+				config.DB.Where("name = ?", format).First(&scannerType)
 			}
 		}
 	}
@@ -156,7 +170,11 @@ func IngestScan(c *gin.Context) {
 		return
 	}
 
-	parser, ok := parsers.Get(scannerType.Parser)
+	parserName := scannerType.Parser
+	if format == "sarif" && scannerType.Name != "sarif" {
+		parserName = "sarif"
+	}
+	parser, ok := parsers.Get(parserName)
 	if !ok {
 		scan.Status = "completed"
 		scan.CompletedAt = &now

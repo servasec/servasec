@@ -97,6 +97,7 @@ func seedScannerTypes() {
 		{Name: "checkov", Description: "Checkov IaC scan (SARIF)", Parser: "checkov", Enabled: true},
 		{Name: "trufflehog", Description: "TruffleHog secret detection (JSON)", Parser: "trufflehog", Enabled: true},
 		{Name: "nuclei", Description: "Nuclei DAST/template scanner (JSON/JSONL)", Parser: "nuclei", Enabled: true},
+		{Name: "sarif", Description: "Generic SARIF v2.1.0 parser (fallback for unknown tools)", Parser: "sarif", Enabled: true},
 	}
 
 	for _, st := range scannerTypes {

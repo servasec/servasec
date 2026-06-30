@@ -48,14 +48,7 @@ Default admin: `admin` / password from `SSC_ADMIN_PASSWORD` (random hex if unset
 
 ## Scanner Support
 
-| Scanner | Type | Parser |
-|---------|------|--------|
-| Semgrep | SAST | ✅ Implemented |
-| Trivy | Vulnerability | ✅ Implemented |
-| Gitleaks | Secrets | ✅ Implemented |
-| Grype | Vulnerability | ✅ Implemented |
-| Snyk | SCA | ⏳ In progress |
-| Checkov | IaC | ⏳ In progress |
+Refer to https://servasec.com/scanners
 
 ## Environment Variables
 
