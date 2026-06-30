@@ -12,6 +12,7 @@ const (
 	FeatureRiskScoring      = "risk_scoring"
 	FeatureAdvancedReporting = "advanced_reporting"
 	FeatureMCPServer         = "mcp_server"
+	FeatureSSO               = "sso"
 )
 
 func FreeFeatures() []string {

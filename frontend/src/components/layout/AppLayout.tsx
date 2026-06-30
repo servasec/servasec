@@ -19,6 +19,8 @@ import {
   Scan,
   Bug,
   ScrollText,
+  ScanLine,
+  ShieldAlert,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useState, useEffect, useRef } from "react";
@@ -45,6 +47,7 @@ const navGroups: NavGroup[] = [
         { label: "Groups", href: "/groups", icon: <FolderKanban className="h-4 w-4" /> },
         { label: "Scans", href: "/scans", icon: <Scan className="h-4 w-4" /> },
         { label: "Findings", href: "/findings", icon: <Bug className="h-4 w-4" /> },
+        { label: "Policies", href: "/policies", icon: <ShieldAlert className="h-4 w-4" /> },
       ],
     },
     {
@@ -53,6 +56,7 @@ const navGroups: NavGroup[] = [
         { label: "Users", href: "/users", icon: <Users className="h-4 w-4" />, adminOnly: true },
         { label: "Teams", href: "/teams", icon: <UsersRound className="h-4 w-4" /> },
         { label: "Permissions", href: "/admin/permissions", icon: <Shield className="h-4 w-4" />, adminOnly: true },
+        { label: "Scanner Types", href: "/admin/scanner-types", icon: <ScanLine className="h-4 w-4" />, adminOnly: true },
         { label: "Audit Log", href: "/admin/audit-log", icon: <ScrollText className="h-4 w-4" />, adminOnly: true, feature: "audit_log" },
       ],
     },

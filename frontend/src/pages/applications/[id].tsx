@@ -221,7 +221,7 @@ export default function ApplicationDetailPage() {
     setIngestVersionName(app?.defaultVersion?.name || "");
     setIngestVersionMode("select");
     setIngestBranch("");
-    axios.get("/api/scanner-types")
+    axios.get("/api/scanner-types", { params: { enabled: "true" } })
       .then((res) => setScannerTypes(res.data))
       .catch(() => toast.error("Failed to load scanner types"));
     setIngestDialogOpen(true);
@@ -398,7 +398,7 @@ export default function ApplicationDetailPage() {
 
       {activeTab === "overview" && (
         <div key="overview" className="animate-in fade-in duration-200">
-          <Card>
+          <Card className="border-0 shadow-none">
             <div className="p-6">
               <div className="flex items-start justify-between gap-4">
                 <div className="min-w-0">
@@ -438,7 +438,7 @@ export default function ApplicationDetailPage() {
           </Card>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card>
+            <Card className="border-0 shadow-none">
               <div className="p-6">
                 <h3 className="text-lg font-semibold mb-4">Latest scan</h3>
                 {loadingScan ? (
@@ -483,7 +483,7 @@ export default function ApplicationDetailPage() {
               </div>
             </Card>
 
-            <Card>
+            <Card className="border-0 shadow-none">
               <div className="p-6">
                 <h3 className="text-lg font-semibold mb-4">Findings severity</h3>
                 <SeverityChart findings={versionFindings} loading={loadingFindings} />
@@ -495,15 +495,15 @@ export default function ApplicationDetailPage() {
 
       {activeTab === "versions" && (
         <div key="versions" className="animate-in fade-in duration-200">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold">Versions</h3>
             <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" onClick={() => router.push(`/applications/${id}/compare`)} className="gap-1.5">
-                <GitCompare className="h-4 w-4" />
+              <Button variant="outline" onClick={() => router.push(`/applications/${id}/compare`)} className="h-8 px-2.5 text-xs gap-1">
+                <GitCompare className="h-3.5 w-3.5" />
                 Compare
               </Button>
-              <Button size="sm" onClick={openCreateVersion} className="gap-1.5">
-                <Plus className="h-4 w-4" />
+              <Button onClick={openCreateVersion} className="h-8 px-2.5 text-xs gap-1">
+                <Plus className="h-3.5 w-3.5" />
                 New version
               </Button>
             </div>
@@ -565,7 +565,7 @@ export default function ApplicationDetailPage() {
                             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEditVersion(v)}>
                               <Pencil className="h-3.5 w-3.5" />
                             </Button>
-                            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => setDeleteVersionTarget(v)}>
+                            <Button variant="destructive-ghost" size="icon" className="h-8 w-8" onClick={() => setDeleteVersionTarget(v)}>
                               <Trash2 className="h-3.5 w-3.5" />
                             </Button>
                           </div>
@@ -582,10 +582,10 @@ export default function ApplicationDetailPage() {
 
       {activeTab === "settings" && (
         <div key="settings" className="animate-in fade-in duration-200">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold">Webhooks</h3>
-            <Button size="sm" onClick={openCreateWebhook} className="gap-1.5">
-              <Plus className="h-4 w-4" />
+            <Button onClick={openCreateWebhook} className="h-8 px-2.5 text-xs gap-1">
+              <Plus className="h-3.5 w-3.5" />
               Add webhook
             </Button>
           </div>
@@ -628,7 +628,7 @@ export default function ApplicationDetailPage() {
                           {wh.createdAt ? new Date(wh.createdAt).toLocaleDateString() : "-"}
                         </td>
                         <td className="px-4 py-3">
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => handleDeleteWebhook(wh)} title="Delete webhook">
+                          <Button variant="destructive-ghost" size="icon" className="h-8 w-8" onClick={() => handleDeleteWebhook(wh)} title="Delete webhook">
                             <Trash2 className="h-3.5 w-3.5" />
                           </Button>
                         </td>
@@ -640,12 +640,16 @@ export default function ApplicationDetailPage() {
             </div>
           </Card>
 
+          <p className="text-xs text-muted-foreground mt-2">
+            Webhooks are triggered by Policies. Create a policy with action type &quot;webhook&quot; to send data to this URL.
+          </p>
+
           {canManagePerms && (
             <>
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-semibold">Permissions</h3>
-                <Button size="sm" onClick={openPermGrant} className="gap-1.5">
-                  <Plus className="h-4 w-4" />
+                <Button onClick={openPermGrant} className="h-8 px-2.5 text-xs gap-1">
+                  <Plus className="h-3.5 w-3.5" />
                   Add permission
                 </Button>
               </div>
@@ -677,7 +681,7 @@ export default function ApplicationDetailPage() {
                             </td>
                             <td className="px-4 py-3 capitalize">{p.action}</td>
                             <td className="px-4 py-3">
-                              <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => handleRevokePerm(p)} title="Revoke">
+                              <Button variant="destructive-ghost" size="icon" className="h-8 w-8" onClick={() => handleRevokePerm(p)} title="Revoke">
                                 <Trash2 className="h-3.5 w-3.5" />
                               </Button>
                             </td>

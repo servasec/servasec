@@ -8,9 +8,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/servasec/servasec/backend/config"
-	"github.com/servasec/servasec/backend/features"
 	"github.com/servasec/servasec/backend/models"
 	"github.com/servasec/servasec/backend/parsers"
+	"github.com/servasec/servasec/backend/pro"
 	"github.com/servasec/servasec/backend/services"
 	"github.com/servasec/servasec/backend/utils"
 )
@@ -124,6 +124,11 @@ func IngestScan(c *gin.Context) {
 		return
 	}
 
+	if !scannerType.Enabled {
+		utils.BadRequestError(c, fmt.Sprintf("scanner type '%s' has been disabled by an administrator", scannerType.Name))
+		return
+	}
+
 	file, header, err := c.Request.FormFile("file")
 	if err != nil {
 		utils.BadRequestError(c, "file is required")
@@ -175,7 +180,31 @@ func IngestScan(c *gin.Context) {
 		return
 	}
 
+	// Deduplicate within the application version: a finding's identity is the
+	// hash of (scanner, rule, file, line, severity). Skip any finding whose hash
+	// already exists for this version or repeats within this upload. The same
+	// finding may reappear in a newer version (e.g. after a code change) and
+	// should not be suppressed.
+	var existingHashes []string
+	config.DB.Model(&models.Finding{}).
+		Where("application_version_id = ?", version.ID).
+		Where("dedupe_hash <> ''").
+		Pluck("dedupe_hash", &existingHashes)
+	seen := make(map[string]bool, len(existingHashes))
+	for _, h := range existingHashes {
+		seen[h] = true
+	}
+
+	var inserted []models.Finding
+	skipped := 0
 	for _, f := range findingsInput {
+		hash := services.DedupeHash(scannerType.Name, f.RuleID, f.FilePath, f.LineStart, f.Severity)
+		if seen[hash] {
+			skipped++
+			continue
+		}
+		seen[hash] = true
+
 		finding := models.Finding{
 			ScanID:               scan.ID,
 			ApplicationVersionID: version.ID,
@@ -190,28 +219,31 @@ func IngestScan(c *gin.Context) {
 			CWEID:                f.CWEID,
 			Remediation:          f.Remediation,
 			Status:               "open",
+			DedupeHash:           hash,
 		}
-		if features.F.IsEnabled(features.FeatureRiskScoring) {
-			now := time.Now()
-			score := services.CalculateRiskScore(f.Severity, nil, app.AssetCriticality, now)
-			finding.RiskScore = &score
+		if s := pro.Risk.CalculateScore(f.Severity, nil, app.AssetCriticality, time.Now()); s != nil {
+			finding.RiskScore = s
 		}
 		if err := config.DB.Create(&finding).Error; err != nil {
 			utils.InternalServerError(c, "failed to record findings")
 			return
 		}
+		inserted = append(inserted, finding)
 	}
 
 	scan.Status = "completed"
 	scan.CompletedAt = &now
 	config.DB.Save(&scan)
 
-	FireWebhooks(app.ID, scan.ID, findingsInput)
+	for i := range inserted {
+		services.EvaluatePolicies("finding.created", &inserted[i], app, 0)
+	}
 
 	utils.CreatedResponse(c, gin.H{
-		"id":            scan.ID,
-		"status":        scan.Status,
-		"versionId":     version.ID,
-		"findingsCount": len(findingsInput),
+		"id":                scan.ID,
+		"status":            scan.Status,
+		"versionId":         version.ID,
+		"findingsCount":     len(inserted),
+		"skippedDuplicates": skipped,
 	})
 }

@@ -16,6 +16,7 @@ type Finding struct {
 	LineEnd               *int                 `json:"lineEnd"`
 	CWEID                 string               `gorm:"size:200" json:"cweId"`
 	Remediation           string               `gorm:"type:text" json:"remediation"`
+	DedupeHash            string               `gorm:"size:64;index" json:"dedupeHash,omitempty"`
 	Status                string               `gorm:"not null;default:open;size:20;index" json:"status"`
 	AssignedTo            *uint                `gorm:"index" json:"assignedTo"`
 	AssignedToUser        *User                `gorm:"foreignKey:AssignedTo" json:"assignedToUser,omitempty"`

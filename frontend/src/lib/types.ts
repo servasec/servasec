@@ -4,6 +4,8 @@ export interface User {
   email: string;
   role: string;
   banned: boolean;
+  avatarUrl?: string;
+  oauthProvider?: string;
   createdAt: string;
 }
 
@@ -27,6 +29,7 @@ export interface ScannerType {
   name: string;
   description: string;
   parser: string;
+  enabled: boolean;
 }
 
 export interface ApplicationVersion {
@@ -138,6 +141,33 @@ export interface CompareResult {
   fixed: Finding[];
   new: Finding[];
   stillPresent: Finding[];
+}
+
+export interface Policy {
+  id: number;
+  name: string;
+  description: string;
+  scopeType: "application" | "group" | "global";
+  scopeValue: string;
+  eventTypes: string;
+  conditions: string;
+  actions: string;
+  isActive: boolean;
+  priority: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PolicyLog {
+  id: number;
+  policyId: number;
+  findingId: number;
+  eventType: string;
+  conditionsMet: boolean;
+  actionType: string;
+  actionResult: string;
+  detail: string;
+  createdAt: string;
 }
 
 export interface Permission {

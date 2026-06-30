@@ -58,7 +58,7 @@ export default function Dashboard() {
       <div className="flex items-center justify-between">
         <PageHeader crumbs={[{ label: "Dashboard" }]} />
         <Link href="/applications">
-          <Button className="gap-2">
+          <Button size="sm" className="gap-2">
             <Plus className="h-4 w-4" />
             New scan
           </Button>

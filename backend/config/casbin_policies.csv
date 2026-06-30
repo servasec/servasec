@@ -23,4 +23,6 @@ p, member, /users/search, *
 p, anonymous, /api/ingest, *
 p, admin, /admin/permissions, *
 p, admin, /admin/permissions/*, *
+p, admin, /admin/scanner-types, *
+p, admin, /admin/scanner-types/*, *
 p, admin, /*, *
