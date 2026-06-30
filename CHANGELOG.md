@@ -1,5 +1,60 @@
 # Changelog
 
+## [0.4.0](https://github.com/servasec/servasec/compare/v0.3.0...v0.4.0) (2026-06-30)
+
+
+### 🧩 Features
+
+* Add audit log middleware ([dd1816a](https://github.com/servasec/servasec/commit/dd1816a8ba571375eaea9843994ddf228dbddfdc))
+* Add audit log page, user search component, and risk scoring widgets to frontend ([e7e0305](https://github.com/servasec/servasec/commit/e7e030590174ce6e173e76bf4bf4edfe3ed53b1d))
+* Add Gitleaks, TruffleHog, and Trivy parsers with tests ([db0c505](https://github.com/servasec/servasec/commit/db0c50538a703d9a5d7cb4071a09e1c17542ba3f))
+* Add license-based feature gating system ([711f235](https://github.com/servasec/servasec/commit/711f235d4fa4e723a802a9622fd81284440c8e1f))
+* Add MCP server with SSE and Streamable HTTP ([3d65701](https://github.com/servasec/servasec/commit/3d657017feda4f641549aaa5076cd22e64a1f022))
+* Add Nuclei (DAST) scanner parser with tests ([d264ec4](https://github.com/servasec/servasec/commit/d264ec459c4dda60c050f52194577b582cbd5507))
+* Add OAuth 2.0 authorization server for MCP ([c4b7311](https://github.com/servasec/servasec/commit/c4b7311869c55f9fbf8f0421aec003c1ef40dfba))
+* Add Podman Quadlet deployment ([66e17ea](https://github.com/servasec/servasec/commit/66e17eabda7ebec5dd3f9a5ea85c18d07c2d6021))
+* Add risk scoring engine with EPSS integration ([c9ed358](https://github.com/servasec/servasec/commit/c9ed358755f6672cfcfb6df6cbe85e7028128882))
+* Add the possibility to enable/disable scanner type for administrators ([c0cb08a](https://github.com/servasec/servasec/commit/c0cb08acbacf32c9a4c568327a2af854ac9797ca))
+* Complete base stack ([cab1ac9](https://github.com/servasec/servasec/commit/cab1ac9ddad294e92a9172c800cc23a6b56535e1))
+* Complete base stack ([931e088](https://github.com/servasec/servasec/commit/931e0889a87b12e7adcc0c2bc563133dcbe36ec1))
+* Deduplicate findings on ingest via dedupe_hash ([b26ac4d](https://github.com/servasec/servasec/commit/b26ac4d748aba845b9b7a364fe2539c6428950e0))
+* **infra:** Route OAuth, well-known, and MCP traffic through Caddy ([22c20d8](https://github.com/servasec/servasec/commit/22c20d80e30fd9b6e05744a4cd2af0198e597351))
+* Polcies & webhooks frontend ([a03e3ab](https://github.com/servasec/servasec/commit/a03e3ab55977440569f4638897eb5e7ef244eb76))
+* Polcies & webhooks frontend ([766a663](https://github.com/servasec/servasec/commit/766a66320fd8a1b208ed8bdd2903a9e22fca7889))
+* Policies + alerting ([9074114](https://github.com/servasec/servasec/commit/9074114dd1e58abbfe8f121a19998d1e1fa2d09e))
+* Pro feat exported ([cd639f4](https://github.com/servasec/servasec/commit/cd639f4cf9a9d532c0d4c62870328b254052ae2e))
+* Sso implementation ([cdc380d](https://github.com/servasec/servasec/commit/cdc380dec33aaf036ed7b7ac3f3713a615235bc9))
+* Wire up features, risk scoring, MCP, and audit log in main; add computed fields to models ([39490f5](https://github.com/servasec/servasec/commit/39490f535eb8e5046879e896c0aef48b49c2d581))
+
+
+### 🐛 Bug fixes
+
+* Add Bearer token support to CheckPolicy and add resource-level access middleware ([dc31c5c](https://github.com/servasec/servasec/commit/dc31c5c055f8bf8cc8723dc322abdcdba6147d96))
+* Add target-branch main to release-please config ([943d6b1](https://github.com/servasec/servasec/commit/943d6b10e128b133e25cb470a411b1d9a0b19824))
+* Add target-branch main to release-please config ([19f23f8](https://github.com/servasec/servasec/commit/19f23f8c41fa0dcc886597ea43d52bccdad6fac3))
+* **dedup:** Dedup didn't take appVersion in criteria ([2d821b2](https://github.com/servasec/servasec/commit/2d821b2f3ec2f7a69b79a7a4471d09e5686d47fa))
+* Global darkmode fix ([0710c67](https://github.com/servasec/servasec/commit/0710c674a891311f3c09ddc1073652d545ec4edd))
+* Mcp & middleware security fix ([16fcafd](https://github.com/servasec/servasec/commit/16fcafd822725bc4dd25410d125a10a9de31e6f0))
+* Seeder & ingest errors on build ([a5d9b22](https://github.com/servasec/servasec/commit/a5d9b22a32371036d9c79035606014d270bdf532))
+* Servasec-pro remediation ([169b0f9](https://github.com/servasec/servasec/commit/169b0f94dab18d05ec6e9edc2f4d783b6f997df2))
+* Sso controller ([f0aee5c](https://github.com/servasec/servasec/commit/f0aee5c69c432143c107cc265e84e7528a4c77e2))
+
+
+### 🤖 Continuous integration
+
+* Fix release please target branch ([56ea036](https://github.com/servasec/servasec/commit/56ea036de678eb006f8c64ee81d6d1abe12ebcdf))
+* Fix release workflow ([e89c3fb](https://github.com/servasec/servasec/commit/e89c3fbc7992c810cfb2077ae124c88c37eb9458))
+* Fix release workflow ([0329596](https://github.com/servasec/servasec/commit/03295961004027073779f91e10778aac2c073bea))
+* Fix release workflow ([1ed8565](https://github.com/servasec/servasec/commit/1ed8565bdc522c00c0ace21491f9061530eafed1))
+* Fix release workflow ([804aedf](https://github.com/servasec/servasec/commit/804aedf3390c5f008bbc1495d4af28b651853b1b))
+* Fix semver release ([a435d4b](https://github.com/servasec/servasec/commit/a435d4b635f1de61851c99eaf03083304006038b))
+* Fix semver release ([d6294ed](https://github.com/servasec/servasec/commit/d6294ed8dabf8d2b4cec8133bb6b9588573530bd))
+* Release please custom config ([646e9bc](https://github.com/servasec/servasec/commit/646e9bcb6428f0ff0485b59074fb587f7b90f93d))
+* **release:** Fix custom note ([5535835](https://github.com/servasec/servasec/commit/5535835b97491996d6fc4b005b2771a6675e948c))
+* **release:** Fix custom note ([f3fac0d](https://github.com/servasec/servasec/commit/f3fac0d53369d3ba07dba11899034812ad1b212c))
+* SCA+SAST workflow ([4184552](https://github.com/servasec/servasec/commit/41845524312a8e44514e759e4652e28178c4b17e))
+* Use release please ([f5bbeb6](https://github.com/servasec/servasec/commit/f5bbeb6cc1bf57a40e50adad38d597c1014f7a24))
+
 ## [0.3.0](https://github.com/servasec/servasec/compare/v0.2.0...v0.3.0) (2026-06-30)
 
 
