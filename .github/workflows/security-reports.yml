@@ -1,0 +1,75 @@
+name: Security Reports
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+  security-events: write
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Semgrep
+        run: pip install semgrep
+
+      - name: Semgrep — JSON report
+        run: |
+          semgrep --config=auto \
+            --output=semgrep-report.json \
+            --json \
+            --exclude=node_modules \
+            --exclude=vendor \
+            backend/ frontend/
+
+      - name: Semgrep — SARIF report
+        run: |
+          semgrep --config=auto \
+            --output=semgrep-report.sarif \
+            --sarif \
+            --exclude=node_modules \
+            --exclude=vendor \
+            backend/ frontend/
+
+      - name: Upload Semgrep SARIF to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: semgrep-report.sarif
+
+      - name: Trivy — JSON report
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: fs
+          scan-ref: .
+          format: json
+          output: trivy-report.json
+          scanners: vuln,secret,misconfig
+          severity: CRITICAL,HIGH,MEDIUM
+
+      - name: Trivy — SARIF report
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: fs
+          scan-ref: .
+          format: sarif
+          output: trivy-report.sarif
+          scanners: vuln,secret,misconfig
+          severity: CRITICAL,HIGH,MEDIUM
+
+      - name: Upload Trivy SARIF to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: trivy-report.sarif
+
+      - name: Attach JSON reports to release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            semgrep-report.json
+            trivy-report.json
