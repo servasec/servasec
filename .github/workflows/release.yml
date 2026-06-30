@@ -1,204 +1,21 @@
 name: Release
+
 on:
   push:
-    branches: [main]
+    branches:
+      - main
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
 
 jobs:
-  release:
+  release-please:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      pull-requests: read
     steps:
-      - uses: actions/checkout@v4
+      - uses: googleapis/release-please-action@v4
         with:
-          fetch-depth: 0
-
-      - name: Auto-bump SemVer
-        id: bump
-        uses: actions/github-script@v7
-        env:
-          DEFAULT_BUMP: patch
-        with:
-          script: |
-            const { DEFAULT_BUMP } = process.env;
-
-            const { data: refs } = await github.rest.git.listMatchingRefs({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              ref: 'tags/v',
-            });
-
-            let lastTag = null;
-            let lastVer = null;
-            for (const r of refs) {
-              const tag = r.ref.replace('refs/tags/', '');
-              const m = tag.match(/^v?(\d+)\.(\d+)\.(\d+)$/);
-              if (m) {
-                const ver = [Number(m[1]), Number(m[2]), Number(m[3])];
-                if (!lastVer ||
-                    ver[0] > lastVer[0] ||
-                    (ver[0] === lastVer[0] && ver[1] > lastVer[1]) ||
-                    (ver[0] === lastVer[0] && ver[1] === lastVer[1] && ver[2] > lastVer[2])) {
-                  lastVer = ver;
-                  lastTag = tag;
-                }
-              }
-            }
-
-            let commits;
-            if (lastTag) {
-              const { data } = await github.rest.repos.compareCommits({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                base: lastTag,
-                head: context.sha,
-              });
-              commits = data.commits;
-            } else {
-              const { data } = await github.rest.repos.listCommits({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                sha: context.sha,
-                per_page: 100,
-              });
-              commits = data;
-            }
-
-            let bump = DEFAULT_BUMP;
-            for (const c of commits) {
-              const msg = c.commit.message;
-              const firstLine = msg.split('\n')[0];
-              const body = msg.split('\n').slice(1).join('\n');
-
-              if (body.toLowerCase().includes('breaking change') || /!\)?\s*:/.test(firstLine)) {
-                bump = 'major';
-                break;
-              }
-              if (/^feat(\(.+\))?!?\s*:/.test(firstLine) && bump !== 'major') {
-                bump = 'minor';
-              }
-              if (/^fix(\(.+\))?!?\s*:/.test(firstLine) && bump === DEFAULT_BUMP) {
-                bump = 'patch';
-              }
-            }
-
-            let [major, minor, patch] = lastVer || [0, 0, 0];
-            if (bump === 'major') { major++; minor = 0; patch = 0; }
-            else if (bump === 'minor') { minor++; patch = 0; }
-            else { patch++; }
-
-            const newTag = `v${major}.${minor}.${patch}`;
-
-            try {
-              await github.rest.git.createRef({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                ref: `refs/tags/${newTag}`,
-                sha: context.sha,
-              });
-            } catch (e) {
-              if (e.status === 422) {
-                console.log(`Tag ${newTag} already exists, skipping creation`);
-              } else {
-                throw e;
-              }
-            }
-
-            core.setOutput('new_tag', newTag);
-            core.setOutput('last_tag', lastTag || '');
-            console.log(`Bump: ${lastTag || '(no tag)'} -> ${newTag} (${bump})`);
-
-      - name: Generate release notes
-        id: notes
-        uses: actions/github-script@v7
-        env:
-          LAST_TAG: ${{ steps.bump.outputs.last_tag }}
-        with:
-          script: |
-            const fs = require('fs');
-            const path = require('path');
-            const lastTag = process.env.LAST_TAG;
-
-            let commits;
-            if (lastTag) {
-              const { data } = await github.rest.repos.compareCommits({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                base: lastTag,
-                head: context.sha,
-              });
-              commits = data.commits;
-            } else {
-              const { data } = await github.rest.repos.listCommits({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                sha: context.sha,
-                per_page: 100,
-              });
-              commits = data;
-            }
-
-            const groups = { feat: [], fix: [], docs: [], chore: [], refactor: [], other: [] };
-
-            const labelGroupMap = {
-              enhancement: 'feat', feature: 'feat', feat: 'feat',
-              bug: 'fix', fix: 'fix',
-              documentation: 'docs', docs: 'docs',
-              chore: 'chore', maintenance: 'chore', dependencies: 'chore',
-              refactor: 'refactor',
-            };
-
-            for (const c of commits) {
-              const firstLine = c.commit.message.split('\n')[0];
-
-              // Merge commit → fetch PR title
-              const mergeMatch = firstLine.match(/^Merge pull request #(\d+)/);
-              if (mergeMatch) {
-                const prNumber = mergeMatch[1];
-                try {
-                  const { data: pr } = await github.rest.pulls.get({
-                    owner: context.repo.owner,
-                    repo: context.repo.repo,
-                    pull_number: prNumber,
-                  });
-                  const prTitle = pr.title;
-                  const label = (pr.labels || []).find(l => labelGroupMap[l.name]);
-                  const group = labelGroupMap[label ? label.name : ''] || 'other';
-                  groups[group].push(`${prTitle} (#${prNumber})`);
-                } catch {
-                  groups.other.push(`#${prNumber} — ${firstLine.replace(/^Merge pull request #\d+ from .+/, '').trim() || firstLine}`);
-                }
-                continue;
-              }
-
-              // Regular commit
-              if (/^feat/.test(firstLine)) groups.feat.push(firstLine);
-              else if (/^fix/.test(firstLine)) groups.fix.push(firstLine);
-              else if (/^docs/.test(firstLine)) groups.docs.push(firstLine);
-              else if (/^chore/.test(firstLine)) groups.chore.push(firstLine);
-              else if (/^refactor/.test(firstLine)) groups.refactor.push(firstLine);
-              else groups.other.push(firstLine);
-            }
-
-            let body = '';
-            if (groups.feat.length) body += '## Features\n' + groups.feat.map(m => '- ' + m).join('\n') + '\n\n';
-            if (groups.fix.length) body += '## Bug Fixes\n' + groups.fix.map(m => '- ' + m).join('\n') + '\n\n';
-            if (groups.docs.length) body += '## Documentation\n' + groups.docs.map(m => '- ' + m).join('\n') + '\n\n';
-            if (groups.refactor.length) body += '## Refactoring\n' + groups.refactor.map(m => '- ' + m).join('\n') + '\n\n';
-            if (groups.chore.length) body += '## Maintenance\n' + groups.chore.map(m => '- ' + m).join('\n') + '\n\n';
-            if (groups.other.length) body += '## Other\n' + groups.other.map(m => '- ' + m).join('\n') + '\n\n';
-
-            const tmpFile = path.join(process.env.RUNNER_TEMP || '/tmp', 'release-notes.md');
-            fs.writeFileSync(tmpFile, body.trim() || 'No changes recorded.');
-            core.setOutput('result', tmpFile);
-            console.log(`Release notes written to ${tmpFile}`);
-
-      - name: Create Release
-        if: steps.bump.outputs.new_tag
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ steps.bump.outputs.new_tag }}
-          name: ${{ steps.bump.outputs.new_tag }}
-          body_path: ${{ steps.notes.outputs.result }}
-          generate_release_notes: false
+          token: ${{ secrets.GITHUB_TOKEN }}
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
