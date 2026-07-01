@@ -51,7 +51,7 @@ func RegisterApplicationRoutes(router *gin.Engine) {
 		slug.GET("/versions/:versionId/findings", middleware.CheckPolicy("/applications/*", "read"), middleware.RequireSlugAccess("read"), controllers.GetVersionFindings)
 	}
 
-	publicIngest := router.Group("/api")
+	publicIngest := router.Group("/")
 	{
 		publicIngest.POST("/ingest", controllers.IngestScan)
 	}

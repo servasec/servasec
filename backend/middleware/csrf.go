@@ -49,6 +49,12 @@ func CSRFProtection() gin.HandlerFunc {
 	)
 
 	return func(c *gin.Context) {
+		authMethod := c.GetString("auth_method")
+		if authMethod == "app_token" || authMethod == "api_key" || authMethod == "bearer" {
+			c.Next()
+			return
+		}
+
 		responseWritten := false
 		wrappedWriter := &csrfResponseWriter{
 			ResponseWriter: c.Writer,
