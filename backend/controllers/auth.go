@@ -15,6 +15,16 @@ import (
 	"github.com/servasec/servasec/backend/utils"
 )
 
+// Register creates a new user account
+// @Summary Register a new user
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Param input body dto.RegisterInput true "Registration details"
+// @Success 201 {object} object "Created"
+// @Failure 400 {object} object "Invalid input"
+// @Failure 409 {object} object "Username or email already exists"
+// @Router /register [post]
 func Register(c *gin.Context) {
 	var input dto.RegisterInput
 	if err := c.ShouldBindJSON(&input); err != nil {
@@ -62,6 +72,16 @@ func Register(c *gin.Context) {
 	})
 }
 
+// Login authenticates a user and sets JWT cookies
+// @Summary Authenticate user
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Param input body dto.LoginInput true "Login credentials"
+// @Success 200 {object} gin.H "Login successful with access_token and refresh_token cookies"
+// @Failure 400 {object} gin.H "Invalid input"
+// @Failure 401 {object} gin.H "Invalid credentials"
+// @Router /login [post]
 func Login(c *gin.Context) {
 	var input dto.LoginInput
 	if err := c.ShouldBindJSON(&input); err != nil {
@@ -129,6 +149,13 @@ func Login(c *gin.Context) {
 	})
 }
 
+// Refresh renews the access token using a refresh token cookie
+// @Summary Refresh access token
+// @Tags Auth
+// @Produce json
+// @Success 200 {object} gin.H "Token refreshed, new access_token cookie set"
+// @Failure 401 {object} gin.H "Missing, invalid or blacklisted refresh token"
+// @Router /refresh [post]
 func Refresh(c *gin.Context) {
 	tokenStr, err := c.Cookie("refresh_token")
 	if err != nil {
@@ -178,6 +205,12 @@ func Refresh(c *gin.Context) {
 	utils.OKResponse(c, gin.H{"message": "Token refreshed"})
 }
 
+// Logout invalidates the current session and clears auth cookies
+// @Summary Logout user
+// @Tags Auth
+// @Produce json
+// @Success 200 {object} gin.H "Logged out successfully"
+// @Router /logout [post]
 func Logout(c *gin.Context) {
 	accessToken, _ := c.Cookie("access_token")
 	refreshToken, _ := c.Cookie("refresh_token")
@@ -195,6 +228,13 @@ func Logout(c *gin.Context) {
 	utils.OKResponse(c, gin.H{"message": "logged out"})
 }
 
+// GetCurrentUser returns the authenticated user's profile
+// @Summary Get current user
+// @Tags Auth
+// @Produce json
+// @Success 200 {object} gin.H "User profile including features"
+// @Failure 401 {object} gin.H "Unauthorized"
+// @Router /me [get]
 func GetCurrentUser(c *gin.Context) {
 	userID, exists := c.Get("user_id")
 	if !exists {
@@ -228,6 +268,16 @@ func GetCurrentUser(c *gin.Context) {
 	utils.OKResponse(c, resp)
 }
 
+// UpdateCurrentUser updates the authenticated user's username and/or email
+// @Summary Update current user profile
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Param input body object true "Fields to update (username, email)"
+// @Success 200 {object} gin.H "Profile updated"
+// @Failure 400 {object} gin.H "Invalid input"
+// @Failure 404 {object} gin.H "User not found"
+// @Router /me [patch]
 func UpdateCurrentUser(c *gin.Context) {
 	userID, exists := c.Get("user_id")
 	if !exists {
@@ -275,6 +325,16 @@ func UpdateCurrentUser(c *gin.Context) {
 	utils.OKResponse(c, gin.H{"message": "Profile updated"})
 }
 
+// UpdateCurrentUserPassword changes the authenticated user's password
+// @Summary Update password
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Param input body object true "Current and new password"
+// @Success 200 {object} gin.H "Password updated"
+// @Failure 400 {object} gin.H "Invalid input"
+// @Failure 401 {object} gin.H "Current password is incorrect"
+// @Router /me/password [put]
 func UpdateCurrentUserPassword(c *gin.Context) {
 	userID, exists := c.Get("user_id")
 	if !exists {

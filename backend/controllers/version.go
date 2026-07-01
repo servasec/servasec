@@ -9,6 +9,13 @@ import (
 	"github.com/servasec/servasec/backend/utils"
 )
 
+// GetVersions returns all versions for an application
+// @Summary List versions
+// @Tags Applications
+// @Produce json
+// @Param id path string true "Application ID"
+// @Success 200 {array} models.ApplicationVersion "List of versions"
+// @Router /applications/{id}/versions [get]
 func GetVersions(c *gin.Context) {
 	appID := c.Param("id")
 	var versions []models.ApplicationVersion
@@ -19,6 +26,15 @@ func GetVersions(c *gin.Context) {
 	utils.OKResponse(c, versions)
 }
 
+// GetVersion returns a single version by ID
+// @Summary Get version
+// @Tags Applications
+// @Produce json
+// @Param id path string true "Application ID"
+// @Param versionId path string true "Version ID"
+// @Success 200 {object} models.ApplicationVersion "Version details with scans"
+// @Failure 404 {object} gin.H "Version not found"
+// @Router /applications/{id}/versions/{versionId} [get]
 func GetVersion(c *gin.Context) {
 	var version models.ApplicationVersion
 	if err := config.DB.Preload("Scans").First(&version, c.Param("versionId")).Error; err != nil {
@@ -28,6 +44,17 @@ func GetVersion(c *gin.Context) {
 	utils.OKResponse(c, version)
 }
 
+// CreateVersion creates a new version for an application
+// @Summary Create version
+// @Tags Applications
+// @Accept json
+// @Produce json
+// @Param id path string true "Application ID"
+// @Param input body object true "Version details"
+// @Success 201 {object} models.ApplicationVersion "Created version"
+// @Failure 400 {object} gin.H "Invalid input"
+// @Failure 409 {object} gin.H "Version with this name already exists"
+// @Router /applications/{id}/versions [post]
 func CreateVersion(c *gin.Context) {
 	appID := c.Param("id")
 
@@ -69,6 +96,18 @@ func CreateVersion(c *gin.Context) {
 	utils.CreatedResponse(c, version)
 }
 
+// UpdateVersion updates an existing version
+// @Summary Update version
+// @Tags Applications
+// @Accept json
+// @Produce json
+// @Param id path string true "Application ID"
+// @Param versionId path string true "Version ID"
+// @Param input body object true "Fields to update"
+// @Success 200 {object} models.ApplicationVersion "Updated version"
+// @Failure 400 {object} gin.H "Invalid input"
+// @Failure 404 {object} gin.H "Version not found"
+// @Router /applications/{id}/versions/{versionId} [patch]
 func UpdateVersion(c *gin.Context) {
 	var version models.ApplicationVersion
 	if err := config.DB.First(&version, c.Param("versionId")).Error; err != nil {
@@ -110,6 +149,15 @@ func UpdateVersion(c *gin.Context) {
 	utils.OKResponse(c, version)
 }
 
+// DeleteVersion deletes a version by ID
+// @Summary Delete version
+// @Tags Applications
+// @Produce json
+// @Param id path string true "Application ID"
+// @Param versionId path string true "Version ID"
+// @Success 204 "No content"
+// @Failure 404 {object} gin.H "Version not found"
+// @Router /applications/{id}/versions/{versionId} [delete]
 func DeleteVersion(c *gin.Context) {
 	var version models.ApplicationVersion
 	if err := config.DB.First(&version, c.Param("versionId")).Error; err != nil {
@@ -131,6 +179,17 @@ type CompareResult struct {
 	StillPresent  []models.Finding           `json:"stillPresent"`
 }
 
+// CompareVersions compares findings between two versions of an application
+// @Summary Compare versions
+// @Tags Applications
+// @Produce json
+// @Param id path string true "Application ID"
+// @Param from query string true "Source version ID or name"
+// @Param to query string true "Target version ID or name"
+// @Success 200 {object} CompareResult "Comparison result"
+// @Failure 400 {object} gin.H "Missing from/to params"
+// @Failure 404 {object} gin.H "Version not found"
+// @Router /applications/{id}/versions/compare [get]
 func CompareVersions(c *gin.Context) {
 	appID := c.Param("id")
 	fromQuery := c.Query("from")
@@ -208,6 +267,17 @@ func CompareVersions(c *gin.Context) {
 	})
 }
 
+// GetVersionFindings returns findings for a specific version
+// @Summary List version findings
+// @Tags Applications
+// @Produce json
+// @Param id path string true "Application ID"
+// @Param versionId path string true "Version ID"
+// @Param severity query string false "Filter by severity"
+// @Param status query string false "Filter by status"
+// @Success 200 {array} models.Finding "List of findings"
+// @Failure 404 {object} gin.H "Version not found"
+// @Router /applications/{id}/versions/{versionId}/findings [get]
 func GetVersionFindings(c *gin.Context) {
 	var version models.ApplicationVersion
 	if err := config.DB.First(&version, c.Param("versionId")).Error; err != nil {

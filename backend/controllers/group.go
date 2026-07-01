@@ -9,6 +9,12 @@ import (
 	"github.com/servasec/servasec/backend/utils"
 )
 
+// GetGroups returns all groups
+// @Summary List groups
+// @Tags Groups
+// @Produce json
+// @Success 200 {array} models.Group "List of groups"
+// @Router /groups [get]
 func GetGroups(c *gin.Context) {
 	var groups []models.Group
 	if err := config.DB.Find(&groups).Error; err != nil {
@@ -18,6 +24,14 @@ func GetGroups(c *gin.Context) {
 	utils.OKResponse(c, groups)
 }
 
+// GetGroup returns a single group by ID
+// @Summary Get group by ID
+// @Tags Groups
+// @Produce json
+// @Param id path string true "Group ID"
+// @Success 200 {object} models.Group "Group details"
+// @Failure 404 {object} gin.H "Group not found"
+// @Router /groups/{id} [get]
 func GetGroup(c *gin.Context) {
 	var group models.Group
 	if err := config.DB.First(&group, c.Param("id")).Error; err != nil {
@@ -27,6 +41,15 @@ func GetGroup(c *gin.Context) {
 	utils.OKResponse(c, group)
 }
 
+// CreateGroup creates a new group
+// @Summary Create group
+// @Tags Groups
+// @Accept json
+// @Produce json
+// @Param input body object true "Group details"
+// @Success 201 {object} models.Group "Created group"
+// @Failure 400 {object} gin.H "Invalid input"
+// @Router /groups [post]
 func CreateGroup(c *gin.Context) {
 	var input struct {
 		Name        string `json:"name" binding:"required,max=100"`
@@ -56,6 +79,17 @@ func CreateGroup(c *gin.Context) {
 	utils.CreatedResponse(c, group)
 }
 
+// UpdateGroup updates an existing group
+// @Summary Update group
+// @Tags Groups
+// @Accept json
+// @Produce json
+// @Param id path string true "Group ID"
+// @Param input body object true "Fields to update"
+// @Success 200 {object} models.Group "Updated group"
+// @Failure 400 {object} gin.H "Invalid input"
+// @Failure 404 {object} gin.H "Group not found"
+// @Router /groups/{id} [put]
 func UpdateGroup(c *gin.Context) {
 	var group models.Group
 	if err := config.DB.First(&group, c.Param("id")).Error; err != nil {
@@ -90,6 +124,14 @@ func UpdateGroup(c *gin.Context) {
 	utils.OKResponse(c, group)
 }
 
+// DeleteGroup deletes a group by ID
+// @Summary Delete group
+// @Tags Groups
+// @Produce json
+// @Param id path string true "Group ID"
+// @Success 200 {object} gin.H "Group deleted"
+// @Failure 404 {object} gin.H "Group not found"
+// @Router /groups/{id} [delete]
 func DeleteGroup(c *gin.Context) {
 	var group models.Group
 	if err := config.DB.First(&group, c.Param("id")).Error; err != nil {

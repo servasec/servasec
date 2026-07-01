@@ -15,6 +15,15 @@ type registerRequest struct {
 	TokenEndpointAuthMethod string   `json:"token_endpoint_auth_method"`
 }
 
+// HandleRegister creates a new OAuth client
+// @Summary OAuth client registration
+// @Tags OAuth
+// @Accept json
+// @Produce json
+// @Param input body registerRequest true "Client registration details"
+// @Success 201 {object} gin.H "Registered client with client_id and client_secret"
+// @Failure 400 {object} gin.H "Invalid request"
+// @Router /oauth/register [post]
 func HandleRegister(c *gin.Context) {
 	var req registerRequest
 	if err := c.ShouldBindJSON(&req); err != nil {

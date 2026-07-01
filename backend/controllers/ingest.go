@@ -74,6 +74,24 @@ func upsertVersion(appID uint, name, branch string) (*models.ApplicationVersion,
 	return &version, nil
 }
 
+// IngestScan accepts a scan result file and creates findings
+// @Summary Ingest scan results
+// @Description Upload a scan results file. Authenticate via API token header, application ID in path, or application slug in path.
+// @Tags Scans
+// @Accept multipart/form-data
+// @Produce json
+// @Param id path string false "Application ID"
+// @Param slug path string false "Application slug"
+// @Param version formData string false "Version name"
+// @Param branch formData string false "Branch name"
+// @Param scannerType formData string false "Scanner type name"
+// @Param file formData file true "Scan results file (SARIF, etc.)"
+// @Param X-Api-Token header string false "API token (alternative to id/slug auth)"
+// @Success 201 {object} gin.H "Scan created with findings count"
+// @Failure 400 {object} gin.H "Bad request"
+// @Failure 404 {object} gin.H "Application not found"
+// @Router /api/ingest [post]
+// @Router /applications/{id}/ingest [post]
 func IngestScan(c *gin.Context) {
 	app, err := findApplication(c)
 	if err != nil {

@@ -50,6 +50,24 @@ func buildFindingsQuery(c *gin.Context) *gorm.DB {
 	return q
 }
 
+// GetFindings returns findings with optional filters and pagination
+// @Summary List findings
+// @Tags Findings
+// @Produce json
+// @Param applicationId query string false "Filter by application ID"
+// @Param applicationVersionId query string false "Filter by version ID"
+// @Param severity query string false "Filter by severity (critical, high, medium, low, info)"
+// @Param status query string false "Filter by status (open, confirmed, false_positive, fixed, closed)"
+// @Param scannerTypeId query string false "Filter by scanner type ID"
+// @Param scanId query string false "Filter by scan ID"
+// @Param assignedTo query string false "Filter by assignedTo=me"
+// @Param sortBy query string false "Sort field (severity, title, risk_score, created_at)"
+// @Param order query string false "Sort order (asc, desc)"
+// @Param page query int false "Page number" default(1)
+// @Param perPage query int false "Items per page" default(50) maximum(200)
+// @Success 200 {object} gin.H "Paginated findings list"
+// @Failure 500 {object} gin.H "Failed to fetch findings"
+// @Router /findings [get]
 func GetFindings(c *gin.Context) {
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	perPage, _ := strconv.Atoi(c.DefaultQuery("perPage", "50"))
@@ -117,6 +135,14 @@ func GetFindings(c *gin.Context) {
 	})
 }
 
+// GetFinding returns a single finding by ID
+// @Summary Get finding
+// @Tags Findings
+// @Produce json
+// @Param id path string true "Finding ID"
+// @Success 200 {object} models.Finding "Finding details"
+// @Failure 404 {object} gin.H "Finding not found"
+// @Router /findings/{id} [get]
 func GetFinding(c *gin.Context) {
 	var finding models.Finding
 	if err := config.DB.
@@ -131,6 +157,17 @@ func GetFinding(c *gin.Context) {
 	utils.OKResponse(c, finding)
 }
 
+// UpdateFindingStatus changes the status of a finding
+// @Summary Update finding status
+// @Tags Findings
+// @Accept json
+// @Produce json
+// @Param id path string true "Finding ID"
+// @Param input body object true "New status"
+// @Success 200 {object} models.Finding "Updated finding"
+// @Failure 400 {object} gin.H "Invalid status"
+// @Failure 404 {object} gin.H "Finding not found"
+// @Router /findings/{id}/status [patch]
 func UpdateFindingStatus(c *gin.Context) {
 	var finding models.Finding
 	if err := config.DB.First(&finding, c.Param("id")).Error; err != nil {
@@ -163,6 +200,17 @@ func UpdateFindingStatus(c *gin.Context) {
 	utils.OKResponse(c, finding)
 }
 
+// AssignFinding assigns a finding to a user with an optional due date
+// @Summary Assign finding
+// @Tags Findings
+// @Accept json
+// @Produce json
+// @Param id path string true "Finding ID"
+// @Param input body object true "User ID and optional due date"
+// @Success 200 {object} models.Finding "Updated finding with assignment"
+// @Failure 400 {object} gin.H "Invalid input"
+// @Failure 404 {object} gin.H "Finding or user not found"
+// @Router /findings/{id}/assign [patch]
 func AssignFinding(c *gin.Context) {
 	var finding models.Finding
 	if err := config.DB.First(&finding, c.Param("id")).Error; err != nil {
@@ -203,6 +251,17 @@ func AssignFinding(c *gin.Context) {
 	utils.OKResponse(c, finding)
 }
 
+// ReviewFinding marks a finding as reviewed and optionally updates its status
+// @Summary Review finding
+// @Tags Findings
+// @Accept json
+// @Produce json
+// @Param id path string true "Finding ID"
+// @Param input body object true "Optional new status"
+// @Success 200 {object} models.Finding "Reviewed finding"
+// @Failure 400 {object} gin.H "Invalid input"
+// @Failure 404 {object} gin.H "Finding not found"
+// @Router /findings/{id}/review [patch]
 func ReviewFinding(c *gin.Context) {
 	var finding models.Finding
 	if err := config.DB.First(&finding, c.Param("id")).Error; err != nil {
@@ -243,6 +302,17 @@ func ReviewFinding(c *gin.Context) {
 	utils.OKResponse(c, finding)
 }
 
+// CreateComment adds a comment to a finding
+// @Summary Create comment
+// @Tags Findings
+// @Accept json
+// @Produce json
+// @Param id path string true "Finding ID"
+// @Param input body object true "Comment body"
+// @Success 201 {object} models.Comment "Created comment"
+// @Failure 400 {object} gin.H "Comment body is required"
+// @Failure 404 {object} gin.H "Finding not found"
+// @Router /findings/{id}/comments [post]
 func CreateComment(c *gin.Context) {
 	var finding models.Finding
 	if err := config.DB.First(&finding, c.Param("id")).Error; err != nil {
@@ -285,6 +355,14 @@ func findingApp(findingID uint) *models.Application {
 	return &app
 }
 
+// GetComments returns all comments for a finding
+// @Summary List comments
+// @Tags Findings
+// @Produce json
+// @Param id path string true "Finding ID"
+// @Success 200 {array} models.Comment "List of comments"
+// @Failure 404 {object} gin.H "Finding not found"
+// @Router /findings/{id}/comments [get]
 func GetComments(c *gin.Context) {
 	var finding models.Finding
 	if err := config.DB.First(&finding, c.Param("id")).Error; err != nil {

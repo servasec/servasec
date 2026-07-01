@@ -14,6 +14,13 @@ func parseAppID(id string) uint {
 	return uint(u)
 }
 
+// GetWebhooks returns all webhooks for an application
+// @Summary List webhooks
+// @Tags Webhooks
+// @Produce json
+// @Param id path string true "Application ID"
+// @Success 200 {array} models.Webhook "List of webhooks"
+// @Router /applications/{id}/webhooks [get]
 func GetWebhooks(c *gin.Context) {
 	appID := c.Param("id")
 	var webhooks []models.Webhook
@@ -24,6 +31,16 @@ func GetWebhooks(c *gin.Context) {
 	utils.OKResponse(c, webhooks)
 }
 
+// CreateWebhook creates a new webhook for an application
+// @Summary Create webhook
+// @Tags Webhooks
+// @Accept json
+// @Produce json
+// @Param id path string true "Application ID"
+// @Param input body object true "Webhook details"
+// @Success 201 {object} models.Webhook "Created webhook"
+// @Failure 400 {object} gin.H "Invalid input"
+// @Router /applications/{id}/webhooks [post]
 func CreateWebhook(c *gin.Context) {
 	appID := c.Param("id")
 
@@ -57,6 +74,15 @@ func CreateWebhook(c *gin.Context) {
 	utils.CreatedResponse(c, webhook)
 }
 
+// DeleteWebhook deletes a webhook by ID
+// @Summary Delete webhook
+// @Tags Webhooks
+// @Produce json
+// @Param id path string true "Application ID"
+// @Param webhookId path string true "Webhook ID"
+// @Success 204 "No content"
+// @Failure 404 {object} gin.H "Webhook not found"
+// @Router /applications/{id}/webhooks/{webhookId} [delete]
 func DeleteWebhook(c *gin.Context) {
 	var webhook models.Webhook
 	if err := config.DB.First(&webhook, c.Param("webhookId")).Error; err != nil {

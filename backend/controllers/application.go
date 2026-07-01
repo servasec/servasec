@@ -18,6 +18,12 @@ func generateApiToken() string {
 	return hex.EncodeToString(b)
 }
 
+// GetApplications returns all applications the user has access to
+// @Summary List applications
+// @Tags Applications
+// @Produce json
+// @Success 200 {array} models.Application "List of applications"
+// @Router /applications [get]
 func GetApplications(c *gin.Context) {
 	accessibleIDs := utils.GetAccessibleAppIDs(c)
 	query := config.DB.Model(&models.Application{})
@@ -37,6 +43,14 @@ func GetApplications(c *gin.Context) {
 	utils.OKResponse(c, apps)
 }
 
+// GetApplication returns a single application by ID or slug
+// @Summary Get application
+// @Tags Applications
+// @Produce json
+// @Param id path string true "Application ID or slug"
+// @Success 200 {object} object "Application with default version"
+// @Failure 404 {object} gin.H "Application not found"
+// @Router /applications/{id} [get]
 func GetApplication(c *gin.Context) {
 	var app models.Application
 	query := config.DB.Preload("Versions", func(db *gorm.DB) *gorm.DB {
@@ -66,6 +80,15 @@ func GetApplication(c *gin.Context) {
 	utils.OKResponse(c, resp)
 }
 
+// CreateApplication creates a new application with an auto-generated API token
+// @Summary Create application
+// @Tags Applications
+// @Accept json
+// @Produce json
+// @Param input body object true "Application details"
+// @Success 201 {object} models.Application "Created application"
+// @Failure 400 {object} gin.H "Invalid input"
+// @Router /applications [post]
 func CreateApplication(c *gin.Context) {
 	var input struct {
 		Name             string `json:"name" binding:"required,max=200"`
@@ -111,6 +134,17 @@ func CreateApplication(c *gin.Context) {
 	utils.CreatedResponse(c, app)
 }
 
+// UpdateApplication updates an existing application
+// @Summary Update application
+// @Tags Applications
+// @Accept json
+// @Produce json
+// @Param id path string true "Application ID"
+// @Param input body object true "Fields to update"
+// @Success 200 {object} models.Application "Updated application"
+// @Failure 400 {object} gin.H "Invalid input"
+// @Failure 404 {object} gin.H "Application not found"
+// @Router /applications/{id} [put]
 func UpdateApplication(c *gin.Context) {
 	var app models.Application
 	if err := config.DB.First(&app, c.Param("id")).Error; err != nil {
@@ -157,6 +191,14 @@ func UpdateApplication(c *gin.Context) {
 	utils.OKResponse(c, app)
 }
 
+// DeleteApplication deletes an application by ID
+// @Summary Delete application
+// @Tags Applications
+// @Produce json
+// @Param id path string true "Application ID"
+// @Success 200 {object} gin.H "Application deleted"
+// @Failure 404 {object} gin.H "Application not found"
+// @Router /applications/{id} [delete]
 func DeleteApplication(c *gin.Context) {
 	var app models.Application
 	if err := config.DB.First(&app, c.Param("id")).Error; err != nil {
@@ -171,6 +213,14 @@ func DeleteApplication(c *gin.Context) {
 	utils.OKResponse(c, gin.H{"message": "Application deleted"})
 }
 
+// RegenerateApiToken generates a new API token for an application
+// @Summary Regenerate API token
+// @Tags Applications
+// @Produce json
+// @Param id path string true "Application ID"
+// @Success 200 {object} gin.H "New API token"
+// @Failure 404 {object} gin.H "Application not found"
+// @Router /applications/{id}/regenerate-token [post]
 func RegenerateApiToken(c *gin.Context) {
 	var app models.Application
 	if err := config.DB.First(&app, c.Param("id")).Error; err != nil {
