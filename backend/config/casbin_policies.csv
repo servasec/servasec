@@ -20,7 +20,8 @@ p, member, /scanner-types/*, *
 p, member, /mcp, *
 p, member, /mcp/message, *
 p, member, /users/search, *
-p, anonymous, /api/ingest, *
+p, anonymous, /ingest, *
+p, app_token, /applications/*, write
 p, admin, /admin/permissions, *
 p, admin, /admin/permissions/*, *
 p, admin, /admin/scanner-types, *

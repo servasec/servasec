@@ -98,6 +98,7 @@ func main() {
 	routes.RegisterScannerTypeRoutes(router)
 	routes.RegisterPermissionRoutes(router)
 	routes.RegisterPolicyRoutes(router)
+	routes.RegisterUserApiKeyRoutes(router)
 
 	pro.Audit.RegisterRoutes(router)
 	pro.MCP.RegisterRoutes(router)

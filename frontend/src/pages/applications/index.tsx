@@ -121,7 +121,11 @@ export default function ApplicationsListPage() {
         await axios.put(`/api/applications/${editing.id}`, payload);
         toast.success("Application updated");
       } else {
-        await axios.post("/api/applications", payload);
+        const res = await axios.post("/api/applications", payload);
+        if (res.data.apiToken) {
+          setNewToken(res.data.apiToken);
+          setTokenApp(res.data);
+        }
         toast.success("Application created");
       }
       setDialogOpen(false);

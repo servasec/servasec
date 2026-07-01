@@ -49,6 +49,21 @@ func resolveGroupAccess(uid uint, resourcePath string, action string) bool {
 
 func RequireResourceAccess(resourcePath string, action string) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		if c.GetString("auth_method") == "app_token" {
+			tokenAppID := AppIDStrFromContext(c)
+			if tokenAppID == "" {
+				c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "unauthorized"})
+				return
+			}
+			expectedPath := fmt.Sprintf("/applications/%s", tokenAppID)
+			if resourcePath != expectedPath {
+				c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "token does not authorize access to this application"})
+				return
+			}
+			c.Next()
+			return
+		}
+
 		userID, exists := c.Get("user_id")
 		if !exists {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})

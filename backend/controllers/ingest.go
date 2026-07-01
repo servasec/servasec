@@ -90,7 +90,7 @@ func upsertVersion(appID uint, name, branch string) (*models.ApplicationVersion,
 // @Success 201 {object} gin.H "Scan created with findings count"
 // @Failure 400 {object} gin.H "Bad request"
 // @Failure 404 {object} gin.H "Application not found"
-// @Router /api/ingest [post]
+// @Router /ingest [post]
 // @Router /applications/{id}/ingest [post]
 func IngestScan(c *gin.Context) {
 	app, err := findApplication(c)
