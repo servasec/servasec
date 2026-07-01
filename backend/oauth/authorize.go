@@ -44,6 +44,21 @@ var loginTmpl = template.Must(template.New("login").Parse(`<!DOCTYPE html>
 </body>
 </html>`))
 
+// HandleAuthorize renders the login form or handles the OAuth authorization request
+// @Summary OAuth authorization endpoint
+// @Tags OAuth
+// @Accept x-www-form-urlencoded
+// @Produce json
+// @Param client_id query string true "OAuth client ID"
+// @Param redirect_uri query string true "Redirect URI"
+// @Param response_type query string true "Response type (must be 'code')"
+// @Param code_challenge query string true "PKCE code challenge"
+// @Param code_challenge_method query string false "PKCE challenge method (must be 'S256')"
+// @Param state query string false "Opaque state value"
+// @Success 302 {string} string "Redirect with authorization code"
+// @Failure 400 {string} string "Missing or invalid parameters"
+// @Router /oauth/authorize [get]
+// @Router /oauth/authorize [post]
 func HandleAuthorize(c *gin.Context) {
 	q := c.Request.URL.Query()
 	clientID := q.Get("client_id")

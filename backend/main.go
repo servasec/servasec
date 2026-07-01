@@ -1,3 +1,13 @@
+// @title Servasec API
+// @version 1.0
+// @description Security scanner management platform API
+// @contact.name API Support
+// @contact.email support@servasec.local
+// @host localhost:8080
+// @BasePath /
+// @securityDefinitions.apikey ApiKeyAuth
+// @in cookie
+// @name access_token
 package main
 
 import (
@@ -6,7 +16,10 @@ import (
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 	"github.com/servasec/servasec/backend/config"
+	_ "github.com/servasec/servasec/backend/docs"
 	"github.com/servasec/servasec/backend/debug"
 	"github.com/servasec/servasec/backend/features"
 	"github.com/servasec/servasec/backend/middleware"
@@ -68,6 +81,8 @@ func main() {
 	router.GET("/ping", func(c *gin.Context) {
 		c.JSON(200, gin.H{"message": "pong"})
 	})
+
+	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	routes.RegisterWellKnownRoutes(router)
 	routes.RegisterAuthRoutes(router)

@@ -1,4 +1,4 @@
-.PHONY: dev down down-clean prod down-prod community pro down-prod logs ps help podman-build podman-install podman-up podman-down podman-logs
+.PHONY: dev down down-clean prod down-prod community pro down-prod logs ps help swagger swagger-copy podman-build podman-install podman-up podman-down podman-logs
 
 COMPOSE_DEV  := USER_UID=$(shell id -u) USER_GID=$(shell id -g) docker compose -f docker-compose.dev.yml
 COMPOSE_PROD := docker compose -f docker-compose.prod.yml
@@ -37,6 +37,13 @@ logs: ## Show all logs (dev)
 
 ps: ## Show container status (dev)
 	$(COMPOSE_DEV) ps
+
+swagger: ## Generate swagger.json from Go annotations
+	cd backend && swag init --parseDependency --parseInternal --output docs
+
+swagger-copy: swagger ## Copy swagger.json to servasec-docs and regenerate API docs
+	cp backend/docs/swagger.json ../servasec-docs/openapi/swagger.json
+	$(MAKE) -C ../servasec-docs gen-api
 
 podman-build: ## Build all Podman images
 	podman build -t servasec-backend:latest -f backend/Dockerfile --target prod backend/

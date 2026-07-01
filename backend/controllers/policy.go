@@ -10,6 +10,15 @@ import (
 	"github.com/servasec/servasec/backend/utils"
 )
 
+// GetPolicies returns all automated policies with optional filters
+// @Summary List policies
+// @Tags Policies
+// @Produce json
+// @Param scopeType query string false "Filter by scope type (application, group, global)"
+// @Param scopeValue query string false "Filter by scope value"
+// @Param eventType query string false "Filter by event type"
+// @Success 200 {array} models.Policy "List of policies"
+// @Router /policies [get]
 func GetPolicies(c *gin.Context) {
 	userID, _ := c.Get("user_id")
 	var user models.User
@@ -44,6 +53,14 @@ func GetPolicies(c *gin.Context) {
 	utils.OKResponse(c, policies)
 }
 
+// GetPolicy returns a single policy by ID
+// @Summary Get policy
+// @Tags Policies
+// @Produce json
+// @Param id path string true "Policy ID"
+// @Success 200 {object} models.Policy "Policy details"
+// @Failure 404 {object} gin.H "Policy not found"
+// @Router /policies/{id} [get]
 func GetPolicy(c *gin.Context) {
 	var policy models.Policy
 	if err := config.DB.First(&policy, c.Param("id")).Error; err != nil {
@@ -63,6 +80,16 @@ func GetPolicy(c *gin.Context) {
 	utils.OKResponse(c, policy)
 }
 
+// CreatePolicy creates a new automated policy
+// @Summary Create policy
+// @Tags Policies
+// @Accept json
+// @Produce json
+// @Param input body object true "Policy definition"
+// @Success 201 {object} models.Policy "Created policy"
+// @Failure 400 {object} gin.H "Invalid input"
+// @Failure 403 {object} gin.H "Access denied"
+// @Router /policies [post]
 func CreatePolicy(c *gin.Context) {
 	var input struct {
 		Name        string `json:"name" binding:"required,min=1,max=200"`
@@ -127,6 +154,17 @@ func CreatePolicy(c *gin.Context) {
 	utils.CreatedResponse(c, policy)
 }
 
+// UpdatePolicy updates an existing policy
+// @Summary Update policy
+// @Tags Policies
+// @Accept json
+// @Produce json
+// @Param id path string true "Policy ID"
+// @Param input body object true "Fields to update"
+// @Success 200 {object} models.Policy "Updated policy"
+// @Failure 400 {object} gin.H "Invalid input"
+// @Failure 404 {object} gin.H "Policy not found"
+// @Router /policies/{id} [put]
 func UpdatePolicy(c *gin.Context) {
 	var policy models.Policy
 	if err := config.DB.First(&policy, c.Param("id")).Error; err != nil {
@@ -224,6 +262,14 @@ func UpdatePolicy(c *gin.Context) {
 	utils.OKResponse(c, policy)
 }
 
+// DeletePolicy deletes a policy by ID
+// @Summary Delete policy
+// @Tags Policies
+// @Produce json
+// @Param id path string true "Policy ID"
+// @Success 204 "No content"
+// @Failure 404 {object} gin.H "Policy not found"
+// @Router /policies/{id} [delete]
 func DeletePolicy(c *gin.Context) {
 	var policy models.Policy
 	if err := config.DB.First(&policy, c.Param("id")).Error; err != nil {
@@ -248,6 +294,14 @@ func DeletePolicy(c *gin.Context) {
 	utils.NoContentResponse(c)
 }
 
+// TogglePolicy toggles a policy's active state
+// @Summary Toggle policy
+// @Tags Policies
+// @Produce json
+// @Param id path string true "Policy ID"
+// @Success 200 {object} models.Policy "Toggled policy"
+// @Failure 404 {object} gin.H "Policy not found"
+// @Router /policies/{id}/toggle [patch]
 func TogglePolicy(c *gin.Context) {
 	var policy models.Policy
 	if err := config.DB.First(&policy, c.Param("id")).Error; err != nil {
@@ -272,6 +326,15 @@ func TogglePolicy(c *gin.Context) {
 	utils.OKResponse(c, policy)
 }
 
+// GetPolicyLogs returns policy execution logs with optional filters
+// @Summary List policy logs
+// @Tags Policies
+// @Produce json
+// @Param policyId query string false "Filter by policy ID"
+// @Param findingId query string false "Filter by finding ID"
+// @Param eventType query string false "Filter by event type"
+// @Success 200 {array} models.PolicyLog "List of policy logs"
+// @Router /policies/logs [get]
 func GetPolicyLogs(c *gin.Context) {
 	userID, _ := c.Get("user_id")
 	var user models.User
@@ -304,6 +367,14 @@ func GetPolicyLogs(c *gin.Context) {
 	utils.OKResponse(c, logs)
 }
 
+// GetPolicyLogsByPolicy returns execution logs for a specific policy
+// @Summary Get policy logs by policy
+// @Tags Policies
+// @Produce json
+// @Param id path string true "Policy ID"
+// @Success 200 {array} models.PolicyLog "List of policy logs"
+// @Failure 404 {object} gin.H "Policy not found"
+// @Router /policies/{id}/logs [get]
 func GetPolicyLogsByPolicy(c *gin.Context) {
 	var policy models.Policy
 	if err := config.DB.First(&policy, c.Param("id")).Error; err != nil {

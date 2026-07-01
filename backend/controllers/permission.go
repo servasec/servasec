@@ -18,6 +18,13 @@ type PermissionPolicy struct {
 	Action   string `json:"action"`
 }
 
+// GetPermissions returns all Casbin policies (admin only)
+// @Summary List permissions
+// @Tags Permissions
+// @Produce json
+// @Param subject query string false "Filter by subject prefix"
+// @Success 200 {array} PermissionPolicy "List of policies"
+// @Router /admin/permissions [get]
 func GetPermissions(c *gin.Context) {
 	filter := c.Query("subject")
 
@@ -41,6 +48,16 @@ func GetPermissions(c *gin.Context) {
 	utils.OKResponse(c, policies)
 }
 
+// GrantPermission adds a Casbin policy (admin only)
+// @Summary Grant permission
+// @Tags Permissions
+// @Accept json
+// @Produce json
+// @Param input body object true "Subject, resource and action"
+// @Success 201 {object} gin.H "Permission granted"
+// @Failure 400 {object} gin.H "Invalid input"
+// @Failure 409 {object} gin.H "Permission already exists"
+// @Router /admin/permissions [post]
 func GrantPermission(c *gin.Context) {
 	var input struct {
 		Subject  string `json:"subject"`
@@ -81,6 +98,16 @@ func GrantPermission(c *gin.Context) {
 	utils.CreatedResponse(c, gin.H{"message": "Permission granted", "subject": sub})
 }
 
+// RevokePermission removes a Casbin policy (admin only)
+// @Summary Revoke permission
+// @Tags Permissions
+// @Accept json
+// @Produce json
+// @Param input body object true "Subject, resource and action"
+// @Success 200 {object} gin.H "Permission revoked"
+// @Failure 400 {object} gin.H "Invalid input"
+// @Failure 404 {object} gin.H "Permission not found"
+// @Router /admin/permissions [delete]
 func RevokePermission(c *gin.Context) {
 	var input struct {
 		Subject  string `json:"subject"`
@@ -121,6 +148,13 @@ func RevokePermission(c *gin.Context) {
 	utils.OKResponse(c, gin.H{"message": "Permission revoked"})
 }
 
+// GetApplicationPermissions returns all policies for a specific application
+// @Summary List application permissions
+// @Tags Permissions
+// @Produce json
+// @Param id path string true "Application ID"
+// @Success 200 {array} PermissionPolicy "Application policies"
+// @Router /applications/{id}/permissions [get]
 func GetApplicationPermissions(c *gin.Context) {
 	appID := c.Param("id")
 	resource := fmt.Sprintf("/applications/%s", appID)
@@ -142,6 +176,18 @@ func GetApplicationPermissions(c *gin.Context) {
 	utils.OKResponse(c, policies)
 }
 
+// GrantApplicationPermission grants a user or team access to an application
+// @Summary Grant application permission
+// @Tags Permissions
+// @Accept json
+// @Produce json
+// @Param id path string true "Application ID"
+// @Param input body object true "Subject (user:{id} or team:{id}) and action (read|write)"
+// @Success 201 {object} gin.H "Permission granted"
+// @Failure 400 {object} gin.H "Invalid input"
+// @Failure 404 {object} gin.H "User, team or application not found"
+// @Failure 409 {object} gin.H "Permission already exists"
+// @Router /applications/{id}/permissions [post]
 func GrantApplicationPermission(c *gin.Context) {
 	appID := c.Param("id")
 
@@ -205,6 +251,17 @@ func GrantApplicationPermission(c *gin.Context) {
 	utils.CreatedResponse(c, gin.H{"message": "Permission granted", "subject": input.Subject})
 }
 
+// RevokeApplicationPermission revokes a user or team's access to an application
+// @Summary Revoke application permission
+// @Tags Permissions
+// @Accept json
+// @Produce json
+// @Param id path string true "Application ID"
+// @Param input body object true "Subject and action"
+// @Success 200 {object} gin.H "Permission revoked"
+// @Failure 400 {object} gin.H "Invalid input"
+// @Failure 404 {object} gin.H "Permission not found"
+// @Router /applications/{id}/permissions [delete]
 func RevokeApplicationPermission(c *gin.Context) {
 	appID := c.Param("id")
 

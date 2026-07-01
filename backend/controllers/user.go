@@ -7,6 +7,13 @@ import (
 	"github.com/servasec/servasec/backend/utils"
 )
 
+// GetUsers returns all users (admin only)
+// @Summary List all users
+// @Tags Users
+// @Produce json
+// @Success 200 {array} models.User "List of users"
+// @Failure 500 {object} gin.H "Internal server error"
+// @Router /users [get]
 func GetUsers(c *gin.Context) {
 	var users []models.User
 	result := config.DB.Find(&users)
@@ -17,6 +24,14 @@ func GetUsers(c *gin.Context) {
 	utils.OKResponse(c, users)
 }
 
+// GetUser returns a single user by ID
+// @Summary Get user by ID
+// @Tags Users
+// @Produce json
+// @Param id path string true "User ID"
+// @Success 200 {object} models.User "User details"
+// @Failure 404 {object} gin.H "User not found"
+// @Router /users/{id} [get]
 func GetUser(c *gin.Context) {
 	var user models.User
 	id := c.Param("id")
@@ -29,6 +44,17 @@ func GetUser(c *gin.Context) {
 	utils.OKResponse(c, user)
 }
 
+// UpdateUser updates a user's email, role, or banned status (admin only)
+// @Summary Update user
+// @Tags Users
+// @Accept json
+// @Produce json
+// @Param id path string true "User ID"
+// @Param input body object true "Fields to update"
+// @Success 200 {object} gin.H "Updated user info"
+// @Failure 400 {object} gin.H "Invalid input"
+// @Failure 404 {object} gin.H "User not found"
+// @Router /users/{id} [put]
 func UpdateUser(c *gin.Context) {
 	var user models.User
 	id := c.Param("id")
@@ -72,6 +98,14 @@ func UpdateUser(c *gin.Context) {
 	})
 }
 
+// SearchUsers searches users by username or email
+// @Summary Search users
+// @Tags Users
+// @Produce json
+// @Param q query string true "Search query (min 2 characters)"
+// @Success 200 {array} object "Matching users (id, username)"
+// @Failure 400 {object} gin.H "Query too short"
+// @Router /users/search [get]
 func SearchUsers(c *gin.Context) {
 	q := c.Query("q")
 	if len(q) < 2 {
@@ -96,6 +130,14 @@ func SearchUsers(c *gin.Context) {
 	utils.OKResponse(c, users)
 }
 
+// DeleteUser deletes a user by ID (admin only)
+// @Summary Delete user
+// @Tags Users
+// @Produce json
+// @Param id path string true "User ID"
+// @Success 200 {object} gin.H "User deleted"
+// @Failure 404 {object} gin.H "User not found"
+// @Router /users/{id} [delete]
 func DeleteUser(c *gin.Context) {
 	var user models.User
 	id := c.Param("id")

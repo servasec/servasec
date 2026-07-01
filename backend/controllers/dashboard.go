@@ -77,6 +77,12 @@ func dashboardScansQuery(c *gin.Context) *gorm.DB {
 	return q
 }
 
+// GetDashboardStats returns aggregate statistics for the dashboard
+// @Summary Get dashboard statistics
+// @Tags Dashboard
+// @Produce json
+// @Success 200 {object} DashboardStats "Dashboard statistics"
+// @Router /dashboard/stats [get]
 func GetDashboardStats(c *gin.Context) {
 	var stats DashboardStats
 
