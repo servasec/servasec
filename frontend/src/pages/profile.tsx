@@ -475,7 +475,7 @@ export default function ProfilePage() {
           ) : (
             <>
               <DialogHeader>
-                <DialogTitle>Generate New API Key</DialogTitle>
+                <DialogTitle>Generate new API key</DialogTitle>
                 <DialogDescription>
                   Create a key for use in your CI/CD pipelines or automation scripts.
                 </DialogDescription>

@@ -138,7 +138,7 @@ func AuthRequired() gin.HandlerFunc {
 		}
 
 		if apiKey := c.GetHeader("X-Api-Key"); apiKey != "" {
-			hash := sha256.Sum256([]byte(apiKey))
+			hash := sha256.Sum256([]byte(strings.TrimPrefix(apiKey, "sc_")))
 			hashStr := hex.EncodeToString(hash[:])
 			var key models.UserApiKey
 			if err := config.DB.Where("key_hash = ?", hashStr).First(&key).Error; err == nil {

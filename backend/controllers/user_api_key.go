@@ -1,6 +1,8 @@
 package controllers
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"net/http"
 
@@ -28,13 +30,23 @@ func CreateApiKey(c *gin.Context) {
 		return
 	}
 
-	key, rawKey, err := models.GenerateUserApiKey(input.Name, currentUser.ID)
+	raw, err := utils.GenerateRandomString(32)
 	if err != nil {
 		utils.InternalServerError(c, "failed to generate API key")
 		return
 	}
 
-	if err := config.DB.Create(key).Error; err != nil {
+	prefix := raw[:8]
+	hash := sha256.Sum256([]byte(raw))
+
+	key := models.UserApiKey{
+		UserID:    currentUser.ID,
+		Name:      input.Name,
+		KeyHash:   hex.EncodeToString(hash[:]),
+		KeyPrefix: "sc_" + prefix,
+	}
+
+	if err := config.DB.Create(&key).Error; err != nil {
 		utils.InternalServerError(c, "failed to save API key")
 		return
 	}
@@ -43,7 +55,7 @@ func CreateApiKey(c *gin.Context) {
 		"id":        key.ID,
 		"name":      key.Name,
 		"keyPrefix": key.KeyPrefix,
-		"key":       rawKey,
+		"key":       "sc_" + raw,
 	})
 }
 

@@ -131,7 +131,18 @@ func CreateApplication(c *gin.Context) {
 	config.CEF.AddPolicy(sub, fmt.Sprintf("/applications/%d", app.ID), "*")
 	config.CEF.SavePolicy()
 
-	utils.CreatedResponse(c, app)
+	utils.CreatedResponse(c, gin.H{
+		"id":               app.ID,
+		"name":             app.Name,
+		"description":      app.Description,
+		"slug":             app.Slug,
+		"groupId":          app.GroupID,
+		"repositoryUrl":    app.RepositoryURL,
+		"apiToken":         app.ApiToken,
+		"assetCriticality": app.AssetCriticality,
+		"createdAt":        app.CreatedAt,
+		"updatedAt":        app.UpdatedAt,
+	})
 }
 
 // UpdateApplication updates an existing application
