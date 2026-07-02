@@ -14,10 +14,11 @@ export const severityBadgeColors: Record<string, string> = {
 };
 
 export const severityBarColors: Record<string, string> = {
-  critical: "bg-red-500 dark:bg-red-600",
-  high: "bg-orange-500 dark:bg-orange-600",
-  medium: "bg-yellow-500 dark:bg-yellow-600",
-  low: "bg-green-500 dark:bg-green-600",
+  critical: "#ef4444",
+  high: "#f97316",
+  medium: "#eab308",
+  low: "#22c55e",
+  info: "#3b82f6",
 };
 
 export const statusColors: Record<string, string> = {

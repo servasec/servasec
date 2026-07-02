@@ -138,8 +138,11 @@ export default function Dashboard() {
                     </div>
                     <div className="h-2 rounded-full bg-muted overflow-hidden">
                       <div
-                        className={`h-full rounded-full transition-all ${severityBarColors[s.severity.toLowerCase()] || "bg-primary"}`}
-                        style={{ width: `${(s.count / totalSeverity) * 100}%` }}
+                        className="h-full rounded-full transition-all"
+                        style={{
+                          width: `${(s.count / totalSeverity) * 100}%`,
+                          backgroundColor: severityBarColors[s.severity.toLowerCase()] || "hsl(var(--primary))",
+                        }}
                       />
                     </div>
                   </div>
