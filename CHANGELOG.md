@@ -1,5 +1,22 @@
 # Changelog
 
+## [2.0.0](https://github.com/servasec/servasec/compare/v1.0.0...v2.0.0) (2026-07-02)
+
+
+### ⚠ BREAKING CHANGES
+
+* **backend:** SSC_ADMIN_PASSWORD & CSRF_SECRET mandatories in prod env + GORM AutoMigrate deleted
+
+### 🧩 Features
+
+* **backend:** SSC_ADMIN_PASSWORD & CSRF_SECRET mandatories in prod env + GORM AutoMigrate deleted ([94dfcb8](https://github.com/servasec/servasec/commit/94dfcb8b738df07306f5fa671e4adf4babdf268e))
+* New database migration system with goose & upgrade script + md ([47d8abf](https://github.com/servasec/servasec/commit/47d8abfb09e406908e3ae12cf10dbe5505fb342d))
+
+
+### 🐛 Bug fixes
+
+* **frontend:** Dashboard bar chart color ([bac0287](https://github.com/servasec/servasec/commit/bac02870cde337c9aa19b2708ba647083ad2c814))
+
 ## [1.0.0](https://github.com/servasec/servasec/compare/v0.3.1...v1.0.0) (2026-07-02)
 
 
