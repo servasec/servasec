@@ -34,21 +34,17 @@ func RegisterApplicationRoutes(router *gin.Engine) {
 		a.DELETE("/:id/permissions", middleware.CheckPolicy("/applications/*", "write"), middleware.RequireResourceAccessByParam("applications", "id", "write"), controllers.RevokeApplicationPermission)
 	}
 
-	slug := router.Group("/applications/by-slug/:slug", middleware.AuthRequired(), middleware.CSRFProtection())
-	slug.Use(func(c *gin.Context) {
-		c.Params = append(c.Params, gin.Param{Key: "id", Value: c.Param("slug")})
-		c.Next()
-	})
+	g := router.Group("/groups/:id/applications", middleware.AuthRequired(), middleware.CSRFProtection())
 	{
-		slug.GET("", middleware.CheckPolicy("/applications/*", "read"), middleware.RequireSlugAccess("read"), controllers.GetApplication)
-		slug.POST("/ingest", middleware.CheckPolicy("/applications/*", "write"), middleware.RequireSlugAccess("write"), controllers.IngestScan)
-		slug.GET("/versions", middleware.CheckPolicy("/applications/*", "read"), middleware.RequireSlugAccess("read"), controllers.GetVersions)
-		slug.POST("/versions", middleware.CheckPolicy("/applications/*", "write"), middleware.RequireSlugAccess("write"), controllers.CreateVersion)
-		slug.GET("/versions/compare", middleware.CheckPolicy("/applications/*", "read"), middleware.RequireSlugAccess("read"), controllers.CompareVersions)
-		slug.GET("/versions/:versionId", middleware.CheckPolicy("/applications/*", "read"), middleware.RequireSlugAccess("read"), controllers.GetVersion)
-		slug.PATCH("/versions/:versionId", middleware.CheckPolicy("/applications/*", "write"), middleware.RequireSlugAccess("write"), controllers.UpdateVersion)
-		slug.DELETE("/versions/:versionId", middleware.CheckPolicy("/applications/*", "write"), middleware.RequireSlugAccess("write"), controllers.DeleteVersion)
-		slug.GET("/versions/:versionId/findings", middleware.CheckPolicy("/applications/*", "read"), middleware.RequireSlugAccess("read"), controllers.GetVersionFindings)
+		g.GET("/:slug", middleware.CheckPolicy("/applications/*", "read"), middleware.RequireGroupSlugAccess("read"), controllers.GetApplication)
+		g.POST("/:slug/ingest", middleware.CheckPolicy("/applications/*", "write"), middleware.RequireGroupSlugAccess("write"), controllers.IngestScan)
+		g.GET("/:slug/versions", middleware.CheckPolicy("/applications/*", "read"), middleware.RequireGroupSlugAccess("read"), controllers.GetVersions)
+		g.POST("/:slug/versions", middleware.CheckPolicy("/applications/*", "write"), middleware.RequireGroupSlugAccess("write"), controllers.CreateVersion)
+		g.GET("/:slug/versions/compare", middleware.CheckPolicy("/applications/*", "read"), middleware.RequireGroupSlugAccess("read"), controllers.CompareVersions)
+		g.GET("/:slug/versions/:versionId", middleware.CheckPolicy("/applications/*", "read"), middleware.RequireGroupSlugAccess("read"), controllers.GetVersion)
+		g.PATCH("/:slug/versions/:versionId", middleware.CheckPolicy("/applications/*", "write"), middleware.RequireGroupSlugAccess("write"), controllers.UpdateVersion)
+		g.DELETE("/:slug/versions/:versionId", middleware.CheckPolicy("/applications/*", "write"), middleware.RequireGroupSlugAccess("write"), controllers.DeleteVersion)
+		g.GET("/:slug/versions/:versionId/findings", middleware.CheckPolicy("/applications/*", "read"), middleware.RequireGroupSlugAccess("read"), controllers.GetVersionFindings)
 	}
 
 	publicIngest := router.Group("/")

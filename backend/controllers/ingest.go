@@ -16,40 +16,35 @@ import (
 )
 
 func findApplication(c *gin.Context) (*models.Application, error) {
+	if app, exists := c.Get("route_app"); exists {
+		return app.(*models.Application), nil
+	}
+
 	apiToken := c.GetHeader("X-Api-Token")
 
-	idParam := c.Param("id")
-	slugParam := c.Param("slug")
-
-	switch {
-	case slugParam != "":
-		var app models.Application
-		if err := config.DB.Where("slug = ?", slugParam).First(&app).Error; err != nil {
-			return nil, fmt.Errorf("application not found")
-		}
-		return &app, nil
-
-	case apiToken != "":
+	if apiToken != "" {
 		var app models.Application
 		if err := config.DB.Where("api_token = ?", apiToken).First(&app).Error; err != nil {
 			return nil, fmt.Errorf("invalid API token")
 		}
 		return &app, nil
+	}
 
-	case idParam != "":
-		id, err := strconv.ParseUint(idParam, 10, 64)
-		if err != nil {
-			return nil, fmt.Errorf("invalid application ID")
-		}
-		var app models.Application
-		if err := config.DB.First(&app, id).Error; err != nil {
-			return nil, fmt.Errorf("application not found")
-		}
-		return &app, nil
-
-	default:
+	idParam := c.Param("id")
+	if idParam == "" {
 		return nil, fmt.Errorf("application not specified")
 	}
+
+	id, err := strconv.ParseUint(idParam, 10, 64)
+	if err != nil {
+		return nil, fmt.Errorf("invalid application ID")
+	}
+
+	var app models.Application
+	if err := config.DB.First(&app, id).Error; err != nil {
+		return nil, fmt.Errorf("application not found")
+	}
+	return &app, nil
 }
 
 func upsertVersion(appID uint, name, branch string) (*models.ApplicationVersion, error) {

@@ -9,15 +9,25 @@ import (
 	"github.com/servasec/servasec/backend/utils"
 )
 
-// GetGroups returns all groups
+// GetGroups returns groups the user has access to
 // @Summary List groups
 // @Tags Groups
 // @Produce json
 // @Success 200 {array} models.Group "List of groups"
 // @Router /groups [get]
 func GetGroups(c *gin.Context) {
+	accessibleIDs := utils.GetAccessibleGroupIDs(c)
+	query := config.DB.Model(&models.Group{})
+	if accessibleIDs != nil {
+		if len(accessibleIDs) == 0 {
+			utils.OKResponse(c, []models.Group{})
+			return
+		}
+		query = query.Where("id IN ?", accessibleIDs)
+	}
+
 	var groups []models.Group
-	if err := config.DB.Find(&groups).Error; err != nil {
+	if err := query.Find(&groups).Error; err != nil {
 		utils.InternalServerError(c, "failed to fetch groups")
 		return
 	}
@@ -58,6 +68,12 @@ func CreateGroup(c *gin.Context) {
 	}
 	if err := c.ShouldBindJSON(&input); err != nil {
 		utils.BadRequestError(c, "Invalid input")
+		return
+	}
+
+	var existing models.Group
+	if err := config.DB.Where("path = ?", input.Path).First(&existing).Error; err == nil {
+		utils.BadRequestError(c, "A group with this path already exists")
 		return
 	}
 
@@ -113,7 +129,12 @@ func UpdateGroup(c *gin.Context) {
 	if input.Description != nil {
 		group.Description = *input.Description
 	}
-	if input.Path != nil {
+	if input.Path != nil && *input.Path != group.Path {
+		var existing models.Group
+		if err := config.DB.Where("path = ?", *input.Path).First(&existing).Error; err == nil {
+			utils.BadRequestError(c, "A group with this path already exists")
+			return
+		}
 		group.Path = *input.Path
 	}
 

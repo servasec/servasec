@@ -43,11 +43,11 @@ func GetApplications(c *gin.Context) {
 	utils.OKResponse(c, apps)
 }
 
-// GetApplication returns a single application by ID or slug
+// GetApplication returns a single application by ID
 // @Summary Get application
 // @Tags Applications
 // @Produce json
-// @Param id path string true "Application ID or slug"
+// @Param id path integer true "Application ID"
 // @Success 200 {object} object "Application with default version"
 // @Failure 404 {object} gin.H "Application not found"
 // @Router /applications/{id} [get]
@@ -55,13 +55,7 @@ func GetApplication(c *gin.Context) {
 	var app models.Application
 	query := config.DB.Preload("Versions", func(db *gorm.DB) *gorm.DB {
 		return db.Order("created_at DESC")
-	})
-
-	if slug := c.Param("slug"); slug != "" {
-		query = query.Where("slug = ?", slug)
-	} else {
-		query = query.Where("id = ?", c.Param("id"))
-	}
+	}).Where("id = ?", c.Param("id"))
 
 	if err := query.First(&app).Error; err != nil {
 		utils.NotFoundError(c, "Application not found")
@@ -106,6 +100,12 @@ func CreateApplication(c *gin.Context) {
 	var group models.Group
 	if err := config.DB.First(&group, input.GroupID).Error; err != nil {
 		utils.NotFoundError(c, "Group not found")
+		return
+	}
+
+	var existing models.Application
+	if err := config.DB.Where("group_id = ? AND slug = ?", input.GroupID, input.Slug).First(&existing).Error; err == nil {
+		utils.BadRequestError(c, "An application with this slug already exists in this group")
 		return
 	}
 
@@ -182,7 +182,16 @@ func UpdateApplication(c *gin.Context) {
 	if input.Description != nil {
 		app.Description = *input.Description
 	}
-	if input.Slug != nil {
+	if input.Slug != nil && *input.Slug != app.Slug {
+		targetGroupID := app.GroupID
+		if input.GroupID != nil {
+			targetGroupID = *input.GroupID
+		}
+		var existing models.Application
+		if err := config.DB.Where("group_id = ? AND slug = ? AND id != ?", targetGroupID, *input.Slug, app.ID).First(&existing).Error; err == nil {
+			utils.BadRequestError(c, "An application with this slug already exists in this group")
+			return
+		}
 		app.Slug = *input.Slug
 	}
 	if input.GroupID != nil {
