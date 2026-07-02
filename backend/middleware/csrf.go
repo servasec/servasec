@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"log"
 	"net/http"
 	"os"
 
@@ -15,6 +16,9 @@ var csrfSecret string
 func InitCSRFProtection() {
 	csrfSecret = os.Getenv("CSRF_SECRET")
 	if csrfSecret == "" {
+		if os.Getenv("SSC_DEBUG_ENABLED") != "true" {
+			log.Fatal("CSRF_SECRET must be set in production")
+		}
 		csrfSecret, _ = utils.GenerateRandomString(32)
 		debug.Log("CSRF_SECRET not set, using random secret for development")
 	}
