@@ -1,5 +1,28 @@
 # Changelog
 
+## [1.0.0](https://github.com/servasec/servasec/compare/v0.3.1...v1.0.0) (2026-07-02)
+
+
+### ⚠ BREAKING CHANGES
+
+* **backend:** /applications/by-slug/:slug replaced by /groups/:groupPath/applications/:slug
+
+### 🧩 Features
+
+* **backend:** /applications/by-slug/:slug replaced by /groups/:groupPath/applications/:slug ([79ca7d8](https://github.com/servasec/servasec/commit/79ca7d8bdd302a74cd606cac86df00109806d5ba))
+* **backend:** Implement openapi annotations ([bd940cb](https://github.com/servasec/servasec/commit/bd940cbd0311c7e74676f01060c5b2a2037d0812))
+* **backend:** Implement openapi annotations ([894e32f](https://github.com/servasec/servasec/commit/894e32f751bda0dda181bf169de9ea9f02f739e8))
+* Better ingest methods for CI/CD processes ([e24911c](https://github.com/servasec/servasec/commit/e24911c14387f4538a1511b185509948dd64a652))
+* Sarif parser ([036dfbc](https://github.com/servasec/servasec/commit/036dfbca61cbe7c433e0a56cc5f3c7450e9b310b))
+* Sarif parser ([9c1c00e](https://github.com/servasec/servasec/commit/9c1c00e6ed37790a1eb228f94ee190c54e2c4864))
+
+
+### 🐛 Bug fixes
+
+* API ingest processes + user api key ([f9d741e](https://github.com/servasec/servasec/commit/f9d741e9cfc95fa2d76de60d4420923c73ea34cb))
+* **frontend:** Scans & findings pages filters rework ([93a378f](https://github.com/servasec/servasec/commit/93a378fce2a1b129db42e2568ff0d4c12ad6f9bd))
+* **frontend:** Toast UI revamp ([b22d465](https://github.com/servasec/servasec/commit/b22d465d4616172864ec7ca9c8fc7080c317b28b))
+
 ## [0.3.1](https://github.com/servasec/servasec/compare/v0.3.0...v0.3.1) (2026-06-30)
 
 
