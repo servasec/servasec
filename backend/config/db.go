@@ -2,9 +2,10 @@ package config
 
 import (
 	"os"
+	"time"
 
 	"github.com/servasec/servasec/backend/debug"
-	"github.com/servasec/servasec/backend/models"
+	"github.com/servasec/servasec/backend/migrations"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -19,28 +20,19 @@ func ConnectDB() *gorm.DB {
 		os.Exit(1)
 	}
 
-	err = db.AutoMigrate(
-		&models.User{},
-		&models.BlacklistedToken{},
-		&models.Group{},
-		&models.Application{},
-		&models.ApplicationVersion{},
-		&models.ScannerType{},
-		&models.Scan{},
-		&models.Finding{},
-		&models.Team{},
-		&models.TeamMember{},
-		&models.Comment{},
-		&models.Webhook{},
-		&models.AuditLog{},
-		&models.Policy{},
-		&models.PolicyLog{},
-		&models.UserApiKey{},
-	)
+	sqlDB, err := db.DB()
 	if err != nil {
-		debug.Log("Failed to migrate database: %v", err)
+		debug.Log("Failed to get underlying sql.DB: %v", err)
 		os.Exit(1)
 	}
+	if err := migrations.Run(sqlDB); err != nil {
+		debug.Log("Database migration failed: %v", err)
+		os.Exit(1)
+	}
+
+	sqlDB.SetMaxOpenConns(25)
+	sqlDB.SetMaxIdleConns(10)
+	sqlDB.SetConnMaxLifetime(5 * time.Minute)
 
 	DB = db
 

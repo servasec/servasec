@@ -11,8 +11,13 @@
 package main
 
 import (
+	"context"
 	"log"
+	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -57,9 +62,7 @@ func main() {
 
 	router := gin.New()
 	router.Use(gin.Logger())
-	if os.Getenv("SSC_DEBUG_ENABLED") == "true" {
-		router.Use(gin.Recovery())
-	}
+	router.Use(gin.Recovery())
 
 	middleware.InitCSRFProtection()
 
@@ -108,6 +111,28 @@ func main() {
 		port = "8080"
 	}
 
-	debug.Log("Starting server on port %s", port)
-	router.Run(":" + port)
+	srv := &http.Server{
+		Addr:    ":" + port,
+		Handler: router,
+	}
+
+	go func() {
+		debug.Log("Starting server on port %s", port)
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("listen: %s\n", err)
+		}
+	}()
+
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+	log.Println("Shutting down server...")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	if err := srv.Shutdown(ctx); err != nil {
+		log.Fatalf("Server forced to shutdown: %v", err)
+	}
+
+	log.Println("Server exited")
 }

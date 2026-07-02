@@ -1,2 +1,2 @@
 #!/bin/sh
-/app/servasec
+exec /app/servasec

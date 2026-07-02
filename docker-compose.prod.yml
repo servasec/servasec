@@ -1,6 +1,7 @@
 services:
   frontend:
     container_name: frontend
+    restart: unless-stopped
     build:
       context: ./frontend
       dockerfile: Dockerfile
@@ -16,6 +17,7 @@ services:
 
   backend:
     container_name: backend
+    restart: unless-stopped
     build:
       context: ./backend
       dockerfile: Dockerfile
@@ -55,7 +57,8 @@ services:
 
   db:
     container_name: db
-    image: postgres:15
+    restart: unless-stopped
+    image: postgres:${POSTGRES_VERSION:-17}
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -72,6 +75,7 @@ services:
 
   caddy:
     container_name: caddy
+    restart: unless-stopped
     hostname: servasec.local
     build:
       context: caddy/
@@ -82,12 +86,15 @@ services:
     ports:
       - "80:80"
       - "443:443"
+    volumes:
+      - caddy_data:/data
     networks:
       public:
       private:
 
 volumes:
   postgres_data:
+  caddy_data:
 
 networks:
   public:

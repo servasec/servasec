@@ -46,28 +46,14 @@ make prod
 
 Default admin: `admin` / password from `SSC_ADMIN_PASSWORD` (random hex if unset, check logs of backend container ;) ).
 
+
 ## Scanner Support
 
-Refer to https://servasec.com/scanners
+Look at https://docs.servasec.com/scanners/overview/ for the complete list of scanners supported.
 
 ## Environment Variables
 
-| Variable | Required | Default | Description |
-|----------|----------|---------|-------------|
-| `DATABASE_URL` | ✓ | - | PostgreSQL connection string |
-| `JWT_SECRET` | ✓ | - | Access token signing key |
-| `REFRESH_SECRET` | ✓ | - | Refresh token signing key |
-| `CSRF_SECRET` | ✓ | (auto) | CSRF protection key |
-| `SSC_ADMIN_PASSWORD` | | random | Initial admin password (8 chars min.) |
-| `SSC_SITE_NAME` | | `servasec` | Site name |
-| `SSC_PUBLIC_DOMAIN` | ✓ | - | Public hostname (for CORS & Caddy) |
-| `SSC_REGISTRATION_ENABLED` | | `true` | Allow user registration |
-| `SSC_DEBUG_ENABLED` | | `false` | Enable debug logging |
-| `SSC_SEED_DATABASE` | | `false` | Seed default admin + scanner types |
-| `SSC_SEED_CASBIN_CSV` | | `false` | Seed Casbin policies from CSV |
-| `SSC_LICENSE_KEY` | | - | License JWT for pro features |
-| `TRUSTED_PROXIES_CIDR` | | `172.70.1.0/24` | Caddy Docker network CIDR |
-
+See https://docs.servasec.com/getting-started/configuration/
 
 ## License
 

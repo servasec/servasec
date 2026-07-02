@@ -25,13 +25,15 @@ func getAdminPassword() string {
 	if pwd := os.Getenv("SSC_ADMIN_PASSWORD"); pwd != "" {
 		return pwd
 	}
+	if os.Getenv("SSC_DEBUG_ENABLED") != "true" {
+		log.Fatal("SSC_ADMIN_PASSWORD must be set in production")
+	}
 	randomPwd, err := generateRandomHex(16)
 	if err != nil {
 		log.Printf("Failed to generate random admin password: %v", err)
 		return "Admin1234!"
 	}
 
-	// use log package instead of custom debug so even if debug is disabled, admin see its generated password
 	log.Printf("========================================")
 	log.Printf("  ADMIN PASSWORD: %s", randomPwd)
 	log.Printf("  Set SSC_ADMIN_PASSWORD env var to disable random generation")

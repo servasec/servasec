@@ -11,8 +11,8 @@ type User struct {
 	Password      string    `json:"-"`
 	Role          string    `gorm:"not null;default:'member'" json:"role"`
 	Banned        bool      `json:"banned"`
-	OAuthProvider string    `gorm:"size:50;index:idx_oauth_provider_id" json:"oauthProvider,omitempty"`
-	OAuthID       string    `gorm:"size:255;index:idx_oauth_provider_id" json:"oauthId,omitempty"`
+	OAuthProvider string    `gorm:"column:oauth_provider;size:50;index:idx_oauth_provider_id" json:"oauthProvider,omitempty"`
+	OAuthID       string    `gorm:"column:oauth_id;size:255;index:idx_oauth_provider_id" json:"oauthId,omitempty"`
 	AvatarURL     string    `gorm:"size:500" json:"avatarUrl,omitempty"`
 	CreatedAt     time.Time `json:"createdAt"`
 	UpdatedAt     time.Time `json:"updatedAt"`

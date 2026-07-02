@@ -49,6 +49,6 @@ func RegisterApplicationRoutes(router *gin.Engine) {
 
 	publicIngest := router.Group("/")
 	{
-		publicIngest.POST("/ingest", controllers.IngestScan)
+		publicIngest.POST("/ingest", middleware.RateLimit(30), controllers.IngestScan)
 	}
 }
