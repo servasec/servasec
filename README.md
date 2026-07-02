@@ -46,68 +46,14 @@ make prod
 
 Default admin: `admin` / password from `SSC_ADMIN_PASSWORD` (random hex if unset, check logs of backend container ;) ).
 
-## Upgrading
-
-Database migrations run **automatically** when the backend starts — no manual SQL step required.
-
-### Standard upgrade
-
-```bash
-# 1. Backup the database
-docker compose exec db pg_dump -U servasec servasec > backup_$(date +%Y%m%d).sql
-
-# 2. Build and restart the new version
-docker compose pull
-docker compose up -d
-
-# 3. Verify migrations applied
-docker compose logs backend --tail=20 | grep -i migration
-```
-
-Or use the helper script:
-
-```bash
-./scripts/upgrade.sh              # build latest
-./scripts/upgrade.sh v1.1.0       # build specific version
-```
-
-### Rollback
-
-```bash
-# Restore the backup and restart the previous image
-cat backup_20260702.sql | docker compose exec -T db psql -U servasec servasec
-```
-
-### Adding a migration (developers)
-
-```bash
-make migrate-create NAME=describe_your_change
-```
-
-Edit the generated file in `backend/migrations/`, rebuild, restart. The new migration runs automatically on next startup. See `backend/migrations/MIGRATIONS.md` for the version-to-app mapping.
 
 ## Scanner Support
 
-Refer to https://servasec.com/scanners
+Look at https://docs.servasec.com/scanners/overview/ for the complete list of scanners supported.
 
 ## Environment Variables
 
-| Variable | Required | Default | Description |
-|----------|----------|---------|-------------|
-| `DATABASE_URL` | ✓ | - | PostgreSQL connection string |
-| `JWT_SECRET` | ✓ | - | Access token signing key |
-| `REFRESH_SECRET` | ✓ | - | Refresh token signing key |
-| `CSRF_SECRET` | ✓ | (auto) | CSRF protection key |
-| `SSC_ADMIN_PASSWORD` | | random | Initial admin password (8 chars min.) |
-| `SSC_SITE_NAME` | | `servasec` | Site name |
-| `SSC_PUBLIC_DOMAIN` | ✓ | - | Public hostname (for CORS & Caddy) |
-| `SSC_REGISTRATION_ENABLED` | | `true` | Allow user registration |
-| `SSC_DEBUG_ENABLED` | | `false` | Enable debug logging |
-| `SSC_SEED_DATABASE` | | `false` | Seed default admin + scanner types |
-| `SSC_SEED_CASBIN_CSV` | | `false` | Seed Casbin policies from CSV |
-| `SSC_LICENSE_KEY` | | - | License JWT for pro features |
-| `TRUSTED_PROXIES_CIDR` | | `172.70.1.0/24` | Caddy Docker network CIDR |
-
+See https://docs.servasec.com/getting-started/configuration/
 
 ## License
 
