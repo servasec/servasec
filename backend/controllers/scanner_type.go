@@ -9,6 +9,13 @@ import (
 	"github.com/servasec/servasec/backend/utils"
 )
 
+// GetScannerTypes returns all scanner types, optionally filtered by enabled status
+// @Summary List scanner types
+// @Tags Scanner Types
+// @Produce json
+// @Param enabled query string false "Filter by enabled status (true)"
+// @Success 200 {array} models.ScannerType "List of scanner types"
+// @Router /scanner-types [get]
 func GetScannerTypes(c *gin.Context) {
 	var scannerTypes []models.ScannerType
 	q := config.DB.Order("name ASC")
@@ -22,6 +29,17 @@ func GetScannerTypes(c *gin.Context) {
 	utils.OKResponse(c, scannerTypes)
 }
 
+// UpdateScannerType enables or disables a scanner type (admin only)
+// @Summary Update scanner type
+// @Tags Scanner Types
+// @Accept json
+// @Produce json
+// @Param id path string true "Scanner type ID"
+// @Param input body object true "enabled field"
+// @Success 200 {object} models.ScannerType "Updated scanner type"
+// @Failure 400 {object} gin.H "Invalid input"
+// @Failure 404 {object} gin.H "Scanner type not found"
+// @Router /admin/scanner-types/{id} [put]
 func UpdateScannerType(c *gin.Context) {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {

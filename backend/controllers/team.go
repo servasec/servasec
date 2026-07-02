@@ -11,6 +11,12 @@ import (
 	"github.com/servasec/servasec/backend/utils"
 )
 
+// GetTeams returns teams accessible to the current user
+// @Summary List teams
+// @Tags Teams
+// @Produce json
+// @Success 200 {array} models.Team "List of teams"
+// @Router /teams [get]
 func GetTeams(c *gin.Context) {
 	user, _ := c.Get("user")
 	currentUser := user.(*models.User)
@@ -32,6 +38,14 @@ func GetTeams(c *gin.Context) {
 	utils.OKResponse(c, teams)
 }
 
+// GetTeam returns a single team by ID with its members
+// @Summary Get team
+// @Tags Teams
+// @Produce json
+// @Param id path string true "Team ID"
+// @Success 200 {object} object "Team with members"
+// @Failure 404 {object} gin.H "Team not found"
+// @Router /teams/{id} [get]
 func GetTeam(c *gin.Context) {
 	var team models.Team
 	if err := config.DB.Preload("Members.User").First(&team, c.Param("id")).Error; err != nil {
@@ -64,6 +78,15 @@ func GetTeam(c *gin.Context) {
 	})
 }
 
+// CreateTeam creates a new team and adds the creator as admin
+// @Summary Create team
+// @Tags Teams
+// @Accept json
+// @Produce json
+// @Param input body object true "Team details"
+// @Success 201 {object} models.Team "Created team"
+// @Failure 400 {object} gin.H "Invalid input"
+// @Router /teams [post]
 func CreateTeam(c *gin.Context) {
 	var input struct {
 		Name        string `json:"name" binding:"required,max=100"`
@@ -98,6 +121,17 @@ func CreateTeam(c *gin.Context) {
 	utils.CreatedResponse(c, team)
 }
 
+// UpdateTeam updates an existing team
+// @Summary Update team
+// @Tags Teams
+// @Accept json
+// @Produce json
+// @Param id path string true "Team ID"
+// @Param input body object true "Fields to update"
+// @Success 200 {object} models.Team "Updated team"
+// @Failure 400 {object} gin.H "Invalid input"
+// @Failure 404 {object} gin.H "Team not found"
+// @Router /teams/{id} [put]
 func UpdateTeam(c *gin.Context) {
 	var team models.Team
 	if err := config.DB.First(&team, c.Param("id")).Error; err != nil {
@@ -128,6 +162,14 @@ func UpdateTeam(c *gin.Context) {
 	utils.OKResponse(c, team)
 }
 
+// DeleteTeam deletes a team by ID
+// @Summary Delete team
+// @Tags Teams
+// @Produce json
+// @Param id path string true "Team ID"
+// @Success 200 {object} gin.H "Team deleted"
+// @Failure 404 {object} gin.H "Team not found"
+// @Router /teams/{id} [delete]
 func DeleteTeam(c *gin.Context) {
 	var team models.Team
 	if err := config.DB.First(&team, c.Param("id")).Error; err != nil {
@@ -142,6 +184,18 @@ func DeleteTeam(c *gin.Context) {
 	utils.OKResponse(c, gin.H{"message": "Team deleted"})
 }
 
+// AddTeamMember adds a user to a team
+// @Summary Add team member
+// @Tags Teams
+// @Accept json
+// @Produce json
+// @Param id path string true "Team ID"
+// @Param input body object true "User ID and role"
+// @Success 201 {object} gin.H "Member added"
+// @Failure 400 {object} gin.H "Invalid input"
+// @Failure 404 {object} gin.H "User not found"
+// @Failure 409 {object} gin.H "User is already a team member"
+// @Router /teams/{id}/members [post]
 func AddTeamMember(c *gin.Context) {
 	teamID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
@@ -187,6 +241,16 @@ func AddTeamMember(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{"message": "Member added"})
 }
 
+// RemoveTeamMember removes a user from a team
+// @Summary Remove team member
+// @Tags Teams
+// @Produce json
+// @Param id path string true "Team ID"
+// @Param userId path string true "User ID"
+// @Success 200 {object} gin.H "Member removed"
+// @Failure 400 {object} gin.H "Invalid ID"
+// @Failure 404 {object} gin.H "Team member not found"
+// @Router /teams/{id}/members/{userId} [delete]
 func RemoveTeamMember(c *gin.Context) {
 	teamID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {

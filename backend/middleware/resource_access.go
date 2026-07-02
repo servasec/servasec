@@ -49,6 +49,21 @@ func resolveGroupAccess(uid uint, resourcePath string, action string) bool {
 
 func RequireResourceAccess(resourcePath string, action string) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		if c.GetString("auth_method") == "app_token" {
+			tokenAppID := AppIDStrFromContext(c)
+			if tokenAppID == "" {
+				c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "unauthorized"})
+				return
+			}
+			expectedPath := fmt.Sprintf("/applications/%s", tokenAppID)
+			if resourcePath != expectedPath {
+				c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "token does not authorize access to this application"})
+				return
+			}
+			c.Next()
+			return
+		}
+
 		userID, exists := c.Get("user_id")
 		if !exists {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
@@ -146,14 +161,32 @@ func RequireScanAccess(action string) gin.HandlerFunc {
 	}
 }
 
-func RequireSlugAccess(action string) gin.HandlerFunc {
+func RequireGroupSlugAccess(action string) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		groupIdentifier := c.Param("id")
+
+		var group models.Group
+		if id, err := strconv.ParseUint(groupIdentifier, 10, 64); err == nil {
+			config.DB.First(&group, id)
+		}
+		if group.ID == 0 {
+			config.DB.Where("path = ?", groupIdentifier).First(&group)
+		}
+		if group.ID == 0 {
+			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": "group not found"})
+			return
+		}
+
 		slug := c.Param("slug")
 		var app models.Application
-		if err := config.DB.Where("slug = ?", slug).First(&app).Error; err != nil {
+		if err := config.DB.Where("group_id = ? AND slug = ?", group.ID, slug).First(&app).Error; err != nil {
 			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": "application not found"})
 			return
 		}
+
+		c.Set("route_group", &group)
+		c.Set("route_app", &app)
+		c.Params = append(c.Params, gin.Param{Key: "id", Value: strconv.FormatUint(uint64(app.ID), 10)})
 		RequireResourceAccess(fmt.Sprintf("/applications/%d", app.ID), action)(c)
 	}
 }

@@ -17,6 +17,20 @@ func generateRefreshToken() string {
 	return hex.EncodeToString(b)
 }
 
+// HandleToken exchanges an authorization code or refresh token for tokens
+// @Summary OAuth token endpoint
+// @Tags OAuth
+// @Accept x-www-form-urlencoded
+// @Produce json
+// @Param grant_type formData string true "Grant type (authorization_code or refresh_token)"
+// @Param client_id formData string true "OAuth client ID"
+// @Param code formData string false "Authorization code (required for authorization_code grant)"
+// @Param code_verifier formData string false "PKCE code verifier (required for authorization_code grant)"
+// @Param redirect_uri formData string false "Redirect URI (optional, must match authorize request)"
+// @Param refresh_token formData string false "Refresh token (required for refresh_token grant)"
+// @Success 200 {object} gin.H "Token response with access_token, refresh_token, expires_in"
+// @Failure 400 {object} gin.H "Invalid request"
+// @Router /oauth/token [post]
 func HandleToken(c *gin.Context) {
 	grantType := c.PostForm("grant_type")
 	clientID := c.PostForm("client_id")

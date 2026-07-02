@@ -41,7 +41,13 @@ export default function App({ Component, pageProps }: AppProps) {
                 <Component {...pageProps} />
               </ErrorBoundary>
             </AppLayout>
-            <Toaster position="top-right" richColors />
+            <Toaster
+              position="top-right"
+              toastOptions={{
+                duration: 4000,
+                className: "!bg-card !border !border-border !text-foreground !shadow-sm",
+              }}
+            />
           </ThemeProvider>
         </CSRFProvider>
       </AuthProvider>

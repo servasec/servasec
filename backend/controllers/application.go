@@ -18,6 +18,12 @@ func generateApiToken() string {
 	return hex.EncodeToString(b)
 }
 
+// GetApplications returns all applications the user has access to
+// @Summary List applications
+// @Tags Applications
+// @Produce json
+// @Success 200 {array} models.Application "List of applications"
+// @Router /applications [get]
 func GetApplications(c *gin.Context) {
 	accessibleIDs := utils.GetAccessibleAppIDs(c)
 	query := config.DB.Model(&models.Application{})
@@ -37,17 +43,19 @@ func GetApplications(c *gin.Context) {
 	utils.OKResponse(c, apps)
 }
 
+// GetApplication returns a single application by ID
+// @Summary Get application
+// @Tags Applications
+// @Produce json
+// @Param id path integer true "Application ID"
+// @Success 200 {object} object "Application with default version"
+// @Failure 404 {object} gin.H "Application not found"
+// @Router /applications/{id} [get]
 func GetApplication(c *gin.Context) {
 	var app models.Application
 	query := config.DB.Preload("Versions", func(db *gorm.DB) *gorm.DB {
 		return db.Order("created_at DESC")
-	})
-
-	if slug := c.Param("slug"); slug != "" {
-		query = query.Where("slug = ?", slug)
-	} else {
-		query = query.Where("id = ?", c.Param("id"))
-	}
+	}).Where("id = ?", c.Param("id"))
 
 	if err := query.First(&app).Error; err != nil {
 		utils.NotFoundError(c, "Application not found")
@@ -66,6 +74,15 @@ func GetApplication(c *gin.Context) {
 	utils.OKResponse(c, resp)
 }
 
+// CreateApplication creates a new application with an auto-generated API token
+// @Summary Create application
+// @Tags Applications
+// @Accept json
+// @Produce json
+// @Param input body object true "Application details"
+// @Success 201 {object} models.Application "Created application"
+// @Failure 400 {object} gin.H "Invalid input"
+// @Router /applications [post]
 func CreateApplication(c *gin.Context) {
 	var input struct {
 		Name             string `json:"name" binding:"required,max=200"`
@@ -83,6 +100,12 @@ func CreateApplication(c *gin.Context) {
 	var group models.Group
 	if err := config.DB.First(&group, input.GroupID).Error; err != nil {
 		utils.NotFoundError(c, "Group not found")
+		return
+	}
+
+	var existing models.Application
+	if err := config.DB.Where("group_id = ? AND slug = ?", input.GroupID, input.Slug).First(&existing).Error; err == nil {
+		utils.BadRequestError(c, "An application with this slug already exists in this group")
 		return
 	}
 
@@ -108,9 +131,31 @@ func CreateApplication(c *gin.Context) {
 	config.CEF.AddPolicy(sub, fmt.Sprintf("/applications/%d", app.ID), "*")
 	config.CEF.SavePolicy()
 
-	utils.CreatedResponse(c, app)
+	utils.CreatedResponse(c, gin.H{
+		"id":               app.ID,
+		"name":             app.Name,
+		"description":      app.Description,
+		"slug":             app.Slug,
+		"groupId":          app.GroupID,
+		"repositoryUrl":    app.RepositoryURL,
+		"apiToken":         app.ApiToken,
+		"assetCriticality": app.AssetCriticality,
+		"createdAt":        app.CreatedAt,
+		"updatedAt":        app.UpdatedAt,
+	})
 }
 
+// UpdateApplication updates an existing application
+// @Summary Update application
+// @Tags Applications
+// @Accept json
+// @Produce json
+// @Param id path string true "Application ID"
+// @Param input body object true "Fields to update"
+// @Success 200 {object} models.Application "Updated application"
+// @Failure 400 {object} gin.H "Invalid input"
+// @Failure 404 {object} gin.H "Application not found"
+// @Router /applications/{id} [put]
 func UpdateApplication(c *gin.Context) {
 	var app models.Application
 	if err := config.DB.First(&app, c.Param("id")).Error; err != nil {
@@ -137,7 +182,16 @@ func UpdateApplication(c *gin.Context) {
 	if input.Description != nil {
 		app.Description = *input.Description
 	}
-	if input.Slug != nil {
+	if input.Slug != nil && *input.Slug != app.Slug {
+		targetGroupID := app.GroupID
+		if input.GroupID != nil {
+			targetGroupID = *input.GroupID
+		}
+		var existing models.Application
+		if err := config.DB.Where("group_id = ? AND slug = ? AND id != ?", targetGroupID, *input.Slug, app.ID).First(&existing).Error; err == nil {
+			utils.BadRequestError(c, "An application with this slug already exists in this group")
+			return
+		}
 		app.Slug = *input.Slug
 	}
 	if input.GroupID != nil {
@@ -157,6 +211,14 @@ func UpdateApplication(c *gin.Context) {
 	utils.OKResponse(c, app)
 }
 
+// DeleteApplication deletes an application by ID
+// @Summary Delete application
+// @Tags Applications
+// @Produce json
+// @Param id path string true "Application ID"
+// @Success 200 {object} gin.H "Application deleted"
+// @Failure 404 {object} gin.H "Application not found"
+// @Router /applications/{id} [delete]
 func DeleteApplication(c *gin.Context) {
 	var app models.Application
 	if err := config.DB.First(&app, c.Param("id")).Error; err != nil {
@@ -171,6 +233,14 @@ func DeleteApplication(c *gin.Context) {
 	utils.OKResponse(c, gin.H{"message": "Application deleted"})
 }
 
+// RegenerateApiToken generates a new API token for an application
+// @Summary Regenerate API token
+// @Tags Applications
+// @Produce json
+// @Param id path string true "Application ID"
+// @Success 200 {object} gin.H "New API token"
+// @Failure 404 {object} gin.H "Application not found"
+// @Router /applications/{id}/regenerate-token [post]
 func RegenerateApiToken(c *gin.Context) {
 	var app models.Application
 	if err := config.DB.First(&app, c.Param("id")).Error; err != nil {

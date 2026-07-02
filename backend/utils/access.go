@@ -29,7 +29,35 @@ func extractIDsFromPolicies(policies [][]string, prefix string) []string {
 			}
 		}
 	}
-	var ids []string
+	ids := make([]string, 0, len(seen))
+	for id := range seen {
+		ids = append(ids, id)
+	}
+	return ids
+}
+
+func GetAccessibleGroupIDs(c *gin.Context) []string {
+	user, exists := c.Get("user")
+	if !exists {
+		return nil
+	}
+	currentUser := user.(*models.User)
+	if currentUser.Role == "admin" {
+		return nil
+	}
+
+	uid := c.GetUint("user_id")
+	seen := make(map[string]struct{})
+
+	subs := collectSubjects(uid)
+	for _, sub := range subs {
+		policies, _ := config.CEF.GetFilteredPolicy(0, sub)
+		for _, id := range extractIDsFromPolicies(policies, "/groups/") {
+			seen[id] = struct{}{}
+		}
+	}
+
+	ids := make([]string, 0, len(seen))
 	for id := range seen {
 		ids = append(ids, id)
 	}
@@ -75,7 +103,7 @@ func GetAccessibleAppIDs(c *gin.Context) []string {
 		}
 	}
 
-	var ids []string
+	ids := make([]string, 0, len(seen))
 	for id := range seen {
 		ids = append(ids, id)
 	}
@@ -83,7 +111,7 @@ func GetAccessibleAppIDs(c *gin.Context) []string {
 }
 
 func mapKeys(m map[string]struct{}) []string {
-	var keys []string
+	keys := make([]string, 0, len(m))
 	for k := range m {
 		keys = append(keys, k)
 	}

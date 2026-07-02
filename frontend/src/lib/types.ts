@@ -170,6 +170,23 @@ export interface PolicyLog {
   createdAt: string;
 }
 
+export interface ApiKey {
+  id: number;
+  userId: number;
+  name: string;
+  keyPrefix: string;
+  lastUsedAt: string | null;
+  expiresAt: string | null;
+  createdAt: string;
+}
+
+export interface CreateApiKeyResponse {
+  id: number;
+  name: string;
+  keyPrefix: string;
+  key: string;
+}
+
 export interface Permission {
   userId: number;
   user: User;

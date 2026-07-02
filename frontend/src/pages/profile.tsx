@@ -7,10 +7,19 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
-import { User, Mail, Lock, Save } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { User, Mail, Lock, Save, Key, Plus, Trash2, Copy, Check } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import axios from "@/lib/api";
 import { toast } from "sonner";
+import type { ApiKey, CreateApiKeyResponse } from "@/lib/types";
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -25,6 +34,16 @@ export default function ProfilePage() {
     newPassword: "",
     confirmPassword: "",
   });
+
+  const [apiKeys, setApiKeys] = useState<ApiKey[]>([]);
+  const [keysLoading, setKeysLoading] = useState(true);
+  const [genDialogOpen, setGenDialogOpen] = useState(false);
+  const [genName, setGenName] = useState("");
+  const [generating, setGenerating] = useState(false);
+  const [createdKey, setCreatedKey] = useState<CreateApiKeyResponse | null>(null);
+  const [copied, setCopied] = useState(false);
+  const [revokeTarget, setRevokeTarget] = useState<ApiKey | null>(null);
+  const [revoking, setRevoking] = useState(false);
 
   useEffect(() => {
     if (authChecked && !loggedIn) {
@@ -83,6 +102,71 @@ export default function ProfilePage() {
       toast.error(error?.response?.data?.error || "Failed to change password");
     } finally {
       setChangingPassword(false);
+    }
+  };
+
+  const fetchKeys = () => {
+    setKeysLoading(true);
+    axios.get("/api/api-keys")
+      .then((res) => setApiKeys(res.data || []))
+      .catch(() => toast.error("Failed to load API keys"))
+      .finally(() => setKeysLoading(false));
+  };
+
+  useEffect(() => {
+    if (authChecked && loggedIn) fetchKeys();
+  }, [authChecked, loggedIn]);
+
+  const handleGenerate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!genName.trim()) return;
+    setGenerating(true);
+    try {
+      const res = await axios.post("/api/api-keys", { name: genName.trim() });
+      setCreatedKey(res.data);
+    } catch (error: any) {
+      toast.error(error?.response?.data?.error || "Failed to generate key");
+    } finally {
+      setGenerating(false);
+    }
+  };
+
+  const handleCopy = async () => {
+    if (!createdKey) return;
+    try {
+      await navigator.clipboard.writeText(createdKey.key);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toast.error("Failed to copy");
+    }
+  };
+
+  const handleCloseGenDialog = () => {
+    if (createdKey) {
+      setGenDialogOpen(false);
+      setCreatedKey(null);
+      setGenName("");
+      setCopied(false);
+      fetchKeys();
+    } else {
+      setGenDialogOpen(false);
+      setGenName("");
+    }
+  };
+
+  const handleRevoke = async () => {
+    if (!revokeTarget) return;
+    setRevoking(true);
+    try {
+      await axios.delete(`/api/api-keys/${revokeTarget.id}`);
+      toast.success("API key revoked");
+      setRevokeTarget(null);
+      fetchKeys();
+    } catch (error: any) {
+      toast.error(error?.response?.data?.error || "Failed to revoke key");
+    } finally {
+      setRevoking(false);
     }
   };
 
@@ -273,6 +357,173 @@ export default function ProfilePage() {
           </CardContent>
         </Card>
       )}
+
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle>API Keys</CardTitle>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 px-2.5 text-xs gap-1"
+              onClick={() => { setGenName(""); setCreatedKey(null); setCopied(false); setGenDialogOpen(true); }}
+            >
+              <Plus className="h-3.5 w-3.5" />
+              Generate New Key
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {keysLoading ? (
+            <div className="space-y-3">
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-10 w-full" />
+            </div>
+          ) : apiKeys.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <Key className="h-8 w-8 mx-auto mb-2 opacity-40" />
+              <p>No API keys yet</p>
+              <p className="text-xs mt-1">Generate a key to use in your CI/CD pipelines</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b">
+                    <th className="text-left pb-3 font-medium text-muted-foreground">Prefix</th>
+                    <th className="text-left pb-3 font-medium text-muted-foreground">Name</th>
+                    <th className="text-left pb-3 font-medium text-muted-foreground hidden sm:table-cell">Created</th>
+                    <th className="text-left pb-3 font-medium text-muted-foreground hidden sm:table-cell">Last Used</th>
+                    <th className="w-16 pb-3" />
+                  </tr>
+                </thead>
+                <tbody>
+                  {apiKeys.map((key) => (
+                    <tr key={key.id} className="border-b last:border-0">
+                      <td className="py-3 pr-4">
+                        <code className="text-xs bg-muted rounded px-1.5 py-0.5 font-mono">{key.keyPrefix}...</code>
+                      </td>
+                      <td className="py-3 pr-4 font-medium">{key.name}</td>
+                      <td className="py-3 pr-4 text-muted-foreground hidden sm:table-cell">
+                        {new Date(key.createdAt).toLocaleDateString()}
+                      </td>
+                      <td className="py-3 pr-4 text-muted-foreground hidden sm:table-cell">
+                        {key.lastUsedAt ? new Date(key.lastUsedAt).toLocaleDateString() : "never"}
+                      </td>
+                      <td className="py-3">
+                        <Button
+                          variant="destructive-ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => setRevokeTarget(key)}
+                          title="Revoke key"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Dialog open={genDialogOpen} onOpenChange={handleCloseGenDialog}>
+        <DialogContent>
+          {createdKey ? (
+            <>
+              <DialogHeader>
+                <DialogTitle>API Key Generated</DialogTitle>
+                <DialogDescription>
+                  Copy this key now. You won&apos;t be able to see it again.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <div className="p-3 rounded-md bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400 text-xs">
+                  ⚠ Copy this key now. It will never be shown again.
+                </div>
+                <div className="grid gap-2">
+                  <Label>Name</Label>
+                  <Input value={createdKey.name} readOnly />
+                </div>
+                <div className="grid gap-2">
+                  <Label>Key</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      value={createdKey.key}
+                      readOnly
+                      className="font-mono text-xs"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      className="h-10 w-10 shrink-0"
+                      onClick={handleCopy}
+                    >
+                      {copied ? <Check className="h-4 w-4 text-emerald-500" /> : <Copy className="h-4 w-4" />}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button type="button" onClick={handleCloseGenDialog}>Done</Button>
+              </DialogFooter>
+            </>
+          ) : (
+            <>
+              <DialogHeader>
+                <DialogTitle>Generate new API key</DialogTitle>
+                <DialogDescription>
+                  Create a key for use in your CI/CD pipelines or automation scripts.
+                </DialogDescription>
+              </DialogHeader>
+              <form onSubmit={handleGenerate}>
+                <div className="py-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="keyName">Key name *</Label>
+                    <Input
+                      id="keyName"
+                      value={genName}
+                      onChange={(e) => setGenName(e.target.value)}
+                      placeholder="e.g. ci-cd, deploy"
+                      required
+                      maxLength={100}
+                      autoComplete="off"
+                      data-1p-ignore
+                    />
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button type="button" variant="outline" onClick={() => setGenDialogOpen(false)}>Cancel</Button>
+                  <Button type="submit" disabled={generating || !genName.trim()}>
+                    {generating ? "Generating..." : "Generate"}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!revokeTarget} onOpenChange={(open) => !open && setRevokeTarget(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Revoke API Key</DialogTitle>
+            <DialogDescription>
+              Are you sure? This action is irreversible. Any services using this key will immediately lose access.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setRevokeTarget(null)}>Cancel</Button>
+            <Button type="button" variant="destructive" onClick={handleRevoke} disabled={revoking}>
+              {revoking ? "Revoking..." : "Revoke"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

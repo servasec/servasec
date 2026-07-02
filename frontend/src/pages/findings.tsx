@@ -19,7 +19,7 @@ import { toast } from "sonner";
 import type { Finding, Application, ScannerType } from "@/lib/types";
 import { severityBadgeColors, statusColors, statusLabels, nextStatuses, severityOptions, riskScoreColor } from "@/lib/constants";
 
-const filterKeys = ["applicationId", "applicationVersionId", "severity", "status", "scannerTypeId", "assignedTo"] as const;
+const filterKeys = ["applicationId", "applicationVersionId", "scanId", "severity", "status", "scannerTypeId", "assignedTo"] as const;
 
 export default function FindingsPage() {
   const router = useRouter();
@@ -29,6 +29,7 @@ export default function FindingsPage() {
   const [apps, setApps] = useState<Application[]>([]);
   const [scannerTypes, setScannerTypes] = useState<ScannerType[]>([]);
   const [versions, setVersions] = useState<Application["versions"] extends undefined ? { id: number; applicationId: number; name: string }[] : any[]>([]);
+  const [scans, setScans] = useState<{ id: number; createdAt: string; scannerType?: { name: string } | null }[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
   const [page, setPage] = useState(1);
@@ -84,6 +85,13 @@ export default function FindingsPage() {
       .catch(() => {});
   };
 
+  const fetchScans = (appId: string) => {
+    if (!appId) { setScans([]); return; }
+    axios.get(`/api/scans?applicationId=${appId}`)
+      .then((res) => setScans(res.data || []))
+      .catch(() => {});
+  };
+
   useEffect(() => {
     if (authChecked && !loggedIn) {
       router.replace("/login");
@@ -94,11 +102,12 @@ export default function FindingsPage() {
     if (authChecked && loggedIn && router.isReady) {
       fetchFindings(1, sortBy, order);
     }
-  }, [authChecked, loggedIn, router.isReady, filters.applicationId, filters.applicationVersionId, filters.severity, filters.status, filters.scannerTypeId, filters.assignedTo, sortBy, order]);
+  }, [authChecked, loggedIn, router.isReady, filters.applicationId, filters.applicationVersionId, filters.scanId, filters.severity, filters.status, filters.scannerTypeId, filters.assignedTo, sortBy, order]);
 
   useEffect(() => {
     if (authChecked && loggedIn && router.isReady) {
       fetchVersions(filters.applicationId);
+      fetchScans(filters.applicationId);
     }
   }, [authChecked, loggedIn, router.isReady, filters.applicationId]);
 
@@ -129,7 +138,7 @@ export default function FindingsPage() {
     for (const k of filterKeys) {
       if (k === key) {
         if (value) newQuery[k] = value;
-      } else if (k === "applicationVersionId" && key === "applicationId") {
+      } else if ((k === "applicationVersionId" || k === "scanId") && key === "applicationId") {
         continue;
       } else if (filters[k]) {
         newQuery[k] = filters[k];
@@ -189,6 +198,21 @@ export default function FindingsPage() {
                 <SelectItem value="All">All versions</SelectItem>
                 {versions.map((v: any) => (
                   <SelectItem key={v.id} value={String(v.id)}>{v.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="w-36">
+            <Select value={filters.scanId} onValueChange={(v) => applyFilter("scanId", v === "All" ? "" : v)}>
+              <SelectTrigger>
+                <SelectValue placeholder="All scans" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="All">All scans</SelectItem>
+                {scans.map((s) => (
+                  <SelectItem key={s.id} value={String(s.id)}>
+                    Scan #{s.id}{s.scannerType ? ` (${s.scannerType.name})` : ""} — {new Date(s.createdAt).toLocaleDateString()}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>

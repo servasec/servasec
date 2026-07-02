@@ -28,6 +28,7 @@ var registry = map[string]ParserFunc{
 	"checkov":    ParseCheckov,
 	"trufflehog": ParseTrufflehog,
 	"nuclei":     ParseNuclei,
+	"sarif":      ParseSarif,
 }
 
 func Get(name string) (ParserFunc, bool) {
@@ -47,6 +48,8 @@ func DetectScannerType(data []byte) string {
 
 	str := string(data)
 	switch {
+	case (strings.Contains(str, `"$schema"`) || strings.Contains(str, `"version"`)) && strings.Contains(str, `"runs"`):
+		return "sarif"
 	case strings.Contains(str, `"check_id":`):
 		return "semgrep"
 	case strings.Contains(str, `"Target":`) && strings.Contains(str, `"Type":`):

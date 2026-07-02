@@ -7,6 +7,15 @@ import (
 	"github.com/servasec/servasec/backend/utils"
 )
 
+// GetScans returns scans with optional filters
+// @Summary List scans
+// @Tags Scans
+// @Produce json
+// @Param applicationId query string false "Filter by application ID"
+// @Param applicationVersionId query string false "Filter by version ID"
+// @Success 200 {array} models.Scan "List of scans"
+// @Failure 500 {object} gin.H "Failed to fetch scans"
+// @Router /scans [get]
 func GetScans(c *gin.Context) {
 	appID := c.Query("applicationId")
 	versionID := c.Query("applicationVersionId")
@@ -41,6 +50,14 @@ func GetScans(c *gin.Context) {
 	utils.OKResponse(c, scans)
 }
 
+// GetScan returns a single scan by ID
+// @Summary Get scan
+// @Tags Scans
+// @Produce json
+// @Param id path string true "Scan ID"
+// @Success 200 {object} models.Scan "Scan details"
+// @Failure 404 {object} gin.H "Scan not found"
+// @Router /scans/{id} [get]
 func GetScan(c *gin.Context) {
 	var scan models.Scan
 	if err := config.DB.Preload("ScannerType").Preload("ApplicationVersion").First(&scan, c.Param("id")).Error; err != nil {

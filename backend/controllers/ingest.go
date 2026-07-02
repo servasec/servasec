@@ -16,40 +16,35 @@ import (
 )
 
 func findApplication(c *gin.Context) (*models.Application, error) {
+	if app, exists := c.Get("route_app"); exists {
+		return app.(*models.Application), nil
+	}
+
 	apiToken := c.GetHeader("X-Api-Token")
 
-	idParam := c.Param("id")
-	slugParam := c.Param("slug")
-
-	switch {
-	case slugParam != "":
-		var app models.Application
-		if err := config.DB.Where("slug = ?", slugParam).First(&app).Error; err != nil {
-			return nil, fmt.Errorf("application not found")
-		}
-		return &app, nil
-
-	case apiToken != "":
+	if apiToken != "" {
 		var app models.Application
 		if err := config.DB.Where("api_token = ?", apiToken).First(&app).Error; err != nil {
 			return nil, fmt.Errorf("invalid API token")
 		}
 		return &app, nil
+	}
 
-	case idParam != "":
-		id, err := strconv.ParseUint(idParam, 10, 64)
-		if err != nil {
-			return nil, fmt.Errorf("invalid application ID")
-		}
-		var app models.Application
-		if err := config.DB.First(&app, id).Error; err != nil {
-			return nil, fmt.Errorf("application not found")
-		}
-		return &app, nil
-
-	default:
+	idParam := c.Param("id")
+	if idParam == "" {
 		return nil, fmt.Errorf("application not specified")
 	}
+
+	id, err := strconv.ParseUint(idParam, 10, 64)
+	if err != nil {
+		return nil, fmt.Errorf("invalid application ID")
+	}
+
+	var app models.Application
+	if err := config.DB.First(&app, id).Error; err != nil {
+		return nil, fmt.Errorf("application not found")
+	}
+	return &app, nil
 }
 
 func upsertVersion(appID uint, name, branch string) (*models.ApplicationVersion, error) {
@@ -74,6 +69,24 @@ func upsertVersion(appID uint, name, branch string) (*models.ApplicationVersion,
 	return &version, nil
 }
 
+// IngestScan accepts a scan result file and creates findings
+// @Summary Ingest scan results
+// @Description Upload a scan results file. Authenticate via API token header, application ID in path, or application slug in path.
+// @Tags Scans
+// @Accept multipart/form-data
+// @Produce json
+// @Param id path string false "Application ID"
+// @Param slug path string false "Application slug"
+// @Param version formData string false "Version name"
+// @Param branch formData string false "Branch name"
+// @Param scannerType formData string false "Scanner type name"
+// @Param file formData file true "Scan results file (SARIF, etc.)"
+// @Param X-Api-Token header string false "API token (alternative to id/slug auth)"
+// @Success 201 {object} gin.H "Scan created with findings count"
+// @Failure 400 {object} gin.H "Bad request"
+// @Failure 404 {object} gin.H "Application not found"
+// @Router /ingest [post]
+// @Router /applications/{id}/ingest [post]
 func IngestScan(c *gin.Context) {
 	app, err := findApplication(c)
 	if err != nil {
@@ -103,19 +116,33 @@ func IngestScan(c *gin.Context) {
 	}
 
 	var scannerType models.ScannerType
+	var format string
 	if scannerTypeName != "" {
 		if err := config.DB.Where("name = ?", scannerTypeName).First(&scannerType).Error; err != nil {
 			utils.BadRequestError(c, fmt.Sprintf("unknown scanner type: %s", scannerTypeName))
 			return
+		}
+		if scannerTypeName == "sarif" {
+			format = "sarif"
 		}
 	} else {
 		file, _, err := c.Request.FormFile("file")
 		if err == nil {
 			data, _ := io.ReadAll(file)
 			file.Close()
-			detected := parsers.DetectScannerType(data)
-			if detected != "" {
-				config.DB.Where("name = ?", detected).First(&scannerType)
+			format = parsers.DetectScannerType(data)
+			if format == "sarif" {
+				if toolName := parsers.ExtractSarifToolName(data); toolName != "" {
+					var st models.ScannerType
+					if err := config.DB.Where("name = ?", toolName).First(&st).Error; err == nil && st.Enabled {
+						scannerType = st
+					}
+				}
+				if scannerType.ID == 0 {
+					config.DB.Where("name = ?", "sarif").First(&scannerType)
+				}
+			} else if format != "" {
+				config.DB.Where("name = ?", format).First(&scannerType)
 			}
 		}
 	}
@@ -156,7 +183,11 @@ func IngestScan(c *gin.Context) {
 		return
 	}
 
-	parser, ok := parsers.Get(scannerType.Parser)
+	parserName := scannerType.Parser
+	if format == "sarif" && scannerType.Name != "sarif" {
+		parserName = "sarif"
+	}
+	parser, ok := parsers.Get(parserName)
 	if !ok {
 		scan.Status = "completed"
 		scan.CompletedAt = &now

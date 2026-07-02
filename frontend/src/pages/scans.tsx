@@ -228,7 +228,7 @@ export default function ScansPage() {
                     <td className="px-4 py-3 text-muted-foreground hidden lg:table-cell">{formatDate(s.startedAt)}</td>
                     <td className="px-4 py-3 text-muted-foreground hidden lg:table-cell">{formatDate(s.completedAt)}</td>
                     <td className="px-4 py-3">
-                      <Link href={`/findings?scanId=${s.id}`}>
+                      <Link href={`/findings?applicationId=${s.applicationVersion?.applicationId || ''}&applicationVersionId=${s.applicationVersionId}&scanId=${s.id}`}>
                         <Button variant="ghost" size="icon" className="h-8 w-8" title="View findings">
                           <ArrowRight className="h-3.5 w-3.5" />
                         </Button>
