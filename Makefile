@@ -1,4 +1,4 @@
-.PHONY: dev down down-clean prod down-prod community pro down-prod logs ps help swagger swagger-copy podman-build podman-install podman-up podman-down podman-logs
+.PHONY: dev down down-clean prod down-prod community pro down-prod logs ps help swagger swagger-copy podman-build podman-install podman-up podman-down podman-logs migrate-create migrate-status
 
 COMPOSE_DEV  := USER_UID=$(shell id -u) USER_GID=$(shell id -g) docker compose -f docker-compose.dev.yml
 COMPOSE_PROD := docker compose -f docker-compose.prod.yml
@@ -72,6 +72,22 @@ podman-down: ## Stop all Quadlet units
 
 podman-logs: ## Tail logs from all servasec units
 	journalctl --user -u servasec-caddy -u servasec-frontend -u servasec-backend -u servasec-db -f
+
+migrate-create: ## Create a new migration: make migrate-create NAME=add_scan_metadata
+	@cd backend && bash -c '\
+		last=$$(ls -1 migrations/[0-9][0-9][0-9]_*.sql 2>/dev/null | tail -1 | grep -oE "^[0-9]+"); \
+		next=$$(printf "%03d" $$(( $${last:-0} + 1 ))); \
+		file="migrations/$${next}_$(NAME).sql"; \
+		printf -- "-- +goose Up\n\n\n-- +goose Down\n" > "$$file"; \
+		echo "Created: backend/$$file"; \
+	'
+
+migrate-status: ## Show migration status (requires running stack)
+	$(COMPOSE_DEV) exec backend sh -c 'apk add --no-cache postgresql-client 2>/dev/null; PGPASSWORD=$$POSTGRES_PASSWORD psql -h db -U $$POSTGRES_USER -d $$POSTGRES_DB -c "SELECT version_id, is_applied, tstamp FROM goose_db_version ORDER BY version_id"'
+
+migrate-down: ## Rollback last migration (requires running stack)
+	@echo "Rollback is not automated. To revert: restore from backup or apply manually."
+	@echo "  docker compose exec db pg_dump -U $$$$POSTGRES_USER $$$$POSTGRES_DB > pre_rollback.sql"
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \

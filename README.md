@@ -46,6 +46,46 @@ make prod
 
 Default admin: `admin` / password from `SSC_ADMIN_PASSWORD` (random hex if unset, check logs of backend container ;) ).
 
+## Upgrading
+
+Database migrations run **automatically** when the backend starts — no manual SQL step required.
+
+### Standard upgrade
+
+```bash
+# 1. Backup the database
+docker compose exec db pg_dump -U servasec servasec > backup_$(date +%Y%m%d).sql
+
+# 2. Build and restart the new version
+docker compose pull
+docker compose up -d
+
+# 3. Verify migrations applied
+docker compose logs backend --tail=20 | grep -i migration
+```
+
+Or use the helper script:
+
+```bash
+./scripts/upgrade.sh              # build latest
+./scripts/upgrade.sh v1.1.0       # build specific version
+```
+
+### Rollback
+
+```bash
+# Restore the backup and restart the previous image
+cat backup_20260702.sql | docker compose exec -T db psql -U servasec servasec
+```
+
+### Adding a migration (developers)
+
+```bash
+make migrate-create NAME=describe_your_change
+```
+
+Edit the generated file in `backend/migrations/`, rebuild, restart. The new migration runs automatically on next startup. See `backend/migrations/MIGRATIONS.md` for the version-to-app mapping.
+
 ## Scanner Support
 
 Refer to https://servasec.com/scanners
