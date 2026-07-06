@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.1.1](https://github.com/servasec/servasec/compare/v2.1.0...v2.1.1) (2026-07-06)
+
+
+### 🤖 Continuous integration
+
+* Fix docker image workflows ([0f40e08](https://github.com/servasec/servasec/commit/0f40e0807d246f4eea23a14bececd40d065ee9f1))
+* Fix docker image workflows ([8077636](https://github.com/servasec/servasec/commit/8077636663f8b82f28a8249c32c397ab5eb5c27c))
+
 ## [2.1.0](https://github.com/servasec/servasec/compare/v2.0.0...v2.1.0) (2026-07-06)
 
 
