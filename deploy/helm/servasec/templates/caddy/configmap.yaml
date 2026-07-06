@@ -1,0 +1,70 @@
+{{- if .Values.ingress.caddy.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "servasec.caddyName" . }}
+  labels:
+    {{- include "servasec.labels" . | nindent 4 }}
+    app.kubernetes.io/component: caddy
+data:
+  Caddyfile: |
+    {
+        servers {
+            protocols h1 h2 h3
+        }
+    }
+
+    {{ .Values.domain.name }} {
+        header /* {
+            defer
+            Server ""
+            -X-Powered-By
+            X-Frame-Options "DENY"
+            X-Content-Type-Options "nosniff"
+            Referrer-Policy "strict-origin-when-cross-origin"
+            Permissions-Policy "geolocation=(), microphone=(), camera=()"
+            Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+            Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' wss: ws:; frame-ancestors 'none'"
+        }
+
+        handle_path /api/* {
+            reverse_proxy {{ include "servasec.backendName" . }}:8080 {
+                header_up X-Real-IP {remote_host}
+                header_up X-Forwarded-For {remote_host}
+                header_up X-Forwarded-Proto {scheme}
+                header_down -Server
+                header_down -X-Powered-By
+            }
+        }
+
+        handle /.well-known/* {
+            reverse_proxy {{ include "servasec.backendName" . }}:8080 {
+                header_up X-Real-IP {remote_host}
+                header_up X-Forwarded-For {remote_host}
+                header_up X-Forwarded-Proto {scheme}
+                header_down -Server
+                header_down -X-Powered-By
+            }
+        }
+
+        handle /oauth/* {
+            reverse_proxy {{ include "servasec.backendName" . }}:8080 {
+                header_up X-Real-IP {remote_host}
+                header_up X-Forwarded-For {remote_host}
+                header_up X-Forwarded-Proto {scheme}
+                header_down -Server
+                header_down -X-Powered-By
+            }
+        }
+
+        handle {
+            reverse_proxy {{ include "servasec.frontendName" . }}:3000 {
+                header_up X-Real-IP {remote_host}
+                header_up X-Forwarded-For {remote_host}
+                header_up X-Forwarded-Proto {scheme}
+                header_down -Server
+                header_down -X-Powered-By
+            }
+        }
+    }
+{{- end }}

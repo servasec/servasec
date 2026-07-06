@@ -1,0 +1,32 @@
+{{- if .Values.ingress.traefik.enabled }}
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: {{ include "servasec.fullname" . }}-security-headers
+  labels:
+    {{- include "servasec.labels" . | nindent 4 }}
+spec:
+  headers:
+    customFrameOptionsValue: DENY
+    contentTypeNosniff: true
+    referrerPolicy: strict-origin-when-cross-origin
+    permissionsPolicy: geolocation=(), microphone=(), camera=()
+    stsSeconds: 31536000
+    stsIncludeSubdomains: true
+    stsPreload: true
+    customResponseHeaders:
+      Server: ""
+      X-Powered-By: ""
+    contentSecurityPolicy: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' wss: ws:; frame-ancestors 'none'"
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: {{ include "servasec.fullname" . }}-strip-api-prefix
+  labels:
+    {{- include "servasec.labels" . | nindent 4 }}
+spec:
+  stripPrefix:
+    prefixes:
+      - /api
+{{- end }}
