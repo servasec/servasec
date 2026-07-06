@@ -9,6 +9,7 @@ ContainerName=caddy
 Network=servasec.network
 PublishPort=80:80
 PublishPort=443:443
+Environment=SSC_PUBLIC_DOMAIN=servasec.local
 Volume=servasec-caddy-data.volume:/data
 Volume=servasec-caddy-config.volume:/config
 

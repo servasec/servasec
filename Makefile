@@ -50,7 +50,6 @@ podman-build: ## Build all Podman images
 	podman build -t servasec-frontend:latest -f frontend/Dockerfile --target prod frontend/
 	podman build -t servasec-caddy:latest \
 		-f caddy/Dockerfile \
-		--build-arg SSC_PUBLIC_DOMAIN=$(SSC_PUBLIC_DOMAIN) \
 		caddy/
 
 podman-install: ## Install Quadlet files for current user
