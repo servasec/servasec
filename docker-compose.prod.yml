@@ -78,8 +78,6 @@ services:
     build:
       context: caddy/
       dockerfile: Dockerfile
-      args:
-        SSC_PUBLIC_DOMAIN: ${SSC_PUBLIC_DOMAIN}
     ports:
       - "80:80"
       - "443:443"
