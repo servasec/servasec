@@ -9,8 +9,6 @@ on:
     paths:
       - deploy/helm/**
       - Chart.yaml
-  release:
-    types: [published]
 
 permissions:
   contents: read
