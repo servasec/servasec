@@ -24,6 +24,8 @@ jobs:
         with:
           app-id: ${{ secrets.PRO_APP_ID }}
           private-key: ${{ secrets.PRO_APP_PRIVATE_KEY }}
+          owner: servasec
+          repositories: servasec-pro
       - name: Checkout pro module
         if: ${{ env.PRO_APP_ID != '' }}
         uses: actions/checkout@v4
