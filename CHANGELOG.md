@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.1.4](https://github.com/servasec/servasec/compare/v2.1.3...v2.1.4) (2026-07-06)
+
+
+### 🐛 Bug fixes
+
+* **backend:** Json security + opengrep false positive ([4052cfb](https://github.com/servasec/servasec/commit/4052cfbbea24a12dd5febb48f8e625fc693441cb))
+
+
+### 🤖 Continuous integration
+
+* Final workflows trigger ([f8b1b80](https://github.com/servasec/servasec/commit/f8b1b803db575491ceb0e1c7776aff8a10713e45))
+
 ## [2.1.3](https://github.com/servasec/servasec/compare/v2.1.2...v2.1.3) (2026-07-06)
 
 
