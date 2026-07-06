@@ -44,7 +44,7 @@ fi
 # ──────────────────────────────────────────────
 
 if [ ! -f "$SSC_ENV_FILE" ]; then
-	warn "No .env file found — using default env vars"
+	warn "No .env file found - using default env vars"
 fi
 
 info "Upgrading Servasec to ${SSC_VERSION}"
@@ -55,7 +55,7 @@ echo ""
 # ──────────────────────────────────────────────
 
 if [ -f "$BACKUP_FILE" ]; then
-	warn "Backup already exists: ${BACKUP_FILE} — skipping"
+	warn "Backup already exists: ${BACKUP_FILE} - skipping"
 else
 	info "[1/5] Backing up database → ${BACKUP_FILE}"
 	if $SSC_COMPOSE exec -T db pg_dump -U "${POSTGRES_USER:-servasec}" "${POSTGRES_DB:-servasec}" > "$BACKUP_FILE" 2>/dev/null; then
@@ -74,7 +74,7 @@ echo ""
 
 if [ "$PG_CURRENT" != "" ] && [ "$PG_CURRENT" != "$PG_TARGET" ]; then
 	warn "PostgreSQL version changed: ${PG_CURRENT} → ${PG_TARGET}"
-	warn "A full dump/restore is required — the old volume will be destroyed."
+	warn "A full dump/restore is required - the old volume will be destroyed."
 	echo ""
 	printf "  Proceed? [y/N] "
 	read -r CONFIRM
@@ -87,7 +87,7 @@ if [ "$PG_CURRENT" != "" ] && [ "$PG_CURRENT" != "$PG_TARGET" ]; then
 	if docker volume rm servasec_postgres_data 2>/dev/null; then
 		ok "Old volume removed"
 	else
-		warn "Volume not found or already removed — continuing"
+		warn "Volume not found or already removed - continuing"
 	fi
 
 	info "Starting new PostgreSQL ${PG_TARGET}..."
@@ -105,7 +105,7 @@ if [ "$PG_CURRENT" != "" ] && [ "$PG_CURRENT" != "$PG_TARGET" ]; then
 	echo "$PG_TARGET" > "$PG_VERSION_FILE"
 	ok "PG version recorded: ${PG_TARGET}"
 else
-	info "PostgreSQL version unchanged (${PG_TARGET}) — skipping"
+	info "PostgreSQL version unchanged (${PG_TARGET}) - skipping"
 
 	if [ ! -f "$PG_VERSION_FILE" ]; then
 		echo "$PG_TARGET" > "$PG_VERSION_FILE"
@@ -146,7 +146,7 @@ if $SSC_COMPOSE logs backend --tail=30 2>&1 | grep -qE "migration|applied|versio
 	done
 	ok "Upgrade complete (${SSC_VERSION})"
 else
-	warn "Could not verify migration status — check manually:"
+	warn "Could not verify migration status - check manually:"
 	echo "  docker compose logs backend --tail=30 | grep -i migration"
 fi
 

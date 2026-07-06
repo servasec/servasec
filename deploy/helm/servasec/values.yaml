@@ -1,0 +1,107 @@
+replicaCount: 1
+
+imagePullSecrets: []
+
+image:
+  backend:
+    # Community version (default). Pro users must point to the pro image
+    # provided with their license (e.g. ghcr.io/servasec/backend-pro).
+    repository: servasec/backend
+    tag: latest
+    pullPolicy: IfNotPresent
+  frontend:
+    repository: servasec/frontend
+    tag: latest
+    pullPolicy: IfNotPresent
+
+nameOverride: ""
+fullnameOverride: ""
+
+ingress:
+  caddy:
+    enabled: true
+    image:
+      repository: servasec/caddy
+      tag: latest
+      pullPolicy: IfNotPresent
+    resources:
+      requests:
+        cpu: 100m
+        memory: 64Mi
+      limits:
+        cpu: 250m
+        memory: 128Mi
+  traefik:
+    enabled: false
+    certResolver: letsencrypt
+    entryPoints:
+      - websecure
+
+domain:
+  name: servasec.local
+  publicUrl: "https://servasec.local"
+
+config:
+  siteName: servasec
+  registrationEnabled: true
+  debugEnabled: false
+  apiPrefix: /api
+  trustedProxiesCidr: "10.0.0.0/8"
+
+postgresql:
+  internal: true
+  image: postgres:17
+  database: servasec-db
+  user: servasec
+  password: ""
+  externalUrl: ""
+  resources:
+    requests:
+      cpu: 500m
+      memory: 1Gi
+    limits:
+      cpu: 1
+      memory: 2Gi
+
+secrets:
+  postgresPassword: ""
+  jwtSecret: ""
+  refreshSecret: ""
+  csrfSecret: ""
+  adminPassword: ""
+  licenseKey: ""
+  sso:
+    githubClientId: ""
+    githubClientSecret: ""
+    gitlabClientId: ""
+    gitlabClientSecret: ""
+    gitlabBaseUrl: ""
+    oidcClientId: ""
+    oidcClientSecret: ""
+    oidcIssuerUrl: ""
+    oidcScopes: "openid profile email"
+
+resources:
+  backend:
+    requests:
+      cpu: 250m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  frontend:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 250m
+      memory: 256Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 80
+
+networkPolicy:
+  enabled: false

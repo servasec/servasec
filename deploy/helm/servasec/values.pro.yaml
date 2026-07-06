@@ -1,0 +1,8 @@
+image:
+  backend:
+    repository: ghcr.io/servasec/servasec/backend-pro
+    tag: latest
+    pullPolicy: Always
+
+secrets:
+  licenseKey: "ssc_xxxxx"

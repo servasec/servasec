@@ -1,0 +1,43 @@
+{{- if .Values.ingress.traefik.enabled }}
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: {{ include "servasec.fullname" . }}
+  labels:
+    {{- include "servasec.labels" . | nindent 4 }}
+spec:
+  entryPoints:
+    {{- toYaml .Values.ingress.traefik.entryPoints | nindent 4 }}
+  routes:
+    - kind: Rule
+      match: Host(`{{ .Values.domain.name }}`) && PathPrefix(`/api`)
+      middlewares:
+        - name: {{ include "servasec.fullname" . }}-strip-api-prefix
+        - name: {{ include "servasec.fullname" . }}-security-headers
+      services:
+        - name: {{ include "servasec.backendName" . }}
+          port: 8080
+    - kind: Rule
+      match: Host(`{{ .Values.domain.name }}`) && PathPrefix(`/.well-known`)
+      middlewares:
+        - name: {{ include "servasec.fullname" . }}-security-headers
+      services:
+        - name: {{ include "servasec.backendName" . }}
+          port: 8080
+    - kind: Rule
+      match: Host(`{{ .Values.domain.name }}`) && PathPrefix(`/oauth`)
+      middlewares:
+        - name: {{ include "servasec.fullname" . }}-security-headers
+      services:
+        - name: {{ include "servasec.backendName" . }}
+          port: 8080
+    - kind: Rule
+      match: Host(`{{ .Values.domain.name }}`)
+      middlewares:
+        - name: {{ include "servasec.fullname" . }}-security-headers
+      services:
+        - name: {{ include "servasec.frontendName" . }}
+          port: 3000
+  tls:
+    certResolver: {{ .Values.ingress.traefik.certResolver | quote }}
+{{- end }}

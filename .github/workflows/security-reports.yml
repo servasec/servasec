@@ -1,6 +1,9 @@
 name: Security Reports
 
 on:
+  push:
+    tags:
+      - "v*"
   release:
     types: [published]
 
@@ -19,7 +22,7 @@ jobs:
       - name: Install Semgrep
         run: pip install semgrep
 
-      - name: Semgrep — JSON report
+      - name: Semgrep - JSON report
         run: |
           semgrep --config=auto \
             --output=semgrep-report.json \
@@ -28,7 +31,7 @@ jobs:
             --exclude=vendor \
             backend/ frontend/
 
-      - name: Semgrep — SARIF report
+      - name: Semgrep - SARIF report
         run: |
           semgrep --config=auto \
             --output=semgrep-report.sarif \
@@ -42,7 +45,7 @@ jobs:
         with:
           sarif_file: semgrep-report.sarif
 
-      - name: Trivy — JSON report
+      - name: Trivy - JSON report
         uses: aquasecurity/trivy-action@master
         with:
           scan-type: fs
@@ -52,7 +55,7 @@ jobs:
           scanners: vuln,secret,misconfig
           severity: CRITICAL,HIGH,MEDIUM
 
-      - name: Trivy — SARIF report
+      - name: Trivy - SARIF report
         uses: aquasecurity/trivy-action@master
         with:
           scan-type: fs

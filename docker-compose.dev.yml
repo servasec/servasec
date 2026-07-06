@@ -7,7 +7,6 @@ services:
       dockerfile: Dockerfile
       target: dev
     environment:
-      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
       - INTERNAL_API_URL=http://backend:8080
       - NODE_ENV=development
     depends_on:
@@ -46,7 +45,6 @@ services:
       SSC_DEBUG_ENABLED: ${SSC_DEBUG_ENABLED}
       SSC_ADMIN_PASSWORD: ${SSC_ADMIN_PASSWORD}
       SSC_LICENSE_KEY: ${SSC_LICENSE_KEY}
-      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
       SSC_API_PREFIX: /api
       BUILD_TAGS: ${BUILD_TAGS:-}
       SSO_GITHUB_CLIENT_ID: ${SSO_GITHUB_CLIENT_ID}
@@ -88,7 +86,6 @@ services:
       context: caddy/
       dockerfile: Dockerfile
       args:
-        CADDY_ENV: ${CADDY_ENV}
         SSC_PUBLIC_DOMAIN: ${SSC_PUBLIC_DOMAIN}
     ports:
       - "8080:80"

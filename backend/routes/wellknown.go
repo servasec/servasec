@@ -8,7 +8,7 @@ import (
 )
 
 func getPublicURL() string {
-	u := os.Getenv("NEXT_PUBLIC_API_URL")
+	u := os.Getenv("SSC_PUBLIC_URL")
 	if u == "" {
 		u = "http://localhost:8080"
 	}
