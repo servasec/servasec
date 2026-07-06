@@ -1,0 +1,119 @@
+{{- if .Values.networkPolicy.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "servasec.fullname" . }}-backend
+  labels:
+    {{- include "servasec.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "servasec.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: backend
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              {{- include "servasec.selectorLabels" . | nindent 16 }}
+              app.kubernetes.io/component: caddy
+        - podSelector:
+            matchLabels:
+              {{- include "servasec.selectorLabels" . | nindent 16 }}
+              app.kubernetes.io/component: frontend
+      ports:
+        - port: 8080
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              {{- include "servasec.selectorLabels" . | nindent 16 }}
+              app.kubernetes.io/component: postgresql
+      ports:
+        - port: 5432
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "servasec.fullname" . }}-frontend
+  labels:
+    {{- include "servasec.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "servasec.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: frontend
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              {{- include "servasec.selectorLabels" . | nindent 16 }}
+              app.kubernetes.io/component: caddy
+---
+{{- if .Values.ingress.caddy.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "servasec.fullname" . }}-caddy
+  labels:
+    {{- include "servasec.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "servasec.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: caddy
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+      ports:
+        - port: 80
+        - port: 443
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              {{- include "servasec.selectorLabels" . | nindent 16 }}
+              app.kubernetes.io/component: backend
+      ports:
+        - port: 8080
+    - to:
+        - podSelector:
+            matchLabels:
+              {{- include "servasec.selectorLabels" . | nindent 16 }}
+              app.kubernetes.io/component: frontend
+      ports:
+        - port: 3000
+{{- end }}
+---
+{{- if .Values.postgresql.internal }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "servasec.fullname" . }}-postgresql
+  labels:
+    {{- include "servasec.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "servasec.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: postgresql
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              {{- include "servasec.selectorLabels" . | nindent 16 }}
+              app.kubernetes.io/component: backend
+      ports:
+        - port: 5432
+{{- end }}
+{{- end }}

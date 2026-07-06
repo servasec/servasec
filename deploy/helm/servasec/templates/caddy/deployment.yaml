@@ -1,0 +1,62 @@
+{{- if .Values.ingress.caddy.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "servasec.caddyName" . }}
+  labels:
+    {{- include "servasec.labels" . | nindent 4 }}
+    app.kubernetes.io/component: caddy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "servasec.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: caddy
+  template:
+    metadata:
+      labels:
+        {{- include "servasec.labels" . | nindent 8 }}
+        app.kubernetes.io/component: caddy
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: caddy
+          image: "{{ .Values.ingress.caddy.image.repository }}:{{ .Values.ingress.caddy.image.tag }}"
+          imagePullPolicy: {{ .Values.ingress.caddy.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 80
+              protocol: TCP
+            - name: https
+              containerPort: 443
+              protocol: TCP
+          volumeMounts:
+            - name: config
+              mountPath: /etc/caddy/Caddyfile
+              subPath: Caddyfile
+            - name: data
+              mountPath: /data
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            {{- toYaml .Values.ingress.caddy.resources | nindent 12 }}
+      volumes:
+        - name: config
+          configMap:
+            name: {{ include "servasec.caddyName" . }}
+        - name: data
+          emptyDir: {}
+{{- end }}

@@ -211,7 +211,7 @@ export default function FindingsPage() {
                 <SelectItem value="All">All scans</SelectItem>
                 {scans.map((s) => (
                   <SelectItem key={s.id} value={String(s.id)}>
-                    Scan #{s.id}{s.scannerType ? ` (${s.scannerType.name})` : ""} — {new Date(s.createdAt).toLocaleDateString()}
+                    Scan #{s.id}{s.scannerType ? ` (${s.scannerType.name})` : ""} - {new Date(s.createdAt).toLocaleDateString()}
                   </SelectItem>
                 ))}
               </SelectContent>

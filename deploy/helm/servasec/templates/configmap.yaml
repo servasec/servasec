@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "servasec.fullname" . }}
+  labels:
+    {{- include "servasec.labels" . | nindent 4 }}
+data:
+  SSC_SITE_NAME: {{ .Values.config.siteName | quote }}
+  SSC_PUBLIC_URL: {{ .Values.domain.publicUrl | quote }}
+  SSC_REGISTRATION_ENABLED: {{ .Values.config.registrationEnabled | quote }}
+  SSC_DEBUG_ENABLED: {{ .Values.config.debugEnabled | quote }}
+  SSC_API_PREFIX: {{ .Values.config.apiPrefix | quote }}
+  TRUSTED_PROXIES_CIDR: {{ .Values.config.trustedProxiesCidr | quote }}
+  INTERNAL_API_URL: http://{{ include "servasec.backendName" . }}:8080
+  NODE_ENV: "production"

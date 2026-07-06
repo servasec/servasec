@@ -67,9 +67,9 @@ func main() {
 	middleware.InitCSRFProtection()
 
 	router.SetTrustedProxies(getTrustedProxies())
-	allowedOrigin := os.Getenv("NEXT_PUBLIC_API_URL")
+	allowedOrigin := os.Getenv("SSC_PUBLIC_URL")
 	if allowedOrigin == "" {
-		log.Fatal("NEXT_PUBLIC_API_URL environment variable is required but not set")
+		log.Fatal("SSC_PUBLIC_URL environment variable is required but not set")
 	}
 	router.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{allowedOrigin},

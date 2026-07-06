@@ -363,7 +363,7 @@ func doSendWebhook(url, secret string, body []byte) error {
 
 	if resp.StatusCode >= 300 {
 		respBody, _ := io.ReadAll(resp.Body)
-		log.Printf("webhook: %s returned %d — body: %s", url, resp.StatusCode, string(respBody))
+		log.Printf("webhook: %s returned %d - body: %s", url, resp.StatusCode, string(respBody))
 		return fmt.Errorf("status %d", resp.StatusCode)
 	}
 	return nil
