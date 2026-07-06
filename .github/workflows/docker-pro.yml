@@ -1,8 +1,6 @@
 name: Docker Pro Images
 on:
   push:
-    branches:
-      - main
     tags:
       - "v*"
   release:
@@ -54,7 +52,7 @@ jobs:
         with:
           images: ghcr.io/${{ github.repository }}/backend-pro
           tags: |
-            type=raw,value=latest,enable={{is_default_branch}}
+            type=raw,value=latest,enable=true
             type=sha,prefix=,suffix=,format=short
             type=semver,pattern={{version}},enable=${{ github.event_name == 'release' }}
             type=semver,pattern={{major}}.{{minor}},enable=${{ github.event_name == 'release' }}
