@@ -1,6 +1,9 @@
 name: Security Reports
 
 on:
+  push:
+    tags:
+      - "v*"
   release:
     types: [published]
 
