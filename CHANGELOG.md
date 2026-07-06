@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.1.2](https://github.com/servasec/servasec/compare/v2.1.1...v2.1.2) (2026-07-06)
+
+
+### 🤖 Continuous integration
+
+* Workflow trigger only on version tag ([a7c41a3](https://github.com/servasec/servasec/commit/a7c41a359bbf2af80ccfb2b009f1c452fcd10abe))
+* Workflow trigger only on version tag ([2874590](https://github.com/servasec/servasec/commit/28745901db497f934a8fce51f6903336c507d42f))
+
 ## [2.1.1](https://github.com/servasec/servasec/compare/v2.1.0...v2.1.1) (2026-07-06)
 
 
