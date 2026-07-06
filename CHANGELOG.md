@@ -1,5 +1,28 @@
 # Changelog
 
+## [2.1.0](https://github.com/servasec/servasec/compare/v2.0.0...v2.1.0) (2026-07-06)
+
+
+### 🧩 Features
+
+* **kubernetes:** Helm chart 0.1.0 ([c1e8040](https://github.com/servasec/servasec/commit/c1e80409f81aeaa6daf2b3525a6de0664aeacaaf))
+
+
+### 🐛 Bug fixes
+
+* **backend:** Sql unique version index ([b7dd87b](https://github.com/servasec/servasec/commit/b7dd87badc84b67a60e79b25acaf88486f7096c1))
+* Caddy service missing var ([4e7778e](https://github.com/servasec/servasec/commit/4e7778edc718a90f37456f2a26d056ca2fc80da5))
+* Dead env var removed ([34cd9c3](https://github.com/servasec/servasec/commit/34cd9c335268d57b184b49741f957b1d97149c60))
+
+
+### 🤖 Continuous integration
+
+* Docker-pro wokflow secrets to env ([5576414](https://github.com/servasec/servasec/commit/557641464b0342332111e772cfb9162ac00fef0f))
+* Docker-pro workflow fix ([9a5cb59](https://github.com/servasec/servasec/commit/9a5cb59b0e4bb409fbd5b3c5a25d203ed0854e0f))
+* Fix security-reports ([3e198a6](https://github.com/servasec/servasec/commit/3e198a65c86a3893f461ced21e74e01dc261fa03))
+* Ghcr images ([d80533b](https://github.com/servasec/servasec/commit/d80533b7046f76f363a48e3627de639ced75cb97))
+* Helm chart release ([429e67a](https://github.com/servasec/servasec/commit/429e67a2a8d4f50c9c26724146d950d36e8a69a9))
+
 ## [2.0.0](https://github.com/servasec/servasec/compare/v1.0.0...v2.0.0) (2026-07-02)
 
 
