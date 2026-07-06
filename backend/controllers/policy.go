@@ -397,8 +397,7 @@ func GetPolicyLogsByPolicy(c *gin.Context) {
 }
 
 func isValidJSON(s string) bool {
-	var v interface{}
-	return json.Unmarshal([]byte(s), &v) == nil
+	return json.Valid([]byte(s))
 }
 
 func policyAccessibleToUser(policy models.Policy, accessibleIDs []string) bool {

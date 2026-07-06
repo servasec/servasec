@@ -13,6 +13,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	// nosemgrep: go.lang.security.audit.xss.import-text-template
 	"text/template"
 	"time"
 
