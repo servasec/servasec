@@ -1,5 +1,18 @@
 # Changelog
 
+## [2.2.0](https://github.com/servasec/servasec/compare/v2.1.4...v2.2.0) (2026-07-07)
+
+
+### 🧩 Features
+
+* Upgrade process reviewed ([3020fab](https://github.com/servasec/servasec/commit/3020fab9b2a695a47175d406c51815fbff6180cd))
+* Upgrade process reviewed pt2 ([f3672fc](https://github.com/servasec/servasec/commit/f3672fce23c044512be2d52b860107d4f30e4708))
+
+
+### 🐛 Bug fixes
+
+* **helm:** Caddy removed from helm chart; traefik is now the official ingress controller we support ([c773911](https://github.com/servasec/servasec/commit/c7739114e18015ed586c850f05418575520fc28c))
+
 ## [2.1.4](https://github.com/servasec/servasec/compare/v2.1.3...v2.1.4) (2026-07-06)
 
 
