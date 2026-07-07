@@ -1,2 +1,0 @@
-# Caddy has been removed.
-# See deploy/helm/servasec/templates/traefik/ for the ingress configuration.
