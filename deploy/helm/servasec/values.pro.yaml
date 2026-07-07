@@ -1,7 +1,7 @@
 image:
   backend:
     repository: ghcr.io/servasec/servasec/backend-pro
-    tag: latest
+    tag: ""
     pullPolicy: Always
 
 secrets:

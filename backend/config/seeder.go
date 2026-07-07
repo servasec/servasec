@@ -80,13 +80,29 @@ func SeedCasbinFromCsv(enforcer *casbin.Enforcer) {
 		return
 	}
 	csvEnforcer.LoadPolicy()
-	csvEnforcer.SetAdapter(enforcer.GetAdapter())
-	err = csvEnforcer.SavePolicy()
+	csvPolicies, err := csvEnforcer.GetPolicy()
 	if err != nil {
-		debug.Log("Failed to save casbin policies: %v", err)
+		debug.Log("Failed to get CSV policies: %v", err)
 		return
 	}
-	debug.Println("Seeding: Casbin from CSV finished")
+
+	added := 0
+	for _, p := range csvPolicies {
+		if len(p) >= 3 {
+			ok, _ := enforcer.AddPolicy(p[0], p[1], p[2])
+			if ok {
+				added++
+			}
+		}
+	}
+
+	if added > 0 {
+		if err := enforcer.SavePolicy(); err != nil {
+			debug.Log("Failed to save casbin policies: %v", err)
+			return
+		}
+	}
+	debug.Log("Seeding: Casbin from CSV finished (%d new policies)", added)
 }
 
 func seedScannerTypes() {
@@ -123,35 +139,8 @@ func seedScannerTypes() {
 	debug.Println("Seeding: scanner types finished")
 }
 
-func seedDefaultVersions() {
-	var apps []models.Application
-	if err := DB.Find(&apps).Error; err != nil {
-		debug.Log("Failed to fetch applications for version seeding: %v\n", err)
-		return
-	}
-
-	for _, app := range apps {
-		var count int64
-		DB.Model(&models.ApplicationVersion{}).Where("application_id = ?", app.ID).Count(&count)
-		if count > 0 {
-			continue
-		}
-
-		version := models.ApplicationVersion{
-			ApplicationID: app.ID,
-			Name:          "v0.0.0",
-			IsDefault:     true,
-		}
-		if err := DB.Create(&version).Error; err != nil {
-			debug.Log("Failed to seed default version for app %d: %v\n", app.ID, err)
-		}
-	}
-	debug.Println("Seeding: default versions finished")
-}
-
 func SeedDatabase() {
 	debug.Println("Seeding: Database..")
 	seedDefaultUsers()
 	seedScannerTypes()
-	seedDefaultVersions()
 }

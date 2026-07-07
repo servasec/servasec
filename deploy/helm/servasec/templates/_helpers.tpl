@@ -37,18 +37,14 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{ include "servasec.fullname" . }}-frontend
 {{- end }}
 
-{{- define "servasec.caddyName" -}}
-{{ include "servasec.fullname" . }}-caddy
-{{- end }}
-
 {{- define "servasec.postgresqlName" -}}
 {{ include "servasec.fullname" . }}-postgresql
 {{- end }}
 
 {{- define "servasec.databaseUrl" -}}
-{{- if .Values.postgresql.internal }}
-postgres://{{ .Values.postgresql.user }}:{{ .Values.secrets.postgresPassword | default .Values.postgresql.password }}@{{ include "servasec.postgresqlName" . }}:5432/{{ .Values.postgresql.database }}?sslmode=disable
-{{- else }}
+{{- if .Values.postgresql.internal -}}
+postgres://{{ .Values.postgresql.user }}:{{ .Values.secrets.postgresPassword | default .Values.postgresql.password | urlquery }}@{{ include "servasec.postgresqlName" . }}:5432/{{ .Values.postgresql.database }}?sslmode=disable
+{{- else -}}
 {{- .Values.postgresql.externalUrl }}
-{{- end }}
+{{- end -}}
 {{- end }}

@@ -9,7 +9,6 @@ ContainerName=backend
 Network=servasec.network
 Environment=DATABASE_URL=postgres://servasec:servasec@db:5432/servasec-db?sslmode=disable
 Environment=SSC_SEED_DATABASE=true
-Environment=SSC_SEED_CASBIN_CSV=true
 Environment=SSC_SITE_NAME=servasec
 Environment=SSC_PUBLIC_URL=https://servasec.local
 Environment=SSC_REGISTRATION_ENABLED=true

@@ -18,6 +18,13 @@ SSC_ENV_FILE=".env"
 TS=$(date +%Y%m%d_%H%M%S)
 BACKUP_FILE="servasec_backup_${TS}.sql"
 
+LOCK_FILE="/tmp/servasec-upgrade.lock"
+trap 'rm -rf "$LOCK_FILE"' EXIT
+if ! mkdir "$LOCK_FILE" 2>/dev/null; then
+	echo "Another upgrade is already in progress (lock: $LOCK_FILE)"
+	exit 1
+fi
+
 # Track PG version to detect major upgrades
 PG_VERSION_FILE="scripts/.pg_version"
 PG_TARGET="${POSTGRES_VERSION:-17}"
@@ -35,13 +42,15 @@ ok()    { printf "${GREEN}✓${NC}  %s\n" "$1"; }
 warn()  { printf "${YELLOW}⚠${NC}  %s\n" "$1"; }
 fail()  { printf "${RED}✗${NC}  %s\n" "$1"; exit 1; }
 
-if [ -f "$PG_VERSION_FILE" ]; then
-	PG_CURRENT=$(cat "$PG_VERSION_FILE")
-fi
-
 # ──────────────────────────────────────────────
 #  Check prerequisites
 # ──────────────────────────────────────────────
+
+docker compose version --short 2>/dev/null | grep -q '^2' || fail "docker compose v2 is required"
+
+if [ -f "$PG_VERSION_FILE" ]; then
+	PG_CURRENT=$(cat "$PG_VERSION_FILE")
+fi
 
 if [ ! -f "$SSC_ENV_FILE" ]; then
 	warn "No .env file found - using default env vars"
@@ -57,12 +66,16 @@ echo ""
 if [ -f "$BACKUP_FILE" ]; then
 	warn "Backup already exists: ${BACKUP_FILE} - skipping"
 else
-	info "[1/5] Backing up database → ${BACKUP_FILE}"
-	if $SSC_COMPOSE exec -T db pg_dump -U "${POSTGRES_USER:-servasec}" "${POSTGRES_DB:-servasec}" > "$BACKUP_FILE" 2>/dev/null; then
-		ok "Backup saved (${BACKUP_FILE})"
+	if $SSC_COMPOSE ps --services --filter status=running 2>/dev/null | grep -q db; then
+		info "[1/5] Backing up database → ${BACKUP_FILE}"
+		if $SSC_COMPOSE exec -T db pg_dump -U "${POSTGRES_USER:-servasec}" "${POSTGRES_DB:-servasec}" > "$BACKUP_FILE" 2>/dev/null; then
+			ok "Backup saved (${BACKUP_FILE})"
+		else
+			warn "Backup failed - continuing without backup"
+			rm -f "$BACKUP_FILE"
+		fi
 	else
-		warn "Backup skipped (is the stack running?)"
-		rm -f "$BACKUP_FILE"
+		warn "Database container is not running - backup skipped"
 	fi
 fi
 
@@ -82,10 +95,12 @@ if [ "$PG_CURRENT" != "" ] && [ "$PG_CURRENT" != "$PG_TARGET" ]; then
 		fail "Aborted by user"
 	fi
 
+	PG_VOLUME=$($SSC_COMPOSE config --volumes 2>/dev/null | head -1)
+
 	info "[2/5] Removing old PostgreSQL ${PG_CURRENT} volume..."
 	$SSC_COMPOSE down
-	if docker volume rm servasec_postgres_data 2>/dev/null; then
-		ok "Old volume removed"
+	if [ -n "$PG_VOLUME" ] && docker volume rm "$PG_VOLUME" 2>/dev/null; then
+		ok "Old volume removed (${PG_VOLUME})"
 	else
 		warn "Volume not found or already removed - continuing"
 	fi
@@ -138,16 +153,19 @@ echo ""
 info "[5/5] Waiting for migrations..."
 sleep 4
 
-if $SSC_COMPOSE logs backend --tail=30 2>&1 | grep -qE "migration|applied|version|Server starting"; then
-	$SSC_COMPOSE logs backend --tail=10 2>/dev/null | while IFS= read -r line; do
+MIGRATIONS=$($SSC_COMPOSE exec -T db psql -U "${POSTGRES_USER:-servasec}" -d "${POSTGRES_DB:-servasec}" \
+	-tAc "SELECT COUNT(*) FROM goose_db_version WHERE is_applied = true" 2>/dev/null)
+
+if [ -n "$MIGRATIONS" ] && [ "$MIGRATIONS" -ge 1 ] 2>/dev/null; then
+	ok "${MIGRATIONS} migration(s) applied"
+else
+	$SSC_COMPOSE logs backend --tail=30 2>/dev/null | while IFS= read -r line; do
 		case "$line" in
 			*"migration"*|*"applied"*) ok "$(echo "$line" | sed 's/.*\s//')" ;;
 		esac
 	done
-	ok "Upgrade complete (${SSC_VERSION})"
-else
-	warn "Could not verify migration status - check manually:"
-	echo "  docker compose logs backend --tail=30 | grep -i migration"
+	warn "Could not verify migration count - check manually:"
+	warn "  docker compose exec db psql -U servasec -d servasec -c 'SELECT * FROM goose_db_version'"
 fi
 
 echo ""
