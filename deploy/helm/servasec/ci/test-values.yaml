@@ -1,11 +1,11 @@
+# values override - local k3d cluster with Traefik
+
 replicaCount: 1
 
 imagePullSecrets: []
 
 image:
   backend:
-    # Community version (default). Pro users must point to the pro image
-    # provided with their license (e.g. ghcr.io/servasec/servasec/backend-pro).
     repository: ghcr.io/servasec/servasec/backend
     tag: latest
     pullPolicy: IfNotPresent
@@ -14,8 +14,16 @@ image:
     tag: latest
     pullPolicy: IfNotPresent
 
-nameOverride: ""
-fullnameOverride: ""
+domain:
+  name: servasec.local
+  publicUrl: "http://servasec.local"
+
+config:
+  siteName: servasec
+  registrationEnabled: true
+  debugEnabled: false
+  apiPrefix: /api
+  trustedProxiesCidr: "10.0.0.0/8"
 
 ingress:
   traefik:
@@ -24,17 +32,6 @@ ingress:
     tlsSecretName: ""
     entryPoints:
       - web
-
-domain:
-  name: servasec.local
-  publicUrl: "https://servasec.local"
-
-config:
-  siteName: servasec
-  registrationEnabled: true
-  debugEnabled: false
-  apiPrefix: /api
-  trustedProxiesCidr: "10.0.0.0/8"
 
 postgresql:
   internal: true
@@ -45,18 +42,18 @@ postgresql:
   externalUrl: ""
   resources:
     requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
       cpu: 500m
       memory: 1Gi
-    limits:
-      cpu: 1
-      memory: 2Gi
 
 secrets:
-  postgresPassword: ""
-  jwtSecret: ""
-  refreshSecret: ""
-  csrfSecret: ""
-  adminPassword: ""
+  postgresPassword: "aAx3bBTWyWgGFmKL5y4fA6mklBWLOAl/h81rUbtvP90="
+  jwtSecret: "9dnZE4ow5Oi2h/DJI0Nl5a9xwKSIW3/HwLy5FTUkb8Y="
+  refreshSecret: "s92Pl24sLFI9Y+31HDw6LPSbxFdfSAoy5Ajsfr6vMrg="
+  csrfSecret: "AyczvmvHtjHwcQXlkTbHCoJo830gzdBTyNRQzm4fbZ0="
+  adminPassword: "dvpn+OOMZ0ZCSCm6eaINIGq/9uctqKXErounQQKLSTQ="
   licenseKey: ""
   sso:
     githubClientId: ""
@@ -65,7 +62,7 @@ secrets:
     gitlabClientSecret: ""
     gitlabBaseUrl: ""
     oidcClientId: ""
-    oidcClientSecret: ""
+    oidcSecret: ""
     oidcIssuerUrl: ""
     oidcScopes: "openid profile email"
 
@@ -87,9 +84,6 @@ resources:
 
 autoscaling:
   enabled: false
-  minReplicas: 1
-  maxReplicas: 5
-  targetCPUUtilizationPercentage: 80
 
 networkPolicy:
   enabled: false

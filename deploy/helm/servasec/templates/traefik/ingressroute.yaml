@@ -38,6 +38,13 @@ spec:
       services:
         - name: {{ include "servasec.frontendName" . }}
           port: 3000
+  {{- if or .Values.ingress.traefik.certResolver .Values.ingress.traefik.tlsSecretName }}
   tls:
-    certResolver: {{ .Values.ingress.traefik.certResolver | quote }}
+    {{- if .Values.ingress.traefik.certResolver }}
+    certResolver: {{ .Values.ingress.traefik.certResolver }}
+    {{- end }}
+    {{- if .Values.ingress.traefik.tlsSecretName }}
+    secretName: {{ .Values.ingress.traefik.tlsSecretName }}
+    {{- end }}
+  {{- end }}
 {{- end }}
