@@ -1,0 +1,46 @@
+{{- if eq .Values.ingress.type "standard" }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "servasec.fullname" . }}
+  labels:
+    {{- include "servasec.labels" . | nindent 4 }}
+  annotations:
+    {{- toYaml .Values.ingress.annotations | nindent 4 }}
+spec:
+  {{- with .Values.ingress.className }}
+  ingressClassName: {{ . | quote }}
+  {{- end }}
+  rules:
+    - host: {{ .Values.domain.name | quote }}
+      http:
+        paths:
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "servasec.backendName" . }}
+                port:
+                  number: 8080
+          - path: /.well-known
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "servasec.backendName" . }}
+                port:
+                  number: 8080
+          - path: /oauth
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "servasec.backendName" . }}
+                port:
+                  number: 8080
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "servasec.frontendName" . }}
+                port:
+                  number: 3000
+{{- end }}

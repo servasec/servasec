@@ -1,6 +1,8 @@
 package config
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"os"
 
@@ -9,6 +11,50 @@ import (
 )
 
 var CEF *casbin.Enforcer
+
+const casbinSeedName = "casbin_policies"
+
+func ensureSchemaSeedsTable() {
+	DB.Exec(`CREATE TABLE IF NOT EXISTS schema_seeds (
+		seed_name  VARCHAR(100) PRIMARY KEY,
+		hash       VARCHAR(64)  NOT NULL,
+		applied_at TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+	)`)
+}
+
+func csvHash() string {
+	data, err := os.ReadFile("config/casbin_policies.csv")
+	if err != nil {
+		return ""
+	}
+	h := sha256.Sum256(data)
+	return hex.EncodeToString(h[:])
+}
+
+func needsCasbinSeed() bool {
+	currentHash := csvHash()
+	if currentHash == "" {
+		return false
+	}
+	var storedHash string
+	err := DB.Raw("SELECT hash FROM schema_seeds WHERE seed_name = ?", casbinSeedName).Scan(&storedHash).Error
+	if err != nil {
+		return true
+	}
+	return storedHash != currentHash
+}
+
+func recordCasbinSeed() {
+	currentHash := csvHash()
+	if currentHash == "" {
+		return
+	}
+	DB.Exec(`INSERT INTO schema_seeds (seed_name, hash)
+		VALUES (?, ?)
+		ON CONFLICT (seed_name)
+		DO UPDATE SET hash = EXCLUDED.hash, applied_at = NOW()`,
+		casbinSeedName, currentHash)
+}
 
 func InitCasbin() *casbin.Enforcer {
 	adapter, err := gormadapter.NewAdapterByDB(DB)
@@ -23,8 +69,10 @@ func InitCasbin() *casbin.Enforcer {
 	enforcer.LoadPolicy()
 	CEF = enforcer
 
-	if os.Getenv("SSC_SEED_CASBIN_CSV") == "true" {
+	ensureSchemaSeedsTable()
+	if needsCasbinSeed() {
 		SeedCasbinFromCsv(CEF)
+		recordCasbinSeed()
 		CEF.LoadPolicy()
 	}
 

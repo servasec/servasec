@@ -85,6 +85,15 @@ func main() {
 		c.JSON(200, gin.H{"message": "pong"})
 	})
 
+	router.GET("/health", func(c *gin.Context) {
+		sqlDB, err := config.DB.DB()
+		if err != nil || sqlDB.Ping() != nil {
+			c.JSON(503, gin.H{"status": "unhealthy"})
+			return
+		}
+		c.JSON(200, gin.H{"status": "healthy"})
+	})
+
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	routes.RegisterWellKnownRoutes(router)

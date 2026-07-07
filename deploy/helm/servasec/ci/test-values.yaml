@@ -7,11 +7,11 @@ imagePullSecrets: []
 image:
   backend:
     repository: ghcr.io/servasec/servasec/backend
-    tag: latest
+    tag: ""
     pullPolicy: IfNotPresent
   frontend:
     repository: ghcr.io/servasec/servasec/frontend
-    tag: latest
+    tag: ""
     pullPolicy: IfNotPresent
 
 domain:

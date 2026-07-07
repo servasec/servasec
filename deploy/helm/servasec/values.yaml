@@ -7,17 +7,20 @@ image:
     # Community version (default). Pro users must point to the pro image
     # provided with their license (e.g. ghcr.io/servasec/servasec/backend-pro).
     repository: ghcr.io/servasec/servasec/backend
-    tag: latest
+    tag: ""
     pullPolicy: IfNotPresent
   frontend:
     repository: ghcr.io/servasec/servasec/frontend
-    tag: latest
+    tag: ""
     pullPolicy: IfNotPresent
 
 nameOverride: ""
 fullnameOverride: ""
 
 ingress:
+  type: traefik
+  className: ""
+  annotations: {}
   traefik:
     enabled: true
     certResolver: ""
