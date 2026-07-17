@@ -1,5 +1,23 @@
 # Changelog
 
+## [2.3.0](https://github.com/servasec/servasec/compare/v2.2.0...v2.3.0) (2026-07-17)
+
+
+### 🧩 Features
+
+* **frontend:** Onboarding tour for new users ([cf609e7](https://github.com/servasec/servasec/commit/cf609e7aa4c1b2ca08857ce2a9d824286b988792))
+* **migrations:** Add FK constraints + soft delete support ([1bc04ce](https://github.com/servasec/servasec/commit/1bc04ce672cf9882ebf338c87eb85d845173f4f0))
+* **models:** Add soft delete (gorm.DeletedAt) to User, Group, Team ([2788063](https://github.com/servasec/servasec/commit/27880638a75493fae32b32b6d7a1650227e94817))
+* **parsers:** Add bandit, gosec, kube-bench, kubescape, npm-audit, osv-scanner, tfsec parsers ([c777e08](https://github.com/servasec/servasec/commit/c777e08ac701ee74e2397fcf277fb9c926809a25))
+
+
+### 🐛 Bug fixes
+
+* **parsers:** Fix grype detection signature, bandit CWE handling ([6e73bc5](https://github.com/servasec/servasec/commit/6e73bc5da9bb180f2c07e9be0c86415144bf5eb2))
+* **security:** Add DB transactions, batch insert, file size limits ([fb92da1](https://github.com/servasec/servasec/commit/fb92da193872321f27b534f5940bdbce81effc2a))
+* **security:** Harden auth, finding, team, webhook, policy controllers ([b439e9e](https://github.com/servasec/servasec/commit/b439e9e468380149def6802de77d20c74287ca46))
+* **seeder:** Remove hardcoded fallback, fatalf on missing admin ([c501428](https://github.com/servasec/servasec/commit/c5014286a80eab37fb4b4e25e09c8e20ea63525e))
+
 ## [2.2.0](https://github.com/servasec/servasec/compare/v2.1.4...v2.2.0) (2026-07-07)
 
 
