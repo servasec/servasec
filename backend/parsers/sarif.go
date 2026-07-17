@@ -162,7 +162,7 @@ func ParseSarif(data []byte, filename string) ([]FindingInput, error) {
 
 	var findings []FindingInput
 	for _, run := range log.Runs {
-		// ruleId → defaultConfiguration.level for severity fallback
+		// ruleId - defaultConfiguration.level for severity fallback
 		ruleDefaultLevel := make(map[string]string)
 		for _, rule := range run.Tool.Driver.Rules {
 			if rule.DefaultConfiguration != nil && rule.DefaultConfiguration.Level != "" {
