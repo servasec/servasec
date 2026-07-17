@@ -9,6 +9,7 @@ import (
 	"github.com/servasec/servasec/backend/config"
 	"github.com/servasec/servasec/backend/models"
 	"github.com/servasec/servasec/backend/utils"
+	"gorm.io/gorm"
 )
 
 // GetTeams returns teams accessible to the current user
@@ -97,21 +98,38 @@ func CreateTeam(c *gin.Context) {
 		return
 	}
 
-	team := models.Team{
-		Name:        input.Name,
-		Description: input.Description,
+	userIDVal, exists := c.Get("user_id")
+	if !exists {
+		utils.UnauthorizedError(c, "unauthorized")
+		return
 	}
-	if err := config.DB.Create(&team).Error; err != nil {
-		utils.InternalServerError(c, "failed to create team")
+	userID, ok := userIDVal.(uint)
+	if !ok {
+		utils.InternalServerError(c, "invalid user context")
 		return
 	}
 
-	userID, _ := c.Get("user_id")
-	config.DB.Create(&models.TeamMember{
-		TeamID: team.ID,
-		UserID: userID.(uint),
-		Role:   "admin",
+	// Phase 1.1: Transaction for team + member creation
+	var team models.Team
+	err := config.DB.Transaction(func(tx *gorm.DB) error {
+		team = models.Team{
+			Name:        input.Name,
+			Description: input.Description,
+		}
+		if err := tx.Create(&team).Error; err != nil {
+			return err
+		}
+
+		return tx.Create(&models.TeamMember{
+			TeamID: team.ID,
+			UserID: userID,
+			Role:   "admin",
+		}).Error
 	})
+	if err != nil {
+		utils.InternalServerError(c, "failed to create team")
+		return
+	}
 
 	sub := fmt.Sprintf("user:%v", userID)
 	config.CEF.AddPolicy(sub, fmt.Sprintf("/teams/%d", team.ID), "*")

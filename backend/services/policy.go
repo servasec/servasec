@@ -23,6 +23,9 @@ import (
 
 const maxRecursionDepth = 3
 
+// sharedHTTPClient is reused across webhook calls to avoid creating a new client per request.
+var sharedHTTPClient = &http.Client{Timeout: 10 * time.Second}
+
 type Condition struct {
 	Field string      `json:"field"`
 	Op    string      `json:"op"`
@@ -54,8 +57,9 @@ func EvaluatePolicies(eventType string, finding *models.Finding, app *models.App
 	appStr := strconv.FormatUint(uint64(app.ID), 10)
 	groupStr := strconv.FormatUint(uint64(app.GroupID), 10)
 
+	escapedEventType := escapeLikePattern(eventType)
 	config.DB.Where("is_active = ?", true).
-		Where("event_types LIKE ?", "%"+eventType+"%").
+		Where("event_types LIKE ?", "%"+escapedEventType+"%").
 		Where("(scope_type = 'application' AND scope_value = ?) OR (scope_type = 'group' AND scope_value = ?) OR scope_type = 'global'", appStr, groupStr).
 		Order("priority DESC").
 		Find(&policies)
@@ -105,7 +109,7 @@ func evaluateConditions(conditionsJSON string, finding *models.Finding, scannerT
 	var conditions []Condition
 	if err := json.Unmarshal([]byte(conditionsJSON), &conditions); err != nil {
 		log.Printf("policy: failed to parse conditions: %v", err)
-		return true
+		return false // Phase 1.4: fail-closed on invalid conditions
 	}
 
 	for _, c := range conditions {
@@ -354,8 +358,7 @@ func doSendWebhook(url, secret string, body []byte) error {
 		req.Header.Set("X-Servasec-Signature", sig)
 	}
 
-	client := &http.Client{Timeout: 10 * time.Second}
-	resp, err := client.Do(req)
+	resp, err := sharedHTTPClient.Do(req)
 	if err != nil {
 		log.Printf("webhook: failed to send to %s: %v", url, err)
 		return err
@@ -409,4 +412,12 @@ func ScanToApp(scanID uint) *models.Application {
 
 func NormalizeEventType(s string) string {
 	return strings.ReplaceAll(strings.ToLower(s), " ", "_")
+}
+
+// escapeLikePattern escapes SQL LIKE metacharacters to prevent pattern injection.
+func escapeLikePattern(s string) string {
+	s = strings.ReplaceAll(s, "\\", "\\\\")
+	s = strings.ReplaceAll(s, "%", "\\%")
+	s = strings.ReplaceAll(s, "_", "\\_")
+	return s
 }

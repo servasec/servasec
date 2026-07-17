@@ -7,6 +7,7 @@ import (
 	"github.com/servasec/servasec/backend/config"
 	"github.com/servasec/servasec/backend/models"
 	"github.com/servasec/servasec/backend/utils"
+	"gorm.io/gorm"
 )
 
 // GetVersions returns all versions for an application
@@ -77,19 +78,27 @@ func CreateVersion(c *gin.Context) {
 	}
 
 	appIDUint, _ := strconv.ParseUint(appID, 10, 64)
-	version := models.ApplicationVersion{
-		ApplicationID: uint(appIDUint),
-		Name:          input.Name,
-		Branch:        input.Branch,
-		Tag:           input.Tag,
-		IsDefault:     input.IsDefault,
-	}
-	if input.IsDefault {
-		config.DB.Model(&models.ApplicationVersion{}).
-			Where("application_id = ?", appID).
-			Update("is_default", false)
-	}
-	if err := config.DB.Create(&version).Error; err != nil {
+
+	var version models.ApplicationVersion
+	err = config.DB.Transaction(func(tx *gorm.DB) error {
+		if input.IsDefault {
+			if err := tx.Model(&models.ApplicationVersion{}).
+				Where("application_id = ?", appID).
+				Update("is_default", false).Error; err != nil {
+				return err
+			}
+		}
+
+		version = models.ApplicationVersion{
+			ApplicationID: uint(appIDUint),
+			Name:          input.Name,
+			Branch:        input.Branch,
+			Tag:           input.Tag,
+			IsDefault:     input.IsDefault,
+		}
+		return tx.Create(&version).Error
+	})
+	if err != nil {
 		utils.InternalServerError(c, "failed to create version")
 		return
 	}
@@ -135,14 +144,21 @@ func UpdateVersion(c *gin.Context) {
 	if input.Tag != nil {
 		version.Tag = *input.Tag
 	}
+	var saveErr error
 	if input.IsDefault != nil && *input.IsDefault {
-		config.DB.Model(&models.ApplicationVersion{}).
-			Where("application_id = ?", version.ApplicationID).
-			Update("is_default", false)
-		version.IsDefault = true
+		saveErr = config.DB.Transaction(func(tx *gorm.DB) error {
+			if err := tx.Model(&models.ApplicationVersion{}).
+				Where("application_id = ?", version.ApplicationID).
+				Update("is_default", false).Error; err != nil {
+				return err
+			}
+			version.IsDefault = true
+			return tx.Save(&version).Error
+		})
+	} else {
+		saveErr = config.DB.Save(&version).Error
 	}
-
-	if err := config.DB.Save(&version).Error; err != nil {
+	if saveErr != nil {
 		utils.InternalServerError(c, "failed to update version")
 		return
 	}

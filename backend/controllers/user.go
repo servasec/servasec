@@ -18,7 +18,7 @@ func GetUsers(c *gin.Context) {
 	var users []models.User
 	result := config.DB.Find(&users)
 	if result.Error != nil {
-		utils.InternalServerError(c, result.Error.Error())
+		utils.InternalServerError(c, "failed to fetch users")
 		return
 	}
 	utils.OKResponse(c, users)
