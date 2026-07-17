@@ -1,14 +1,16 @@
 import type { AppProps } from 'next/app'
 import Head from 'next/head'
-import { AuthProvider } from '@/context/AuthContext'
+import { useState, useEffect } from 'react'
+import { AuthProvider, useAuth } from '@/context/AuthContext'
 import { CSRFProvider, useCSRF } from '@/context/CSRFContext'
 import { ThemeProvider } from 'next-themes'
 import { Toaster } from 'sonner'
-import { useEffect } from 'react'
 import { setCSRFToken, setCSRFReady } from '@/lib/api'
 import AppLayout from '@/components/layout/AppLayout'
 import { ErrorBoundary } from '@/components/error-boundary'
+import { OnboardingModal } from '@/components/onboarding/onboarding-modal'
 import '@/styles/globals.css'
+import type { User } from '@/lib/types'
 
 function CSRFSyncComponent() {
   const { token, isReady } = useCSRF();
@@ -19,6 +21,29 @@ function CSRFSyncComponent() {
   }, [token, isReady]);
 
   return null;
+}
+
+function OnboardingGate() {
+  const { loggedIn, user, authChecked } = useAuth();
+  const [show, setShow] = useState(false);
+
+  useEffect(() => {
+    if (authChecked && loggedIn && user && !user.hasSeenOnboarding) {
+      setShow(true);
+    }
+  }, [authChecked, loggedIn, user]);
+
+  if (!authChecked || !loggedIn || !user) return null;
+
+  return (
+    <OnboardingModal
+      open={show}
+      user={user}
+      onComplete={(updatedUser: User) => {
+        setShow(false);
+      }}
+    />
+  );
 }
 
 export default function App({ Component, pageProps }: AppProps) {
@@ -41,6 +66,7 @@ export default function App({ Component, pageProps }: AppProps) {
                 <Component {...pageProps} />
               </ErrorBoundary>
             </AppLayout>
+            <OnboardingGate />
             <Toaster
               position="top-right"
               toastOptions={{

@@ -347,7 +347,7 @@ export default function FindingDetailPage() {
                   value={assignUserId}
                   onSelect={(userId) => setAssignUserId(userId)}
                   onClear={() => setAssignUserId("")}
-                  placeholder="Search users (min 2 chars)..."
+                  placeholder="Search users..."
                 />
               </div>
               <div className="space-y-2">

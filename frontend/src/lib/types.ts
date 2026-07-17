@@ -6,6 +6,7 @@ export interface User {
   banned: boolean;
   avatarUrl?: string;
   oauthProvider?: string;
+  hasSeenOnboarding: boolean;
   createdAt: string;
 }
 

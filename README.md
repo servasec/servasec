@@ -28,7 +28,7 @@
 | Resource-level permissions | ✓ | ✓ |
 | Scanner ingest (Semgrep, Trivy, etc.) | ✓ | ✓ |
 | Version comparison | ✓ | ✓ |
-| SSO / OIDC (planned) | ? | ✓ |
+| SSO / OIDC | ? | ✓ |
 | Audit log |  | ✓ |
 | MCP Server |  | ✓ |
 | SLA management (planned) |  | ✓ |

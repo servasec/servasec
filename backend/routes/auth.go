@@ -18,6 +18,7 @@ func RegisterAuthRoutes(router *gin.Engine) {
 		auth.GET("csrf-token", middleware.RateLimit(30), middleware.CSRFProtection(), controllers.GetCSRFToken)
 
 		auth.PATCH("me", middleware.AuthRequired(), middleware.CSRFProtection(), controllers.UpdateCurrentUser)
+		auth.PATCH("me/onboarding", middleware.AuthRequired(), middleware.CSRFProtection(), controllers.MarkOnboardingSeen)
 		auth.PUT("me/password", middleware.AuthRequired(), middleware.CSRFProtection(), controllers.UpdateCurrentUserPassword)
 	}
 }

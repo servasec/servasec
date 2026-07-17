@@ -1,0 +1,60 @@
+# Multi-tool scanner image for servasec fixture generation
+FROM alpine:3.19
+
+RUN apk add --no-cache \
+    bash \
+    curl \
+    git \
+    jq \
+    python3 \
+    py3-pip \
+    nodejs \
+    npm \
+    && true
+
+# Install Go from official tarball (Alpine 3.19 ships 1.21, we need 1.22+)
+RUN curl -sSL https://go.dev/dl/go1.22.4.linux-amd64.tar.gz | tar -C /usr/local -xz
+ENV PATH="/usr/local/go/bin:/root/go/bin:${PATH}"
+
+# --- grype (container/filesystem scanner) ---
+RUN curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh -s -- -b /usr/local/bin
+
+# --- trivy (container/filesystem/IaC scanner) ---
+RUN curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
+
+# --- osv-scanner (dependency scanner) ---
+RUN go install github.com/google/osv-scanner/cmd/osv-scanner@latest
+
+# --- bandit (Python SAST) ---
+RUN pip3 install --break-system-packages bandit
+
+# --- gosec (Go SAST) ---
+RUN go install github.com/securego/gosec/v2/cmd/gosec@latest
+
+# --- checkov (IaC scanner) ---
+RUN pip3 install --break-system-packages checkov
+
+    # --- tfsec (Terraform scanner) ---
+    # Download directly — Alpine's BusyBox sha256sum doesn't support -q flag
+    # used by the official install script
+RUN curl -sSL -o /usr/local/bin/tfsec \
+        https://github.com/aquasecurity/tfsec/releases/latest/download/tfsec-linux-amd64 \
+    && chmod +x /usr/local/bin/tfsec
+
+# --- semgrep (multi-language SAST) ---
+RUN pip3 install --break-system-packages semgrep
+
+# --- gitleaks (secret scanner) ---
+RUN go install github.com/zricethezav/gitleaks/v8@latest
+
+# --- nuclei (DAST scanner) ---
+RUN go install github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest
+
+# --- nuclei templates ---
+RUN nuclei -update-templates 2>/dev/null || true
+
+COPY scan.sh /scan.sh
+RUN chmod +x /scan.sh
+
+WORKDIR /workspace
+ENTRYPOINT ["/scan.sh"]
