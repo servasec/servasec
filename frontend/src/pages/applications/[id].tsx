@@ -738,7 +738,7 @@ export default function ApplicationDetailPage() {
                     value={permForm.subjectValue}
                     onSelect={(userId) => setPermForm({ ...permForm, subjectValue: userId })}
                     onClear={() => setPermForm({ ...permForm, subjectValue: "" })}
-                    placeholder="Search users (min 2 characters)..."
+                    placeholder="Search users..."
                   />
                 </div>
               ) : (

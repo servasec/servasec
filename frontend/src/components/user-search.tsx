@@ -15,7 +15,7 @@ interface UserSearchProps {
   existingIds?: number[];
 }
 
-export function UserSearch({ value, onSelect, onClear, placeholder = "Search users (min 2 characters)...", existingIds }: UserSearchProps) {
+export function UserSearch({ value, onSelect, onClear, placeholder = "Search users...", existingIds }: UserSearchProps) {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchUser[]>([]);
   const [searching, setSearching] = useState(false);
