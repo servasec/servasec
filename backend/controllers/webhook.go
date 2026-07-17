@@ -1,7 +1,11 @@
 package controllers
 
 import (
+	"fmt"
+	"net"
+	"net/url"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/servasec/servasec/backend/config"
@@ -60,6 +64,12 @@ func CreateWebhook(c *gin.Context) {
 		isActive = *input.IsActive
 	}
 
+	// Phase 2.7: Validate webhook URL to prevent SSRF
+	if err := validateWebhookURL(input.URL); err != nil {
+		utils.BadRequestError(c, err.Error())
+		return
+	}
+
 	webhook := models.Webhook{
 		ApplicationID: parseAppID(appID),
 		URL:           input.URL,
@@ -94,4 +104,55 @@ func DeleteWebhook(c *gin.Context) {
 		return
 	}
 	utils.NoContentResponse(c)
+}
+
+// validateWebhookURL checks that the URL is HTTPS and does not point to
+// private/internal networks (SSRF prevention).
+func validateWebhookURL(rawURL string) error {
+	u, err := url.Parse(rawURL)
+	if err != nil {
+		return fmt.Errorf("invalid URL")
+	}
+	if u.Scheme != "https" {
+		return fmt.Errorf("webhook URL must use HTTPS")
+	}
+	if u.Host == "" {
+		return fmt.Errorf("webhook URL must have a valid host")
+	}
+
+	hostname := u.Hostname()
+	if hostname == "localhost" || hostname == "127.0.0.1" || hostname == "::1" {
+		return fmt.Errorf("webhook URL cannot point to localhost")
+	}
+
+	// Resolve hostname and check for private IPs
+	ips, err := net.LookupIP(hostname)
+	if err == nil {
+		for _, ip := range ips {
+			if isPrivateIP(ip) {
+				return fmt.Errorf("webhook URL cannot point to private/internal networks")
+			}
+		}
+	}
+
+	// Also block common internal hostnames
+	blocked := []string{"metadata.google.internal", "169.254.169.254"}
+	for _, b := range blocked {
+		if strings.EqualFold(hostname, b) {
+			return fmt.Errorf("webhook URL cannot point to internal metadata services")
+		}
+	}
+
+	return nil
+}
+
+func isPrivateIP(ip net.IP) bool {
+	if ip4 := ip.To4(); ip4 != nil {
+		return ip4[0] == 10 ||
+			(ip4[0] == 172 && ip4[1] >= 16 && ip4[1] <= 31) ||
+			(ip4[0] == 192 && ip4[1] == 168) ||
+			ip4[0] == 127 ||
+			(ip4[0] == 169 && ip4[1] == 254)
+	}
+	return ip.IsLoopback() || ip.IsLinkLocalUnicast() || ip.IsLinkLocalMulticast()
 }

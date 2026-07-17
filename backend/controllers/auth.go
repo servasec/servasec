@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -13,6 +14,7 @@ import (
 	"github.com/servasec/servasec/backend/features"
 	"github.com/servasec/servasec/backend/models"
 	"github.com/servasec/servasec/backend/utils"
+	"gorm.io/gorm"
 )
 
 // Register creates a new user account
@@ -50,17 +52,22 @@ func Register(c *gin.Context) {
 		Role:     "member",
 	}
 
-	var existing models.User
-	if err := config.DB.Where("username = ?", input.Username).First(&existing).Error; err == nil {
-		utils.ConflictError(c, "Username already exists")
-		return
-	}
-	if err := config.DB.Where("email = ?", input.Email).First(&existing).Error; err == nil {
-		utils.ConflictError(c, "Email already exists")
-		return
-	}
-
-	if err := config.DB.Create(&user).Error; err != nil {
+	// Phase 1.5: Atomic check-and-create to prevent TOCTOU race condition
+	err = config.DB.Transaction(func(tx *gorm.DB) error {
+		var count int64
+		if err := tx.Model(&models.User{}).Where("username = ? OR email = ?", input.Username, input.Email).Count(&count).Error; err != nil {
+			return err
+		}
+		if count > 0 {
+			return fmt.Errorf("conflict")
+		}
+		return tx.Create(&user).Error
+	})
+	if err != nil {
+		if err.Error() == "conflict" {
+			utils.ConflictError(c, "Username or email already exists")
+			return
+		}
 		utils.InternalServerError(c, "Failed to create user")
 		return
 	}
@@ -254,13 +261,14 @@ func GetCurrentUser(c *gin.Context) {
 	}
 
 	resp := gin.H{
-		"id":       user.ID,
-		"username": user.Username,
-		"email":    user.Email,
-		"role":     user.Role,
-		"banned":   user.Banned,
-		"avatarUrl": user.AvatarURL,
-		"features": enabledFeatures,
+		"id":                 user.ID,
+		"username":           user.Username,
+		"email":              user.Email,
+		"role":               user.Role,
+		"banned":             user.Banned,
+		"avatarUrl":          user.AvatarURL,
+		"hasSeenOnboarding":  user.HasSeenOnboarding,
+		"features":           enabledFeatures,
 	}
 	if user.OAuthProvider != "" {
 		resp["oauthProvider"] = user.OAuthProvider
@@ -380,4 +388,33 @@ func UpdateCurrentUserPassword(c *gin.Context) {
 	}
 
 	utils.OKResponse(c, gin.H{"message": "Password updated"})
+}
+
+// MarkOnboardingSeen marks the user's onboarding tour as completed
+// @Summary Mark onboarding as seen
+// @Tags Auth
+// @Produce json
+// @Success 200 {object} gin.H "Onboarding marked as seen"
+// @Failure 401 {object} gin.H "Unauthorized"
+// @Router /me/onboarding [patch]
+func MarkOnboardingSeen(c *gin.Context) {
+	userID, exists := c.Get("user_id")
+	if !exists {
+		utils.UnauthorizedError(c, "unauthorized")
+		return
+	}
+
+	var user models.User
+	if err := config.DB.First(&user, userID).Error; err != nil {
+		utils.NotFoundError(c, "User not found")
+		return
+	}
+
+	user.HasSeenOnboarding = true
+	if err := config.DB.Save(&user).Error; err != nil {
+		utils.InternalServerError(c, "Failed to update onboarding status")
+		return
+	}
+
+	utils.OKResponse(c, gin.H{"message": "Onboarding marked as seen"})
 }

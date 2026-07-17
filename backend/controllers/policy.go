@@ -2,12 +2,13 @@ package controllers
 
 import (
 	"encoding/json"
-	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/servasec/servasec/backend/config"
 	"github.com/servasec/servasec/backend/models"
 	"github.com/servasec/servasec/backend/utils"
+	"gorm.io/gorm"
 )
 
 // GetPolicies returns all automated policies with optional filters
@@ -34,7 +35,7 @@ func GetPolicies(c *gin.Context) {
 		q = q.Where("scope_value = ?", scopeValue)
 	}
 	if eventType := c.Query("eventType"); eventType != "" {
-		q = q.Where("event_types LIKE ?", "%"+eventType+"%")
+		q = q.Where("event_types LIKE ?", "%"+escapeLikePattern(eventType)+"%")
 	}
 
 	q.Order("priority DESC, created_at DESC").Find(&policies)
@@ -286,8 +287,13 @@ func DeletePolicy(c *gin.Context) {
 		return
 	}
 
-	config.DB.Where("policy_id = ?", policy.ID).Delete(&models.PolicyLog{})
-	if err := config.DB.Delete(&policy).Error; err != nil {
+	// Phase 1.1: Transaction for log deletion + policy deletion
+	if err := config.DB.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Where("policy_id = ?", policy.ID).Delete(&models.PolicyLog{}).Error; err != nil {
+			return err
+		}
+		return tx.Delete(&policy).Error
+	}).Error; err != nil {
 		utils.InternalServerError(c, "Failed to delete policy")
 		return
 	}
@@ -459,10 +465,10 @@ func stringSliceContains(slice []string, s string) bool {
 	return false
 }
 
-func parseUintOrZero(s string) uint {
-	id, err := strconv.ParseUint(s, 10, 64)
-	if err != nil {
-		return 0
-	}
-	return uint(id)
+// escapeLikePattern escapes SQL LIKE metacharacters to prevent pattern injection.
+func escapeLikePattern(s string) string {
+	s = strings.ReplaceAll(s, "\\", "\\\\")
+	s = strings.ReplaceAll(s, "%", "\\%")
+	s = strings.ReplaceAll(s, "_", "\\_")
+	return s
 }

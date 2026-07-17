@@ -20,15 +20,22 @@ type FindingInput struct {
 type ParserFunc func(data []byte, filename string) ([]FindingInput, error)
 
 var registry = map[string]ParserFunc{
-	"semgrep":    ParseSemgrep,
-	"trivy":      ParseTrivy,
-	"gitleaks":   ParseGitleaks,
-	"grype":      ParseGrype,
-	"snyk":       ParseSnyk,
-	"checkov":    ParseCheckov,
-	"trufflehog": ParseTrufflehog,
-	"nuclei":     ParseNuclei,
-	"sarif":      ParseSarif,
+	"semgrep":      ParseSemgrep,
+	"trivy":        ParseTrivy,
+	"gitleaks":     ParseGitleaks,
+	"grype":        ParseGrype,
+	"snyk":         ParseSnyk,
+	"checkov":      ParseCheckov,
+	"trufflehog":   ParseTrufflehog,
+	"nuclei":       ParseNuclei,
+	"sarif":        ParseSarif,
+	"gosec":        ParseGosec,
+	"bandit":       ParseBandit,
+	"osv-scanner":  ParseOSVScanner,
+	"npm-audit":    ParseNpmAudit,
+	"tfsec":        ParseTfsec,
+	"kubescape":    ParseKubescape,
+	"kube-bench":   ParseKubeBench,
 }
 
 func Get(name string) (ParserFunc, bool) {
@@ -56,7 +63,7 @@ func DetectScannerType(data []byte) string {
 		return "trivy"
 	case strings.Contains(str, `"Description":`) && strings.Contains(str, `"StartLine":`) && strings.Contains(str, `"RuleID":`):
 		return "gitleaks"
-	case strings.Contains(str, `"vulnerabilities":`) && strings.Contains(str, `"matches":`):
+	case strings.Contains(str, `"matches":`) && strings.Contains(str, `"descriptor":`):
 		return "grype"
 	case strings.Contains(str, `"vulns":`):
 		return "snyk"
@@ -66,6 +73,20 @@ func DetectScannerType(data []byte) string {
 		return "trufflehog"
 	case strings.Contains(str, `"template-id":`) && strings.Contains(str, `"matched-at":`):
 		return "nuclei"
+	case strings.Contains(str, `"Issues":`) && strings.Contains(str, `"rule_id":`):
+		return "gosec"
+	case strings.Contains(str, `"test_id":`) && strings.Contains(str, `"issue_text":`):
+		return "bandit"
+	case strings.Contains(str, `"source":`) && strings.Contains(str, `"packages":`) && strings.Contains(str, `"ecosystem":`):
+		return "osv-scanner"
+	case strings.Contains(str, `"packageManager":`) && strings.Contains(str, `"dependencyCount":`):
+		return "npm-audit"
+	case strings.Contains(str, `"rule_id":`) && strings.Contains(str, `"resolution":`) && strings.Contains(str, `"passed":`):
+		return "tfsec"
+	case strings.Contains(str, `"controls":`) && strings.Contains(str, `"failedResources":`):
+		return "kubescape"
+	case strings.Contains(str, `"node_type":`) && strings.Contains(str, `"test_number":`):
+		return "kube-bench"
 	}
 
 	if arr, ok := raw.([]any); ok && len(arr) > 0 {

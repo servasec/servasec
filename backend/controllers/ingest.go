@@ -3,6 +3,7 @@ package controllers
 import (
 	"fmt"
 	"io"
+	"net/http"
 	"strconv"
 	"time"
 
@@ -13,7 +14,10 @@ import (
 	"github.com/servasec/servasec/backend/pro"
 	"github.com/servasec/servasec/backend/services"
 	"github.com/servasec/servasec/backend/utils"
+	"gorm.io/gorm"
 )
+
+const maxIngestFileSize = 50 << 20 // 50 MB
 
 func findApplication(c *gin.Context) (*models.Application, error) {
 	if app, exists := c.Get("route_app"); exists {
@@ -52,8 +56,7 @@ func upsertVersion(appID uint, name, branch string) (*models.ApplicationVersion,
 	err := config.DB.Where("application_id = ? AND name = ?", appID, name).First(&version).Error
 	if err == nil {
 		if branch != "" && version.Branch != branch {
-			version.Branch = branch
-			config.DB.Save(&version)
+			config.DB.Model(&version).Update("branch", branch)
 		}
 		return &version, nil
 	}
@@ -96,23 +99,52 @@ func IngestScan(c *gin.Context) {
 
 	versionName := c.PostForm("version")
 	if versionName == "" {
-		versionName = c.DefaultQuery("version", "latest")
+		versionName = c.DefaultQuery("version", "")
 	}
 	branch := c.PostForm("branch")
 
-	version, err := upsertVersion(app.ID, versionName, branch)
-	if err != nil {
-		utils.InternalServerError(c, "failed to create version")
-		return
+	// No version specified → use the app's default version
+	var version *models.ApplicationVersion
+	if versionName == "" {
+		var defaultVersion models.ApplicationVersion
+		if err := config.DB.Where("application_id = ? AND is_default = ?", app.ID, true).
+			First(&defaultVersion).Error; err == nil {
+			version = &defaultVersion
+		} else {
+			versionName = "latest"
+		}
 	}
-	if versionName == "latest" && branch == "" {
-		version.IsDefault = true
-		config.DB.Save(version)
+
+	if version == nil {
+		var err error
+		version, err = upsertVersion(app.ID, versionName, branch)
+		if err != nil {
+			utils.InternalServerError(c, "failed to create version")
+			return
+		}
+		if versionName == "latest" && branch == "" {
+			config.DB.Model(&version).Update("is_default", true)
+		}
 	}
 
 	scannerTypeName := c.PostForm("scannerType")
 	if scannerTypeName == "" {
 		scannerTypeName = c.DefaultQuery("scannerType", "")
+	}
+
+	// Read file once with size limit (Phase 2.2 + 2.5)
+	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, maxIngestFileSize)
+	file, header, err := c.Request.FormFile("file")
+	if err != nil {
+		utils.BadRequestError(c, "file is required")
+		return
+	}
+	defer file.Close()
+
+	data, err := io.ReadAll(file)
+	if err != nil {
+		utils.BadRequestError(c, "failed to read file or file too large (max 50MB)")
+		return
 	}
 
 	var scannerType models.ScannerType
@@ -126,24 +158,19 @@ func IngestScan(c *gin.Context) {
 			format = "sarif"
 		}
 	} else {
-		file, _, err := c.Request.FormFile("file")
-		if err == nil {
-			data, _ := io.ReadAll(file)
-			file.Close()
-			format = parsers.DetectScannerType(data)
-			if format == "sarif" {
-				if toolName := parsers.ExtractSarifToolName(data); toolName != "" {
-					var st models.ScannerType
-					if err := config.DB.Where("name = ?", toolName).First(&st).Error; err == nil && st.Enabled {
-						scannerType = st
-					}
+		format = parsers.DetectScannerType(data)
+		if format == "sarif" {
+			if toolName := parsers.ExtractSarifToolName(data); toolName != "" {
+				var st models.ScannerType
+				if err := config.DB.Where("name = ?", toolName).First(&st).Error; err == nil && st.Enabled {
+					scannerType = st
 				}
-				if scannerType.ID == 0 {
-					config.DB.Where("name = ?", "sarif").First(&scannerType)
-				}
-			} else if format != "" {
-				config.DB.Where("name = ?", format).First(&scannerType)
 			}
+			if scannerType.ID == 0 {
+				config.DB.Where("name = ?", "sarif").First(&scannerType)
+			}
+		} else if format != "" {
+			config.DB.Where("name = ?", format).First(&scannerType)
 		}
 	}
 	if scannerType.ID == 0 {
@@ -156,42 +183,26 @@ func IngestScan(c *gin.Context) {
 		return
 	}
 
-	file, header, err := c.Request.FormFile("file")
-	if err != nil {
-		utils.BadRequestError(c, "file is required")
-		return
-	}
-	defer file.Close()
-
-	data, err := io.ReadAll(file)
-	if err != nil {
-		utils.InternalServerError(c, "failed to read file")
-		return
-	}
-
-	now := time.Now()
-	rawStr := string(data)
-	scan := models.Scan{
-		ApplicationVersionID: version.ID,
-		ScannerTypeID:        scannerType.ID,
-		Status:               "processing",
-		StartedAt:            &now,
-		RawResults:           &rawStr,
-	}
-	if err := config.DB.Create(&scan).Error; err != nil {
-		utils.InternalServerError(c, "failed to create scan")
-		return
-	}
-
 	parserName := scannerType.Parser
 	if format == "sarif" && scannerType.Name != "sarif" {
 		parserName = "sarif"
 	}
 	parser, ok := parsers.Get(parserName)
 	if !ok {
-		scan.Status = "completed"
-		scan.CompletedAt = &now
-		config.DB.Save(&scan)
+		now := time.Now()
+		rawStr := string(data)
+		scan := models.Scan{
+			ApplicationVersionID: version.ID,
+			ScannerTypeID:        scannerType.ID,
+			Status:               "completed",
+			StartedAt:            &now,
+			CompletedAt:          &now,
+			RawResults:           &rawStr,
+		}
+		if err := config.DB.Create(&scan).Error; err != nil {
+			utils.InternalServerError(c, "failed to create scan")
+			return
+		}
 		utils.CreatedResponse(c, gin.H{
 			"id":            scan.ID,
 			"status":        scan.Status,
@@ -204,75 +215,107 @@ func IngestScan(c *gin.Context) {
 
 	findingsInput, err := parser(data, header.Filename)
 	if err != nil {
-		scan.Status = "failed"
-		scan.CompletedAt = &now
-		config.DB.Save(&scan)
+		now := time.Now()
+		rawStr := string(data)
+		scan := models.Scan{
+			ApplicationVersionID: version.ID,
+			ScannerTypeID:        scannerType.ID,
+			Status:               "failed",
+			StartedAt:            &now,
+			CompletedAt:          &now,
+			RawResults:           &rawStr,
+		}
+		config.DB.Create(&scan)
 		utils.InternalServerError(c, fmt.Sprintf("failed to parse results: %v", err))
 		return
 	}
 
-	// Deduplicate within the application version: a finding's identity is the
-	// hash of (scanner, rule, file, line, severity). Skip any finding whose hash
-	// already exists for this version or repeats within this upload. The same
-	// finding may reappear in a newer version (e.g. after a code change) and
-	// should not be suppressed.
-	var existingHashes []string
-	config.DB.Model(&models.Finding{}).
-		Where("application_version_id = ?", version.ID).
-		Where("dedupe_hash <> ''").
-		Pluck("dedupe_hash", &existingHashes)
-	seen := make(map[string]bool, len(existingHashes))
-	for _, h := range existingHashes {
-		seen[h] = true
-	}
-
+	// Phase 1.1: Wrap scan + findings + policy eval in a transaction
+	now := time.Now()
+	rawStr := string(data)
+	var scanResult models.Scan
 	var inserted []models.Finding
 	skipped := 0
-	for _, f := range findingsInput {
-		hash := services.DedupeHash(scannerType.Name, f.RuleID, f.FilePath, f.LineStart, f.Severity)
-		if seen[hash] {
-			skipped++
-			continue
-		}
-		seen[hash] = true
 
-		finding := models.Finding{
-			ScanID:               scan.ID,
+	err = config.DB.Transaction(func(tx *gorm.DB) error {
+		scanResult = models.Scan{
 			ApplicationVersionID: version.ID,
 			ScannerTypeID:        scannerType.ID,
-			RuleID:               f.RuleID,
-			Title:                f.Title,
-			Severity:             f.Severity,
-			Description:          f.Description,
-			FilePath:             f.FilePath,
-			LineStart:            f.LineStart,
-			LineEnd:              f.LineEnd,
-			CWEID:                f.CWEID,
-			Remediation:          f.Remediation,
-			Status:               "open",
-			DedupeHash:           hash,
+			Status:               "completed",
+			StartedAt:            &now,
+			CompletedAt:          &now,
+			RawResults:           &rawStr,
 		}
-		if s := pro.Risk.CalculateScore(f.Severity, nil, app.AssetCriticality, time.Now()); s != nil {
-			finding.RiskScore = s
+		if err := tx.Create(&scanResult).Error; err != nil {
+			return fmt.Errorf("create scan: %w", err)
 		}
-		if err := config.DB.Create(&finding).Error; err != nil {
-			utils.InternalServerError(c, "failed to record findings")
-			return
+
+		// Deduplicate within the application version
+		var existingHashes []string
+		tx.Model(&models.Finding{}).
+			Where("application_version_id = ?", version.ID).
+			Where("dedupe_hash <> ''").
+			Pluck("dedupe_hash", &existingHashes)
+		seen := make(map[string]bool, len(existingHashes))
+		for _, h := range existingHashes {
+			seen[h] = true
 		}
-		inserted = append(inserted, finding)
+
+		var batch []models.Finding
+		for _, f := range findingsInput {
+			hash := services.DedupeHash(scannerType.Name, f.RuleID, f.FilePath, f.LineStart, f.Severity)
+			if seen[hash] {
+				skipped++
+				continue
+			}
+			seen[hash] = true
+
+			finding := models.Finding{
+				ScanID:               scanResult.ID,
+				ApplicationVersionID: version.ID,
+				ScannerTypeID:        scannerType.ID,
+				RuleID:               f.RuleID,
+				Title:                f.Title,
+				Severity:             f.Severity,
+				Description:          f.Description,
+				FilePath:             f.FilePath,
+				LineStart:            f.LineStart,
+				LineEnd:              f.LineEnd,
+				CWEID:                f.CWEID,
+				Remediation:          f.Remediation,
+				Status:               "open",
+				DedupeHash:           hash,
+			}
+			if s := pro.Risk.CalculateScore(f.Severity, nil, app.AssetCriticality, time.Now()); s != nil {
+				finding.RiskScore = s
+			}
+			batch = append(batch, finding)
+		}
+
+		// Phase 2.1: Batch insert findings
+		if len(batch) > 0 {
+			if err := tx.CreateInBatches(&batch, 500).Error; err != nil {
+				return fmt.Errorf("create findings: %w", err)
+			}
+			inserted = batch
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		utils.InternalServerError(c, "failed to record scan results")
+		return
 	}
 
-	scan.Status = "completed"
-	scan.CompletedAt = &now
-	config.DB.Save(&scan)
-
+	// Policy evaluation runs outside the transaction (may trigger webhooks)
 	for i := range inserted {
 		services.EvaluatePolicies("finding.created", &inserted[i], app, 0)
 	}
 
 	utils.CreatedResponse(c, gin.H{
-		"id":                scan.ID,
-		"status":            scan.Status,
+		"id":                scanResult.ID,
+		"status":            scanResult.Status,
 		"versionId":         version.ID,
 		"findingsCount":     len(inserted),
 		"skippedDuplicates": skipped,

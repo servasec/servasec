@@ -30,8 +30,7 @@ func getAdminPassword() string {
 	}
 	randomPwd, err := generateRandomHex(16)
 	if err != nil {
-		log.Printf("Failed to generate random admin password: %v", err)
-		return "Admin1234!"
+		log.Fatalf("CRITICAL: Failed to generate random admin password: %v. refusing to fall back to hardcoded password.", err)
 	}
 
 	log.Printf("========================================")
@@ -107,7 +106,7 @@ func SeedCasbinFromCsv(enforcer *casbin.Enforcer) {
 
 func seedScannerTypes() {
 	scannerTypes := []models.ScannerType{
-		{Name: "semgrep", Description: "Semgrep SAST (JSON)", Parser: "semgrep", Enabled: true},
+		{Name: "semgrep", Description: "Semgrep SAST (SARIF/JSON)", Parser: "semgrep", Enabled: true},
 		{Name: "trivy", Description: "Trivy vulnerability scanner (SARIF/JSON)", Parser: "trivy", Enabled: true},
 		{Name: "gitleaks", Description: "Gitleaks secret detection (JSON)", Parser: "gitleaks", Enabled: true},
 		{Name: "grype", Description: "Grype vulnerability scanner (JSON)", Parser: "grype", Enabled: true},
@@ -116,6 +115,13 @@ func seedScannerTypes() {
 		{Name: "trufflehog", Description: "TruffleHog secret detection (JSON)", Parser: "trufflehog", Enabled: true},
 		{Name: "nuclei", Description: "Nuclei DAST/template scanner (JSON/JSONL)", Parser: "nuclei", Enabled: true},
 		{Name: "sarif", Description: "Generic SARIF v2.1.0 parser (fallback for unknown tools)", Parser: "sarif", Enabled: true},
+		{Name: "gosec", Description: "Gosec Go SAST (JSON)", Parser: "gosec", Enabled: true},
+		{Name: "bandit", Description: "Bandit Python SAST (JSON)", Parser: "bandit", Enabled: true},
+		{Name: "osv-scanner", Description: "OSV-Scanner SCA (JSON)", Parser: "osv-scanner", Enabled: true},
+		{Name: "npm-audit", Description: "NPM Audit SCA (JSON)", Parser: "npm-audit", Enabled: true},
+		{Name: "tfsec", Description: "Tfsec Terraform IaC (JSON)", Parser: "tfsec", Enabled: true},
+		{Name: "kubescape", Description: "Kubescape Kubernetes CSPM (JSON)", Parser: "kubescape", Enabled: true},
+		{Name: "kube-bench", Description: "Kube-bench CIS Kubernetes (JSON)", Parser: "kube-bench", Enabled: true},
 	}
 
 	for _, st := range scannerTypes {

@@ -242,7 +242,7 @@ export default function TeamDetailPage() {
                   value={addForm.userId}
                   onSelect={(userId) => setAddForm({ ...addForm, userId })}
                   onClear={() => setAddForm({ ...addForm, userId: "" })}
-                  placeholder="Search users (min 2 characters)..."
+                  placeholder="Search users..."
                   existingIds={(members || []).map((m) => m.userId)}
                 />
               </div>

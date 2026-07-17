@@ -11,7 +11,6 @@
   <a href="./LICENSE"><img src="https://img.shields.io/badge/license-AGPLv3%20%7C%20Commercial-blue" alt="License"></a>
   <a href="https://github.com/servasec/servasec/releases"><img src="https://img.shields.io/github/v/release/servasec/servasec" alt="Release"></a>
   <a href="https://github.com/servasec/servasec/stargazers"><img src="https://img.shields.io/github/stars/servasec/servasec" alt="GitHub Stars"></a>
-  <a href="https://github.com/servasec/servasec/actions"><img src="https://img.shields.io/github/actions/workflow/status/servasec/servasec/ci.yml" alt="CI"></a>
   <a href="https://discord.gg/jqFmBEPQz"><img src="https://img.shields.io/badge/chat-Discord-5865F2" alt="Discord"></a>
 </p>
 
@@ -29,7 +28,7 @@
 | Resource-level permissions | ✓ | ✓ |
 | Scanner ingest (Semgrep, Trivy, etc.) | ✓ | ✓ |
 | Version comparison | ✓ | ✓ |
-| SSO / OIDC (planned) | ? | ✓ |
+| SSO / OIDC | ? | ✓ |
 | Audit log |  | ✓ |
 | MCP Server |  | ✓ |
 | SLA management (planned) |  | ✓ |

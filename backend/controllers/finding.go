@@ -269,8 +269,16 @@ func ReviewFinding(c *gin.Context) {
 		return
 	}
 
-	userID, _ := c.Get("user_id")
-	uid := userID.(uint)
+	userIDVal, exists := c.Get("user_id")
+	if !exists {
+		utils.UnauthorizedError(c, "unauthorized")
+		return
+	}
+	uid, ok := userIDVal.(uint)
+	if !ok {
+		utils.InternalServerError(c, "invalid user context")
+		return
+	}
 
 	var input struct {
 		Status *string `json:"status" binding:"omitempty,oneof=fixed closed open"`
@@ -328,11 +336,20 @@ func CreateComment(c *gin.Context) {
 		return
 	}
 
-	userID, _ := c.Get("user_id")
+	userIDVal, exists := c.Get("user_id")
+	if !exists {
+		utils.UnauthorizedError(c, "unauthorized")
+		return
+	}
+	userID, ok := userIDVal.(uint)
+	if !ok {
+		utils.InternalServerError(c, "invalid user context")
+		return
+	}
 
 	comment := models.Comment{
 		FindingID: finding.ID,
-		UserID:    userID.(uint),
+		UserID:    userID,
 		Body:      input.Body,
 	}
 	if err := config.DB.Create(&comment).Error; err != nil {
