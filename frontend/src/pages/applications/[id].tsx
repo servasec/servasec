@@ -21,53 +21,10 @@ import {
 } from "@/components/ui/dialog";
 import axios from "@/lib/api";
 import { toast } from "sonner";
-import type { Webhook, ScanItem } from "@/lib/types";
+import type { Webhook, ScanItem, ApplicationVersion, Application, Group, ScannerType, AppPermission } from "@/lib/types";
 import { statusScanColors } from "@/lib/constants";
 import { UserSearch } from "@/components/user-search";
 import { SeverityChart } from "@/components/findings/severity-chart";
-
-interface ApplicationVersion {
-  id: number;
-  applicationId: number;
-  name: string;
-  branch: string;
-  tag: string;
-  isDefault: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
-
-interface Application {
-  id: number;
-  name: string;
-  description: string;
-  slug: string;
-  groupId: number;
-  repositoryUrl: string;
-  versions: ApplicationVersion[];
-  defaultVersion: ApplicationVersion | null;
-  createdAt: string;
-  updatedAt: string;
-}
-
-interface Group {
-  id: number;
-  name: string;
-}
-
-interface ScannerType {
-  id: number;
-  name: string;
-  description: string;
-  parser: string;
-}
-
-interface AppPermission {
-  id: number;
-  subject: string;
-  resource: string;
-  action: string;
-}
 
 export default function ApplicationDetailPage() {
   const router = useRouter();
@@ -384,7 +341,7 @@ export default function ApplicationDetailPage() {
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors
+              className={`px-4 py-2.5 text-[13px] font-medium border-b-2 transition-colors
                 ${activeTab === tab
                   ? "border-primary text-foreground"
                   : "border-transparent text-muted-foreground hover:text-foreground"
@@ -399,7 +356,7 @@ export default function ApplicationDetailPage() {
       {activeTab === "overview" && (
         <div key="overview" className="animate-in fade-in duration-200">
           <Card className="border-0 shadow-none">
-            <div className="p-6">
+            <div className="p-5">
               <div className="flex items-start justify-between gap-4">
                 <div className="min-w-0">
                   <h2 className="text-xl font-semibold truncate">{app.name}</h2>
@@ -419,7 +376,7 @@ export default function ApplicationDetailPage() {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
                 <div>
                   <p className="text-xs text-muted-foreground mb-0.5">Slug</p>
-                  <code className="text-sm bg-muted px-1.5 py-0.5 rounded">{app.slug}</code>
+                  <code className="text-[11px] font-mono bg-muted px-1.5 py-0.5 rounded">{app.slug}</code>
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground mb-0.5">Group</p>
@@ -437,9 +394,9 @@ export default function ApplicationDetailPage() {
             </div>
           </Card>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <Card className="border-0 shadow-none">
-              <div className="p-6">
+              <div className="p-5">
                 <h3 className="text-lg font-semibold mb-4">Latest scan</h3>
                 {loadingScan ? (
                   <div className="space-y-3">
@@ -484,7 +441,7 @@ export default function ApplicationDetailPage() {
             </Card>
 
             <Card className="border-0 shadow-none">
-              <div className="p-6">
+              <div className="p-5">
                 <h3 className="text-lg font-semibold mb-4">Findings severity</h3>
                 <SeverityChart findings={versionFindings} loading={loadingFindings} />
               </div>
@@ -498,11 +455,11 @@ export default function ApplicationDetailPage() {
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold">Versions</h3>
             <div className="flex items-center gap-2">
-              <Button variant="outline" onClick={() => router.push(`/applications/${id}/compare`)} className="h-8 px-2.5 text-xs gap-1">
+              <Button variant="outline" onClick={() => router.push(`/applications/${id}/compare`)} className="h-8 px-2.5 text-xs gap-1.5">
                 <GitCompare className="h-3.5 w-3.5" />
                 Compare
               </Button>
-              <Button onClick={openCreateVersion} className="h-8 px-2.5 text-xs gap-1">
+              <Button onClick={openCreateVersion} className="h-8 px-2.5 text-xs gap-1.5">
                 <Plus className="h-3.5 w-3.5" />
                 New version
               </Button>
@@ -511,14 +468,14 @@ export default function ApplicationDetailPage() {
 
           <Card>
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="w-full text-xs">
                 <thead>
                   <tr className="border-b bg-muted/50">
-                    <th className="text-left px-4 py-3.5 font-medium text-muted-foreground">Name</th>
-                    <th className="text-left px-4 py-3.5 font-medium text-muted-foreground hidden sm:table-cell">Branch</th>
-                    <th className="text-left px-4 py-3.5 font-medium text-muted-foreground hidden sm:table-cell">Tag</th>
-                    <th className="text-left px-4 py-3.5 font-medium text-muted-foreground hidden md:table-cell">Created</th>
-                    <th className="w-32 px-4 py-3.5" />
+                    <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">Name</th>
+                    <th className="text-left px-4 py-2.5 font-medium text-muted-foreground hidden sm:table-cell">Branch</th>
+                    <th className="text-left px-4 py-2.5 font-medium text-muted-foreground hidden sm:table-cell">Tag</th>
+                    <th className="text-left px-4 py-2.5 font-medium text-muted-foreground hidden md:table-cell">Created</th>
+                    <th className="w-32 px-4 py-2.5" />
                   </tr>
                 </thead>
                 <tbody>
@@ -532,7 +489,7 @@ export default function ApplicationDetailPage() {
                   ) : (
                     app.versions.map((v) => (
                       <tr key={v.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors">
-                        <td className="px-4 py-3">
+                        <td className="px-4 py-2">
                           <div className="flex items-center gap-2">
                             <span className="font-medium">{v.name}</span>
                             {v.isDefault && (
@@ -543,17 +500,17 @@ export default function ApplicationDetailPage() {
                             )}
                           </div>
                         </td>
-                        <td className="px-4 py-3 text-muted-foreground hidden sm:table-cell">
+                        <td className="px-4 py-2 text-muted-foreground hidden sm:table-cell">
                           {v.branch || "-"}
                         </td>
-                        <td className="px-4 py-3 text-muted-foreground hidden sm:table-cell">
+                        <td className="px-4 py-2 text-muted-foreground hidden sm:table-cell">
                           {v.tag || "-"}
                         </td>
-                        <td className="px-4 py-3 text-muted-foreground hidden md:table-cell">
+                        <td className="px-4 py-2 text-muted-foreground hidden md:table-cell">
                           {new Date(v.createdAt).toLocaleDateString()}
                         </td>
-                        <td className="px-4 py-3">
-                          <div className="flex items-center gap-1">
+                        <td className="px-4 py-2">
+                          <div className="flex items-center gap-1.5">
                             {!v.isDefault && (
                               <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleSetDefault(v)} title="Set as default">
                                 <Star className="h-3.5 w-3.5" />
@@ -584,7 +541,7 @@ export default function ApplicationDetailPage() {
         <div key="settings" className="animate-in fade-in duration-200">
           <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold">Webhooks</h3>
-            <Button onClick={openCreateWebhook} className="h-8 px-2.5 text-xs gap-1">
+            <Button onClick={openCreateWebhook} className="h-8 px-2.5 text-xs gap-1.5">
               <Plus className="h-3.5 w-3.5" />
               Add webhook
             </Button>
@@ -592,14 +549,14 @@ export default function ApplicationDetailPage() {
 
           <Card>
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="w-full text-xs">
                 <thead>
                   <tr className="border-b bg-muted/50">
-                    <th className="text-left px-4 py-3.5 font-medium text-muted-foreground">URL</th>
-                    <th className="text-left px-4 py-3.5 font-medium text-muted-foreground hidden sm:table-cell">Events</th>
-                    <th className="text-left px-4 py-3.5 font-medium text-muted-foreground hidden sm:table-cell">Status</th>
-                    <th className="text-left px-4 py-3.5 font-medium text-muted-foreground hidden md:table-cell">Created</th>
-                    <th className="w-12 px-4 py-3.5" />
+                    <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">URL</th>
+                    <th className="text-left px-4 py-2.5 font-medium text-muted-foreground hidden sm:table-cell">Events</th>
+                    <th className="text-left px-4 py-2.5 font-medium text-muted-foreground hidden sm:table-cell">Status</th>
+                    <th className="text-left px-4 py-2.5 font-medium text-muted-foreground hidden md:table-cell">Created</th>
+                    <th className="w-12 px-4 py-2.5" />
                   </tr>
                 </thead>
                 <tbody>
@@ -614,20 +571,20 @@ export default function ApplicationDetailPage() {
                   ) : (
                     webhooks.map((wh) => (
                       <tr key={wh.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors">
-                        <td className="px-4 py-3 font-medium max-w-[200px] truncate">{wh.url}</td>
-                        <td className="px-4 py-3 text-muted-foreground hidden sm:table-cell">
-                          <code className="text-xs bg-muted px-1.5 py-0.5 rounded">{wh.events}</code>
+                        <td className="px-4 py-2 font-medium max-w-[200px] truncate">{wh.url}</td>
+                        <td className="px-4 py-2 text-muted-foreground hidden sm:table-cell">
+                          <code className="text-[11px] font-mono bg-muted px-1.5 py-0.5 rounded">{wh.events}</code>
                         </td>
-                        <td className="px-4 py-3 hidden sm:table-cell">
+                        <td className="px-4 py-2 hidden sm:table-cell">
                           <span className={`inline-flex items-center gap-1.5 text-sm ${wh.isActive ? "text-emerald-500" : "text-muted-foreground"}`}>
                             <span className="h-1.5 w-1.5 rounded-full bg-current" />
                             {wh.isActive ? "Active" : "Inactive"}
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-muted-foreground hidden md:table-cell">
+                        <td className="px-4 py-2 text-muted-foreground hidden md:table-cell">
                           {wh.createdAt ? new Date(wh.createdAt).toLocaleDateString() : "-"}
                         </td>
-                        <td className="px-4 py-3">
+                        <td className="px-4 py-2">
                           <Button variant="destructive-ghost" size="icon" className="h-8 w-8" onClick={() => handleDeleteWebhook(wh)} title="Delete webhook">
                             <Trash2 className="h-3.5 w-3.5" />
                           </Button>
@@ -648,7 +605,7 @@ export default function ApplicationDetailPage() {
             <>
               <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-semibold">Permissions</h3>
-                <Button onClick={openPermGrant} className="h-8 px-2.5 text-xs gap-1">
+                <Button onClick={openPermGrant} className="h-8 px-2.5 text-xs gap-1.5">
                   <Plus className="h-3.5 w-3.5" />
                   Add permission
                 </Button>
@@ -656,12 +613,12 @@ export default function ApplicationDetailPage() {
 
               <Card>
                 <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
+                  <table className="w-full text-xs">
                     <thead>
                       <tr className="border-b bg-muted/50">
-                        <th className="text-left px-4 py-3.5 font-medium text-muted-foreground">Subject</th>
-                        <th className="text-left px-4 py-3.5 font-medium text-muted-foreground">Action</th>
-                        <th className="w-12 px-4 py-3.5" />
+                        <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">Subject</th>
+                        <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">Action</th>
+                        <th className="w-12 px-4 py-2.5" />
                       </tr>
                     </thead>
                     <tbody>
@@ -676,11 +633,11 @@ export default function ApplicationDetailPage() {
                       ) : (
                         appPerms.map((p, i) => (
                           <tr key={p.id || i} className="border-b last:border-0 hover:bg-muted/30 transition-colors">
-                            <td className="px-4 py-3">
-                              <code className="text-xs bg-muted px-1.5 py-0.5 rounded">{p.subject}</code>
+                            <td className="px-4 py-2">
+                              <code className="text-[11px] font-mono bg-muted px-1.5 py-0.5 rounded">{p.subject}</code>
                             </td>
-                            <td className="px-4 py-3 capitalize">{p.action}</td>
-                            <td className="px-4 py-3">
+                            <td className="px-4 py-2 capitalize">{p.action}</td>
+                            <td className="px-4 py-2">
                               <Button variant="destructive-ghost" size="icon" className="h-8 w-8" onClick={() => handleRevokePerm(p)} title="Revoke">
                                 <Trash2 className="h-3.5 w-3.5" />
                               </Button>
@@ -759,7 +716,7 @@ export default function ApplicationDetailPage() {
 
               <div className="grid gap-2">
                 <Label>Action</Label>
-                <Select value={permForm.action} onValueChange={(v: any) => setPermForm({ ...permForm, action: v })}>
+                <Select value={permForm.action} onValueChange={(v) => setPermForm({ ...permForm, action: v })}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>

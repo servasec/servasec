@@ -17,7 +17,7 @@ import { Pencil, Trash2, ChevronLeft, ShieldAlert, ScrollText } from "lucide-rea
 import Link from "next/link";
 import axios from "@/lib/api";
 import { toast } from "sonner";
-import type { Policy, PolicyLog } from "@/lib/types";
+import type { Policy, PolicyLog, PolicyCondition, PolicyAction } from "@/lib/types";
 
 export default function PolicyDetailPage() {
   const router = useRouter();
@@ -77,15 +77,15 @@ export default function PolicyDetailPage() {
 
   if (loading || !policy) {
     return (
-      <div className="space-y-6">
-        <Skeleton className="h-8 w-48" />
-        <Card><div className="p-6 space-y-4"><Skeleton className="h-6 w-64" /><Skeleton className="h-4 w-full" /><Skeleton className="h-4 w-3/4" /></div></Card>
+      <div className="space-y-4">
+        <Skeleton className="h-7 w-48 animate-pulse" />
+        <Card><div className="p-4 space-y-3"><Skeleton className="h-5 w-64 animate-pulse" /><Skeleton className="h-3.5 w-full animate-pulse" /><Skeleton className="h-3.5 w-3/4 animate-pulse" /></div></Card>
       </div>
     );
   }
 
-  const conditions = parseJSON(policy.conditions);
-  const actions = parseJSON(policy.actions);
+  const conditions: PolicyCondition[] | null = parseJSON(policy.conditions);
+  const actions: PolicyAction[] | null = parseJSON(policy.actions);
 
   return (
     <div className="space-y-6">
@@ -102,91 +102,91 @@ export default function PolicyDetailPage() {
 
       <div className="flex items-center gap-2">
         <Link href={`/policies/${policy.id}/edit`}>
-          <Button variant="outline" size="sm" className="h-8 px-2.5 text-xs gap-1">
-            <Pencil className="h-3.5 w-3.5" />
+          <Button variant="outline" size="sm" className="h-8 px-2.5 text-[11px] gap-1">
+            <Pencil className="h-3 w-3" />
             Edit
           </Button>
         </Link>
-        <Button variant="destructive-ghost" size="sm" className="h-8 px-2.5 text-xs gap-1" onClick={() => setDeleteTarget(true)}>
-          <Trash2 className="h-3.5 w-3.5" />
+        <Button variant="destructive-ghost" size="sm" className="h-8 px-2.5 text-[11px] gap-1" onClick={() => setDeleteTarget(true)}>
+          <Trash2 className="h-3 w-3" />
           Delete
         </Button>
       </div>
 
       <Card>
-        <div className="p-6 space-y-6">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="p-4 space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
               <p className="text-xs text-muted-foreground mb-0.5">Status</p>
-              <span className={`inline-flex items-center gap-1.5 text-sm ${policy.isActive ? "text-emerald-500" : "text-muted-foreground"}`}>
+              <span className={`inline-flex items-center gap-1.5 text-xs ${policy.isActive ? "text-emerald-500" : "text-muted-foreground"}`}>
                 <span className="h-1.5 w-1.5 rounded-full bg-current" />
                 {policy.isActive ? "Active" : "Inactive"}
               </span>
             </div>
             <div>
               <p className="text-xs text-muted-foreground mb-0.5">Scope</p>
-              <p className="text-sm capitalize">
+              <p className="text-xs capitalize">
                 {policy.scopeType}
                 {policy.scopeValue && <span className="text-muted-foreground ml-1">(#{policy.scopeValue})</span>}
               </p>
             </div>
             <div>
               <p className="text-xs text-muted-foreground mb-0.5">Priority</p>
-              <p className="text-sm">{policy.priority}</p>
+              <p className="text-xs">{policy.priority}</p>
             </div>
           </div>
 
           {policy.description && (
             <div>
               <p className="text-xs text-muted-foreground mb-0.5">Description</p>
-              <p className="text-sm">{policy.description}</p>
+              <p className="text-xs">{policy.description}</p>
             </div>
           )}
 
           <div>
             <p className="text-xs text-muted-foreground mb-0.5">Event Types</p>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-1.5">
               {(policy.eventTypes || "").split(",").filter(Boolean).map((ev) => (
-                <code key={ev} className="text-xs bg-muted rounded px-1.5 py-0.5">{ev.trim()}</code>
+                <code key={ev} className="text-[11px] font-mono bg-muted rounded px-1.5 py-0.5">{ev.trim()}</code>
               ))}
-              {!policy.eventTypes && <p className="text-sm text-muted-foreground">None</p>}
+              {!policy.eventTypes && <p className="text-xs text-muted-foreground">None</p>}
             </div>
           </div>
 
           <div>
-            <p className="text-xs text-muted-foreground mb-1.5">Conditions</p>
+            <p className="text-xs text-muted-foreground mb-1">Conditions</p>
             {Array.isArray(conditions) && conditions.length > 0 ? (
-              <div className="space-y-1.5">
-                {conditions.map((c: any, i: number) => (
-                  <div key={i} className="flex items-center gap-2 text-sm">
-                    <code className="text-xs bg-muted rounded px-1.5 py-0.5">{c.field}</code>
+              <div className="space-y-1">
+                {conditions.map((c, i) => (
+                  <div key={i} className="flex items-center gap-2 text-xs">
+                    <code className="text-[11px] font-mono bg-muted rounded px-1.5 py-0.5">{c.field}</code>
                     <span className="text-muted-foreground">{c.op}</span>
-                    <code className="text-xs bg-muted rounded px-1.5 py-0.5">{c.value}</code>
+                    <code className="text-[11px] font-mono bg-muted rounded px-1.5 py-0.5">{c.value}</code>
                   </div>
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground">No conditions (always matches)</p>
+              <p className="text-xs text-muted-foreground">No conditions (always matches)</p>
             )}
           </div>
 
           <div>
-            <p className="text-xs text-muted-foreground mb-1.5">Actions</p>
+            <p className="text-xs text-muted-foreground mb-1">Actions</p>
             {Array.isArray(actions) && actions.length > 0 ? (
-              <div className="space-y-1.5">
-                {actions.map((a: any, i: number) => (
-                  <div key={i} className="flex items-center gap-2 text-sm">
-                    <code className="text-xs bg-muted rounded px-1.5 py-0.5">{a.type}</code>
+              <div className="space-y-1">
+                {actions.map((a, i) => (
+                  <div key={i} className="flex items-center gap-2 text-xs">
+                    <code className="text-[11px] font-mono bg-muted rounded px-1.5 py-0.5">{a.type}</code>
                     {a.target && <span className="text-muted-foreground">→ <span className="text-foreground">{a.target}</span></span>}
                   </div>
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground">No actions</p>
+              <p className="text-xs text-muted-foreground">No actions</p>
             )}
           </div>
 
-          <div className="grid grid-cols-2 gap-4 text-xs text-muted-foreground">
+          <div className="grid grid-cols-2 gap-3 text-xs text-muted-foreground">
             <div>
               <p>Created: {new Date(policy.createdAt).toLocaleString()}</p>
             </div>
@@ -203,18 +203,18 @@ export default function PolicyDetailPage() {
 
       <Card className="overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full text-xs">
             <thead>
               <tr className="border-b bg-muted/50">
-                <th className="text-left px-4 py-3.5 font-medium text-muted-foreground">Finding</th>
-                <th className="text-left px-4 py-3.5 font-medium text-muted-foreground hidden sm:table-cell">Event</th>
-                <th className="text-left px-4 py-3.5 font-medium text-muted-foreground">Action</th>
-                <th className="text-left px-4 py-3.5 font-medium text-muted-foreground hidden sm:table-cell">Result</th>
-                <th className="text-left px-4 py-3.5 font-medium text-muted-foreground hidden sm:table-cell">Detail</th>
-                <th className="text-left px-4 py-3.5 font-medium text-muted-foreground hidden md:table-cell">Date</th>
+                <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">Finding</th>
+                <th className="text-left px-4 py-2.5 font-medium text-muted-foreground hidden sm:table-cell">Event</th>
+                <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">Action</th>
+                <th className="text-left px-4 py-2.5 font-medium text-muted-foreground hidden sm:table-cell">Result</th>
+                <th className="text-left px-4 py-2.5 font-medium text-muted-foreground hidden sm:table-cell">Detail</th>
+                <th className="text-left px-4 py-2.5 font-medium text-muted-foreground hidden md:table-cell">Date</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="animate-pulse">
               {logs.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="px-4 py-12 text-center text-muted-foreground">
@@ -225,25 +225,25 @@ export default function PolicyDetailPage() {
               ) : (
                 logs.map((log) => (
                   <tr key={log.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors">
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-2">
                       <Link href={`/findings?id=${log.findingId}`} className="hover:text-primary transition-colors">
                         #{log.findingId}
                       </Link>
                     </td>
-                    <td className="px-4 py-3 hidden sm:table-cell">
-                      <code className="text-xs bg-muted rounded px-1.5 py-0.5">{log.eventType}</code>
+                    <td className="px-4 py-2 hidden sm:table-cell">
+                      <code className="text-[11px] font-mono bg-muted rounded px-1.5 py-0.5">{log.eventType}</code>
                     </td>
-                    <td className="px-4 py-3 capitalize">{log.actionType}</td>
-                    <td className="px-4 py-3 hidden sm:table-cell">
-                      <span className={`inline-flex items-center gap-1.5 text-sm ${log.actionResult === "success" ? "text-emerald-500" : log.actionResult === "skipped" ? "text-amber-500" : "text-red-500"}`}>
+                    <td className="px-4 py-2 capitalize">{log.actionType}</td>
+                    <td className="px-4 py-2 hidden sm:table-cell">
+                      <span className={`inline-flex items-center gap-1.5 text-xs ${log.actionResult === "success" ? "text-emerald-500" : log.actionResult === "skipped" ? "text-amber-500" : "text-red-500"}`}>
                         <span className="h-1.5 w-1.5 rounded-full bg-current" />
                         {log.actionResult}
                       </span>
                     </td>
-                    <td className="px-4 py-3 hidden sm:table-cell max-w-[200px] truncate text-muted-foreground">
+                    <td className="px-4 py-2 hidden sm:table-cell max-w-[200px] truncate text-muted-foreground">
                       {log.detail || "-"}
                     </td>
-                    <td className="px-4 py-3 text-muted-foreground hidden md:table-cell text-xs">
+                    <td className="px-4 py-2 text-muted-foreground hidden md:table-cell text-xs">
                       {new Date(log.createdAt).toLocaleString()}
                     </td>
                   </tr>

@@ -80,12 +80,12 @@ export function UserSearch({ value, onSelect, onClear, placeholder = "Search use
         <p className="text-xs text-muted-foreground mt-1">Searching...</p>
       )}
       {results.length > 0 && (
-        <div className="border rounded-md divide-y max-h-40 overflow-y-auto mt-1">
+        <div className="border rounded-md divide-y max-h-40 overflow-y-auto mt-1 text-xs">
           {results.map((u) => (
             <button
               key={u.id}
               type="button"
-              className="w-full text-left px-3 py-2 text-sm hover:bg-accent transition-colors"
+              className="w-full text-left px-3 py-1.5 text-xs hover:bg-accent transition-colors"
               onClick={() => handleSelect(u)}
             >
               {u.username} <span className="text-muted-foreground">(id: {u.id})</span>

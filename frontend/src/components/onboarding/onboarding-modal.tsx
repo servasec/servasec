@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { useTheme } from "next-themes";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
@@ -62,15 +62,15 @@ interface OnboardingModalProps {
 }
 
 export function OnboardingModal({ open, onComplete, user }: OnboardingModalProps) {
+  const { resolvedTheme } = useTheme();
   const [step, setStep] = useState(0);
   const [direction, setDirection] = useState(0);
-  const { resolvedTheme } = useTheme();
 
   const slide = slides[step];
   const isLast = step === slides.length - 1;
   const isFirst = step === 0;
 
-  const isDark = resolvedTheme === "dark";
+  const isDark = resolvedTheme === "dark" || resolvedTheme === "catppuccin" || resolvedTheme === "atom-one" || resolvedTheme === "nord";
   const markSrc = "/assets/servasec-mark.svg";
   const imgSrc = slide.image
     ? isDark && slide.image.dark
@@ -138,13 +138,13 @@ export function OnboardingModal({ open, onComplete, user }: OnboardingModalProps
             <X className="h-4 w-4" />
           </button>
 
-          <div className="flex items-center justify-center gap-1.5 mb-6">
+          <div className="flex items-center justify-center gap-1 mb-4">
             {slides.map((_, i) => (
               <motion.div
                 key={i}
-                className="h-1.5 rounded-full"
+                className="h-1 rounded-full"
                 animate={{
-                  width: i === step ? 24 : 6,
+                  width: i === step ? 20 : 5,
                   backgroundColor:
                     i === step
                       ? "hsl(var(--primary))"
@@ -155,7 +155,7 @@ export function OnboardingModal({ open, onComplete, user }: OnboardingModalProps
             ))}
           </div>
 
-          <div className="relative min-h-[18rem]">
+          <div className="relative min-h-[15rem]">
             <AnimatePresence mode="wait" custom={direction}>
               <motion.div
                 key={step}

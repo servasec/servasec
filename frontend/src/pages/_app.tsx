@@ -9,6 +9,7 @@ import { setCSRFToken, setCSRFReady } from '@/lib/api'
 import AppLayout from '@/components/layout/AppLayout'
 import { ErrorBoundary } from '@/components/error-boundary'
 import { OnboardingModal } from '@/components/onboarding/onboarding-modal'
+import { PageTransition } from '@/components/page-transition'
 import '@/styles/globals.css'
 import type { User } from '@/lib/types'
 
@@ -57,13 +58,15 @@ export default function App({ Component, pageProps }: AppProps) {
           <CSRFSyncComponent />
           <ThemeProvider
             attribute="class"
-            defaultTheme="light"
-            enableSystem
-            disableTransitionOnChange
+            defaultTheme="dark"
+            storageKey="servasec-theme"
+            themes={["light", "dark", "catppuccin", "atom-one", "nord"]}
           >
             <AppLayout>
               <ErrorBoundary>
-                <Component {...pageProps} />
+                <PageTransition>
+                  <Component {...pageProps} />
+                </PageTransition>
               </ErrorBoundary>
             </AppLayout>
             <OnboardingGate />
@@ -71,7 +74,7 @@ export default function App({ Component, pageProps }: AppProps) {
               position="top-right"
               toastOptions={{
                 duration: 4000,
-                className: "!bg-card !border !border-border !text-foreground !shadow-sm",
+                className: "!bg-card !border !border-border !text-foreground !shadow-sm !text-xs",
               }}
             />
           </ThemeProvider>
