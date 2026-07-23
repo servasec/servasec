@@ -44,8 +44,8 @@ export default function NewPolicyPage() {
         { label: "New policy" },
       ]} />
 
-      <div className="rounded-lg border p-6">
-        <h2 className="text-lg font-semibold mb-6">Create policy</h2>
+      <div className="rounded-lg border p-4">
+        <h2 className="text-sm font-semibold mb-4">Create policy</h2>
         <PolicyForm onSubmit={handleSubmit} saving={false} />
       </div>
     </div>

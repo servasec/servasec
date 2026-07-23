@@ -1,3 +1,13 @@
+export type ThemeName = "light" | "dark" | "catppuccin" | "atom-one" | "nord";
+
+export const THEMES: { name: ThemeName; label: string; dark: boolean }[] = [
+  { name: "light", label: "Light", dark: false },
+  { name: "dark", label: "Dark", dark: true },
+  { name: "catppuccin", label: "Catppuccin Mocha", dark: true },
+  { name: "atom-one", label: "Atom One", dark: true },
+  { name: "nord", label: "Nord", dark: true },
+];
+
 export interface User {
   id: number;
   username: string;
@@ -6,7 +16,9 @@ export interface User {
   banned: boolean;
   avatarUrl?: string;
   oauthProvider?: string;
+  theme?: string;
   hasSeenOnboarding: boolean;
+  features?: string[];
   createdAt: string;
 }
 
@@ -159,6 +171,18 @@ export interface Policy {
   updatedAt: string;
 }
 
+export interface PolicyCondition {
+  field: string;
+  op: string;
+  value: string;
+}
+
+export interface PolicyAction {
+  type: string;
+  target?: string;
+  config?: Record<string, unknown>;
+}
+
 export interface PolicyLog {
   id: number;
   policyId: number;
@@ -186,6 +210,18 @@ export interface CreateApiKeyResponse {
   name: string;
   keyPrefix: string;
   key: string;
+}
+
+export interface Group {
+  id: number;
+  name: string;
+}
+
+export interface AppPermission {
+  id: number;
+  subject: string;
+  resource: string;
+  action: string;
 }
 
 export interface Permission {

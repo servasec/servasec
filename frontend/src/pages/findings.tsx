@@ -16,7 +16,7 @@ import { Bug, ChevronDown, User as UserIcon, Clock, ChevronLeft, ChevronRight, S
 import Link from "next/link";
 import axios from "@/lib/api";
 import { toast } from "sonner";
-import type { Finding, Application, ScannerType } from "@/lib/types";
+import type { Finding, Application, ScannerType, ApplicationVersion } from "@/lib/types";
 import { severityBadgeColors, statusColors, statusLabels, nextStatuses, severityOptions, riskScoreColor } from "@/lib/constants";
 
 const filterKeys = ["applicationId", "applicationVersionId", "scanId", "severity", "status", "scannerTypeId", "assignedTo"] as const;
@@ -28,7 +28,7 @@ export default function FindingsPage() {
   const [findings, setFindings] = useState<Finding[]>([]);
   const [apps, setApps] = useState<Application[]>([]);
   const [scannerTypes, setScannerTypes] = useState<ScannerType[]>([]);
-  const [versions, setVersions] = useState<Application["versions"] extends undefined ? { id: number; applicationId: number; name: string }[] : any[]>([]);
+  const [versions, setVersions] = useState<ApplicationVersion[]>([]);
   const [scans, setScans] = useState<{ id: number; createdAt: string; scannerType?: { name: string } | null }[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
@@ -162,7 +162,7 @@ export default function FindingsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col h-full">
       <PageHeader crumbs={[{ label: "Findings" }]} />
 
       {loadError ? (
@@ -174,11 +174,11 @@ export default function FindingsPage() {
           </div>
         </Card>
       ) : (
-      <Card>
-        <div className="p-4 flex flex-wrap gap-3 border-b items-center">
+      <Card className="flex flex-col flex-1 min-h-0 mt-4">
+        <div className="shrink-0 p-3 flex flex-wrap gap-2 border-b items-center">
           <div className="w-44">
             <Select value={filters.applicationId} onValueChange={(v) => applyFilter("applicationId", v === "All" ? "" : v)}>
-              <SelectTrigger>
+              <SelectTrigger className="h-8 text-xs">
                 <SelectValue placeholder="All applications" />
               </SelectTrigger>
               <SelectContent>
@@ -191,12 +191,12 @@ export default function FindingsPage() {
           </div>
           <div className="w-44">
             <Select value={filters.applicationVersionId} onValueChange={(v) => applyFilter("applicationVersionId", v === "All" ? "" : v)}>
-              <SelectTrigger>
+              <SelectTrigger className="h-8 text-xs">
                 <SelectValue placeholder="All versions" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="All">All versions</SelectItem>
-                {versions.map((v: any) => (
+                {versions.map((v) => (
                   <SelectItem key={v.id} value={String(v.id)}>{v.name}</SelectItem>
                 ))}
               </SelectContent>
@@ -204,7 +204,7 @@ export default function FindingsPage() {
           </div>
           <div className="w-36">
             <Select value={filters.scanId} onValueChange={(v) => applyFilter("scanId", v === "All" ? "" : v)}>
-              <SelectTrigger>
+              <SelectTrigger className="h-8 text-xs">
                 <SelectValue placeholder="All scans" />
               </SelectTrigger>
               <SelectContent>
@@ -219,7 +219,7 @@ export default function FindingsPage() {
           </div>
           <div className="w-32">
             <Select value={filters.severity} onValueChange={(v) => applyFilter("severity", v === "All" ? "" : v)}>
-              <SelectTrigger>
+              <SelectTrigger className="h-8 text-xs">
                 <SelectValue placeholder="All severities" />
               </SelectTrigger>
               <SelectContent>
@@ -232,7 +232,7 @@ export default function FindingsPage() {
           </div>
           <div className="w-36">
             <Select value={filters.status} onValueChange={(v) => applyFilter("status", v === "All" ? "" : v)}>
-              <SelectTrigger>
+              <SelectTrigger className="h-8 text-xs">
                 <SelectValue placeholder="All statuses" />
               </SelectTrigger>
               <SelectContent>
@@ -245,7 +245,7 @@ export default function FindingsPage() {
           </div>
           <div className="w-36">
             <Select value={filters.scannerTypeId} onValueChange={(v) => applyFilter("scannerTypeId", v === "All" ? "" : v)}>
-              <SelectTrigger>
+              <SelectTrigger className="h-8 text-xs">
                 <SelectValue placeholder="All scanners" />
               </SelectTrigger>
               <SelectContent>
@@ -259,29 +259,29 @@ export default function FindingsPage() {
           <Button
             variant={filters.assignedTo === "me" ? "default" : "outline"}
             size="sm"
-            className="gap-1.5"
+            className="gap-1.5 h-8 text-xs"
             onClick={() => applyFilter("assignedTo", filters.assignedTo === "me" ? "" : "me")}
           >
             <UserIcon className="h-3.5 w-3.5" />
             My findings
           </Button>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+        <div className="flex-1 min-h-0 overflow-y-auto">
+          <table className="w-full text-xs">
             <thead>
               <tr className="border-b bg-muted/50">
-                <th className="text-left px-4 py-3.5 font-medium text-muted-foreground">Finding</th>
-                <th className="text-left px-4 py-3.5 font-medium text-muted-foreground hidden sm:table-cell">Severity</th>
+                <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">Finding</th>
+                <th className="text-left px-4 py-2.5 font-medium text-muted-foreground hidden sm:table-cell">Severity</th>
                 {hasRisk && (
-                  <th className="text-left px-4 py-3.5 font-medium text-muted-foreground hidden md:table-cell cursor-pointer hover:text-foreground select-none" onClick={toggleSort}>
+                  <th className="text-left px-4 py-2.5 font-medium text-muted-foreground hidden md:table-cell cursor-pointer hover:text-foreground select-none" onClick={toggleSort}>
                     Risk {sortBy === "risk_score" ? (order === "desc" ? "↓" : "↑") : ""}
                   </th>
                 )}
-                <th className="text-left px-4 py-3.5 font-medium text-muted-foreground hidden md:table-cell">Status</th>
-                <th className="text-left px-4 py-3.5 font-medium text-muted-foreground hidden lg:table-cell">Assigned to</th>
-                <th className="text-left px-4 py-3.5 font-medium text-muted-foreground hidden lg:table-cell">Due date</th>
-                <th className="text-left px-4 py-3.5 font-medium text-muted-foreground hidden lg:table-cell">Version</th>
-                <th className="text-left px-4 py-3.5 font-medium text-muted-foreground hidden lg:table-cell">Scanner</th>
+                <th className="text-left px-4 py-2.5 font-medium text-muted-foreground hidden md:table-cell">Status</th>
+                <th className="text-left px-4 py-2.5 font-medium text-muted-foreground hidden lg:table-cell">Assigned to</th>
+                <th className="text-left px-4 py-2.5 font-medium text-muted-foreground hidden lg:table-cell">Due date</th>
+                <th className="text-left px-4 py-2.5 font-medium text-muted-foreground hidden lg:table-cell">Version</th>
+                <th className="text-left px-4 py-2.5 font-medium text-muted-foreground hidden lg:table-cell">Scanner</th>
               </tr>
             </thead>
             <tbody>
@@ -289,8 +289,8 @@ export default function FindingsPage() {
                 Array.from({ length: 4 }).map((_, i) => (
                   <tr key={i} className="border-b last:border-0">
                     {Array.from({ length: hasRisk ? 8 : 7 }).map((_, j) => (
-                      <td key={j} className="px-4 py-3">
-                        <Skeleton className="h-5 w-full max-w-[140px]" />
+                      <td key={j} className="px-4 py-2">
+                        <Skeleton className="h-4 w-full max-w-[140px]" />
                       </td>
                     ))}
                   </tr>
@@ -306,7 +306,7 @@ export default function FindingsPage() {
               ) : (
                 findings.map((f) => (
                   <tr key={f.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors cursor-pointer" onClick={() => router.push(`/findings/${f.id}`)}>
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-2">
                       <span className="font-medium hover:text-primary transition-colors">
                         {f.title}
                       </span>
@@ -318,22 +318,22 @@ export default function FindingsPage() {
                         </p>
                       )}
                     </td>
-                    <td className="px-4 py-3 hidden sm:table-cell">
-                      <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border ${severityBadgeColors[f.severity] || ""}`}>
+                    <td className="px-4 py-2 hidden sm:table-cell">
+                      <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium border ${severityBadgeColors[f.severity] || ""}`}>
                         {f.severity}
                       </span>
                     </td>
                     {hasRisk && (
-                      <td className="px-4 py-3 hidden md:table-cell">
-                        <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border ${riskScoreColor(f.riskScore)}`}>
+                      <td className="px-4 py-2 hidden md:table-cell">
+                        <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium border ${riskScoreColor(f.riskScore)}`}>
                           {f.riskScore != null ? f.riskScore.toFixed(2) : "N/A"}
                         </span>
                       </td>
                     )}
-                    <td className="px-4 py-3 hidden md:table-cell" onClick={(e) => e.stopPropagation()}>
+                    <td className="px-4 py-2 hidden md:table-cell" onClick={(e) => e.stopPropagation()}>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <button className={`inline-flex items-center gap-1.5 text-sm hover:underline ${statusColors[f.status] || ""}`}>
+                          <button className={`inline-flex items-center gap-1.5 text-xs hover:underline ${statusColors[f.status] || ""}`}>
                             <span className="h-1.5 w-1.5 rounded-full bg-current" />
                             {statusLabels[f.status] || f.status}
                             <ChevronDown className="h-3 w-3" />
@@ -349,7 +349,7 @@ export default function FindingsPage() {
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </td>
-                    <td className="px-4 py-3 text-muted-foreground hidden lg:table-cell">
+                    <td className="px-4 py-2 text-muted-foreground hidden lg:table-cell">
                       {f.assignedToUser ? (
                         <span className="inline-flex items-center gap-1">
                           <UserIcon className="h-3 w-3" />
@@ -357,7 +357,7 @@ export default function FindingsPage() {
                         </span>
                       ) : "-"}
                     </td>
-                    <td className="px-4 py-3 hidden lg:table-cell">
+                    <td className="px-4 py-2 hidden lg:table-cell">
                       {f.dueDate ? (
                         <span className={`inline-flex items-center gap-1 ${isOverdue(f) ? "text-red-500 font-medium" : "text-muted-foreground"}`}>
                           <Clock className="h-3 w-3" />
@@ -365,12 +365,12 @@ export default function FindingsPage() {
                         </span>
                       ) : "-"}
                     </td>
-                    <td className="px-4 py-3 text-muted-foreground hidden lg:table-cell">
-                      {f.applicationVersion?.name || `#${f.applicationVersionId}`}
-                    </td>
-                    <td className="px-4 py-3 text-muted-foreground hidden lg:table-cell">
-                      {f.scannerType?.name || `#${f.scannerTypeId}`}
-                    </td>
+                    <td className="px-4 py-2 text-muted-foreground hidden lg:table-cell">
+                       <span className="text-[11px] font-mono">{f.applicationVersion?.name || `#${f.applicationVersionId}`}</span>
+                     </td>
+                     <td className="px-4 py-2 text-muted-foreground hidden lg:table-cell">
+                       <span className="text-[11px] font-mono">{f.scannerType?.name || `#${f.scannerTypeId}`}</span>
+                     </td>
                   </tr>
                 ))
               )}
@@ -378,7 +378,7 @@ export default function FindingsPage() {
           </table>
         </div>
         {!loading && total > perPage && (
-          <div className="flex items-center justify-between px-4 py-3 border-t text-sm">
+          <div className="shrink-0 flex items-center justify-between px-4 py-2 border-t text-xs">
             <span className="text-muted-foreground">
               {total} finding{(total) !== 1 ? "s" : ""}
             </span>
