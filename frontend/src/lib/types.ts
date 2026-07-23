@@ -1,10 +1,10 @@
-export type ThemeName = "light" | "dark" | "catppuccin" | "atom-one" | "nord";
+export type ThemeName = "light" | "dark" | "catppuccin" | "github" | "nord";
 
 export const THEMES: { name: ThemeName; label: string; dark: boolean }[] = [
   { name: "light", label: "Light", dark: false },
   { name: "dark", label: "Dark", dark: true },
   { name: "catppuccin", label: "Catppuccin Mocha", dark: true },
-  { name: "atom-one", label: "Atom One", dark: true },
+  { name: "github", label: "GitHub", dark: true },
   { name: "nord", label: "Nord", dark: true },
 ];
 

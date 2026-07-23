@@ -32,7 +32,7 @@ export function CommandPalette() {
   }, [])
 
   const toggleTheme = useCallback(() => {
-    setTheme(theme === "dark" || theme === "catppuccin" || theme === "atom-one" || theme === "nord" ? "light" : "dark")
+    setTheme(theme === "dark" || theme === "catppuccin" || theme === "github" || theme === "nord" ? "light" : "dark")
   }, [theme, setTheme])
 
   const runCommand = useCallback((action?: () => void, href?: string) => {
@@ -54,7 +54,7 @@ export function CommandPalette() {
 
   if (!mounted) return null
 
-  const isDark = theme === "dark" || theme === "catppuccin" || theme === "atom-one" || theme === "nord"
+  const isDark = theme === "dark" || theme === "catppuccin" || theme === "github" || theme === "nord"
 
   const items: CommandItem[] = [
     { label: "Dashboard", href: "/", icon: <AppWindow className="h-4 w-4" />, group: "Navigation", shortcut: "G D" },

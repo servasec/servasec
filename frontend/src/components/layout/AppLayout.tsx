@@ -273,7 +273,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 collapsed ? "justify-center" : ""
               }`}
             >
-              {theme === "dark" || theme === "catppuccin" || theme === "atom-one" || theme === "nord" ? (
+              {theme === "dark" || theme === "catppuccin" || theme === "github" || theme === "nord" ? (
                 <Sun className="h-4 w-4 shrink-0" />
               ) : (
                 <Moon className="h-4 w-4 shrink-0" />

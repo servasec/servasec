@@ -70,7 +70,7 @@ export function OnboardingModal({ open, onComplete, user }: OnboardingModalProps
   const isLast = step === slides.length - 1;
   const isFirst = step === 0;
 
-  const isDark = resolvedTheme === "dark" || resolvedTheme === "catppuccin" || resolvedTheme === "atom-one" || resolvedTheme === "nord";
+  const isDark = resolvedTheme === "dark" || resolvedTheme === "catppuccin" || resolvedTheme === "github" || resolvedTheme === "nord";
   const markSrc = "/assets/servasec-mark.svg";
   const imgSrc = slide.image
     ? isDark && slide.image.dark

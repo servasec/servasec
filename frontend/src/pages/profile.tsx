@@ -318,7 +318,7 @@ export default function ProfilePage() {
                       style={{
                         backgroundColor:
                           t.name === "catppuccin" ? "#cba6f7" :
-                          t.name === "atom-one" ? "#a6e22e" :
+                           t.name === "github" ? "#238636" :
                           t.name === "nord" ? "#88c0d0" :
                           t.name === "dark" ? "#a298ab" :
                           "#7c3aed",

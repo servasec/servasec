@@ -60,7 +60,7 @@ export default function App({ Component, pageProps }: AppProps) {
             attribute="class"
             defaultTheme="dark"
             storageKey="servasec-theme"
-            themes={["light", "dark", "catppuccin", "atom-one", "nord"]}
+            themes={["light", "dark", "catppuccin", "github", "nord"]}
           >
             <AppLayout>
               <ErrorBoundary>

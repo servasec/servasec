@@ -22,7 +22,7 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
             onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
             className="absolute bottom-4 left-4 flex h-9 w-9 items-center justify-center rounded-lg border bg-card text-muted-foreground hover:text-foreground transition-colors shadow-sm"
           >
-            {theme === "dark" || theme === "catppuccin" || theme === "atom-one" || theme === "nord" ? (
+            {theme === "dark" || theme === "catppuccin" || theme === "github" || theme === "nord" ? (
               <Sun className="h-4 w-4" />
             ) : (
               <Moon className="h-4 w-4" />
