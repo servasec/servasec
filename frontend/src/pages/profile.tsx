@@ -15,15 +15,18 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { User, Mail, Lock, Save, Key, Plus, Trash2, Copy, Check } from "lucide-react";
+import { User, Mail, Lock, Save, Key, Plus, Trash2, Copy, Check, Palette } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import axios from "@/lib/api";
 import { toast } from "sonner";
+import { useTheme } from "next-themes";
+import { THEMES } from "@/lib/types";
 import type { ApiKey, CreateApiKeyResponse } from "@/lib/types";
 
 export default function ProfilePage() {
   const router = useRouter();
   const { loggedIn, user: authUser, authChecked, checkAuth } = useAuth();
+  const { theme, setTheme } = useTheme();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [changingPassword, setChangingPassword] = useState(false);
@@ -103,6 +106,10 @@ export default function ProfilePage() {
     } finally {
       setChangingPassword(false);
     }
+  };
+
+  const handleThemeChange = (newTheme: string) => {
+    setTheme(newTheme);
   };
 
   const fetchKeys = () => {
@@ -265,6 +272,73 @@ export default function ProfilePage() {
         </CardContent>
       </Card>
 
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-3">
+            <Palette className="h-5 w-5 text-muted-foreground" />
+            <div>
+              <CardTitle>Theme</CardTitle>
+              <p className="text-sm text-muted-foreground mt-0.5">
+                Choose your preferred color scheme
+              </p>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+            {THEMES.map((t) => {
+                  const active = theme === t.name;
+              return (
+                <button
+                  key={t.name}
+                  onClick={() => handleThemeChange(t.name)}
+                  className={`relative flex flex-col items-center gap-2.5 rounded-lg border-2 p-4 transition-all hover:border-primary/50 ${
+                    active
+                      ? "border-primary bg-primary/5"
+                      : "border-border"
+                  }`}
+                >
+                  <div className="flex gap-1.5">
+                    <span
+                      className="h-4 w-4 rounded-full border"
+                      style={{
+                        backgroundColor: t.dark ? "#1e1e2e" : "#f5f5f5",
+                        borderColor: t.dark ? "#313244" : "#e5e5e5",
+                      }}
+                    />
+                    <span
+                      className="h-4 w-4 rounded-full border"
+                      style={{
+                        backgroundColor: t.dark ? "#cdd6f4" : "#1e1e2e",
+                        borderColor: t.dark ? "#45475a" : "#313244",
+                      }}
+                    />
+                    <span
+                      className="h-4 w-4 rounded-full border"
+                      style={{
+                        backgroundColor:
+                          t.name === "catppuccin" ? "#cba6f7" :
+                           t.name === "github" ? "#238636" :
+                          t.name === "nord" ? "#88c0d0" :
+                          t.name === "dark" ? "#a298ab" :
+                          "#7c3aed",
+                        borderColor: "transparent",
+                      }}
+                    />
+                  </div>
+                  <span className="text-xs font-medium text-foreground">
+                    {t.label}
+                  </span>
+                  {active && (
+                    <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-primary" />
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
+
       {!authUser?.oauthProvider && (
         <Card>
           <CardHeader>
@@ -369,7 +443,7 @@ export default function ProfilePage() {
               onClick={() => { setGenName(""); setCreatedKey(null); setCopied(false); setGenDialogOpen(true); }}
             >
               <Plus className="h-3.5 w-3.5" />
-              Generate New Key
+              Generate new key
             </Button>
           </div>
         </CardHeader>

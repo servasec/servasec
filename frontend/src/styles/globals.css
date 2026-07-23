@@ -6,6 +6,19 @@
   * {
     @apply border-border;
   }
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+  code, pre, .font-mono {
+    font-feature-settings: "liga" 0, "calt" 0;
+  }
+  ::selection {
+    @apply bg-primary/20 text-foreground;
+  }
+  :focus-visible {
+    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+  }
 }
 
 html, body {
@@ -14,57 +27,174 @@ html, body {
   overflow-x: hidden;
 }
 
-:root {
-  --background: 270 15% 85%;
-  --foreground: 270 8% 19%;
-  --card: 270 15% 93%;
-  --card-foreground: 270 8% 19%;
-  --popover: 270 15% 93%;
-  --popover-foreground: 270 8% 19%;
-  --primary: 270 35% 45%;
-  --primary-foreground: 270 15% 93%;
-  --secondary: 270 20% 55%;
-  --secondary-foreground: 270 15% 93%;
-  --muted: 270 15% 88%;
-  --muted-foreground: 270 8% 25%;
-  --accent: 270 25% 52%;
-  --accent-foreground: 270 15% 93%;
-  --destructive: 0 70% 50%;
-  --destructive-foreground: 0 0% 100%;
-  --border: 270 8% 71%;
-  --input: 270 8% 71%;
-  --ring: 270 35% 45%;
-  --radius: 0.5rem;
-  --sidebar: 270 15% 85%;
-  --sidebar-foreground: 270 8% 19%;
-  --sidebar-border: 270 8% 71%;
-  --sidebar-accent: 270 25% 52%;
-  --sidebar-accent-foreground: 270 15% 93%;
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground) / 0.2);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground) / 0.35);
 }
 
-.dark {
-  --background: 270 6% 8%;
-  --foreground: 270 15% 90%;
-  --card: 270 4% 18%;
-  --card-foreground: 270 15% 90%;
-  --popover: 270 4% 18%;
-  --popover-foreground: 270 15% 90%;
-  --primary: 270 60% 65%;
-  --primary-foreground: 270 20% 98%;
-  --secondary: 270 4% 16%;
-  --secondary-foreground: 270 15% 85%;
-  --muted: 270 4% 22%;
-  --muted-foreground: 270 5% 55%;
-  --accent: 270 60% 65%;
-  --accent-foreground: 270 20% 98%;
-  --destructive: 0 70% 50%;
+/* ============================================
+   LIGHT THEME (default)
+   ============================================ */
+:root {
+  color-scheme: light;
+  --background: 270 10% 96%;
+  --foreground: 270 8% 14%;
+  --card: 270 10% 100%;
+  --card-foreground: 270 8% 14%;
+  --popover: 270 10% 100%;
+  --popover-foreground: 270 8% 14%;
+  --primary: 270 40% 42%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 270 15% 93%;
+  --secondary-foreground: 270 8% 25%;
+  --muted: 270 10% 93%;
+  --muted-foreground: 270 8% 40%;
+  --accent: 270 20% 93%;
+  --accent-foreground: 270 8% 14%;
+  --destructive: 0 72% 51%;
   --destructive-foreground: 0 0% 100%;
-  --border: 270 4% 14%;
-  --input: 270 4% 20%;
-  --ring: 270 60% 65%;
-  --sidebar: 270 6% 8%;
-  --sidebar-foreground: 270 15% 85%;
-  --sidebar-border: 270 4% 10%;
-  --sidebar-accent: 270 60% 65%;
-  --sidebar-accent-foreground: 270 20% 98%;
+  --border: 270 8% 88%;
+  --input: 270 8% 88%;
+  --ring: 270 40% 42%;
+  --radius: 0.5rem;
+  --sidebar: 270 10% 96%;
+  --sidebar-foreground: 270 8% 20%;
+  --sidebar-border: 270 8% 90%;
+  --sidebar-accent: 270 35% 92%;
+  --sidebar-accent-foreground: 270 8% 14%;
+}
+
+/* ============================================
+   DARK THEME (default)
+   ============================================ */
+.dark {
+  color-scheme: dark;
+  --background: 270 6% 6%;
+  --foreground: 270 10% 88%;
+  --card: 270 5% 10%;
+  --card-foreground: 270 10% 88%;
+  --popover: 270 5% 10%;
+  --popover-foreground: 270 10% 88%;
+  --primary: 270 55% 60%;
+  --primary-foreground: 270 6% 6%;
+  --secondary: 270 5% 14%;
+  --secondary-foreground: 270 10% 80%;
+  --muted: 270 5% 16%;
+  --muted-foreground: 270 5% 50%;
+  --accent: 270 5% 16%;
+  --accent-foreground: 270 10% 88%;
+  --destructive: 0 62% 50%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 270 5% 18%;
+  --input: 270 5% 18%;
+  --ring: 270 55% 60%;
+  --sidebar: 270 6% 6%;
+  --sidebar-foreground: 270 8% 75%;
+  --sidebar-border: 270 5% 12%;
+  --sidebar-accent: 270 5% 14%;
+  --sidebar-accent-foreground: 270 10% 88%;
+}
+
+/* ============================================
+   CATPPUCCIN MOCHA
+   ============================================ */
+.catppuccin {
+  color-scheme: dark;
+  --background: 240 21% 11%;
+  --foreground: 240 23% 87%;
+  --card: 240 22% 13%;
+  --card-foreground: 240 23% 87%;
+  --popover: 240 22% 13%;
+  --popover-foreground: 240 23% 87%;
+  --primary: 280 77% 72%;
+  --primary-foreground: 240 21% 11%;
+  --secondary: 240 18% 18%;
+  --secondary-foreground: 240 23% 87%;
+  --muted: 240 18% 18%;
+  --muted-foreground: 240 9% 52%;
+  --accent: 240 18% 18%;
+  --accent-foreground: 240 23% 87%;
+  --destructive: 0 72% 51%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 240 18% 20%;
+  --input: 240 18% 20%;
+  --ring: 280 77% 72%;
+  --sidebar: 240 21% 11%;
+  --sidebar-foreground: 240 23% 80%;
+  --sidebar-border: 240 18% 18%;
+  --sidebar-accent: 240 18% 18%;
+  --sidebar-accent-foreground: 240 23% 87%;
+}
+
+/* ============================================
+   ATOM ONE DARK
+   ============================================ */
+.github {
+  color-scheme: dark;
+  --background: 222 34% 7%;
+  --foreground: 213 38% 83%;
+  --card: 216 37% 11%;
+  --card-foreground: 213 38% 83%;
+  --popover: 216 37% 11%;
+  --popover-foreground: 213 38% 83%;
+  --primary: 142 72% 40%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 216 37% 14%;
+  --secondary-foreground: 213 38% 83%;
+  --muted: 216 37% 14%;
+  --muted-foreground: 213 12% 55%;
+  --accent: 213 93% 53%;
+  --accent-foreground: 0 0% 100%;
+  --destructive: 0 72% 51%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 216 37% 17%;
+  --input: 216 37% 17%;
+  --ring: 142 72% 40%;
+  --sidebar: 222 34% 7%;
+  --sidebar-foreground: 213 38% 75%;
+  --sidebar-border: 216 37% 14%;
+  --sidebar-accent: 216 37% 14%;
+  --sidebar-accent-foreground: 213 38% 83%;
+}
+
+/* ============================================
+   NORD
+   ============================================ */
+.nord {
+  color-scheme: dark;
+  --background: 220 34% 12%;
+  --foreground: 220 40% 86%;
+  --card: 220 35% 15%;
+  --card-foreground: 220 40% 86%;
+  --popover: 220 35% 15%;
+  --popover-foreground: 220 40% 86%;
+  --primary: 213 92% 65%;
+  --primary-foreground: 220 34% 12%;
+  --secondary: 220 30% 18%;
+  --secondary-foreground: 220 40% 86%;
+  --muted: 220 30% 18%;
+  --muted-foreground: 220 14% 50%;
+  --accent: 220 30% 18%;
+  --accent-foreground: 220 40% 86%;
+  --destructive: 0 72% 51%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 220 30% 20%;
+  --input: 220 30% 20%;
+  --ring: 213 92% 65%;
+  --sidebar: 220 34% 12%;
+  --sidebar-foreground: 220 40% 78%;
+  --sidebar-border: 220 30% 18%;
+  --sidebar-accent: 220 30% 18%;
+  --sidebar-accent-foreground: 220 40% 86%;
 }

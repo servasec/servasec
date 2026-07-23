@@ -121,31 +121,31 @@ export default function TeamsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <PageHeader crumbs={[{ label: "Administration" }, { label: "Teams" }]} />
-        <Button onClick={openCreate} className="gap-2">
-          <Plus className="h-4 w-4" />
+        <Button onClick={openCreate} className="h-8 text-xs gap-1.5">
+          <Plus className="h-3.5 w-3.5" />
           New team
         </Button>
       </div>
 
       <Card>
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full text-xs">
             <thead>
               <tr className="border-b bg-muted/50">
-                <th className="text-left px-4 py-3.5 font-medium text-muted-foreground">Name</th>
-                <th className="text-left px-4 py-3.5 font-medium text-muted-foreground hidden md:table-cell">Description</th>
-                <th className="text-left px-4 py-3.5 font-medium text-muted-foreground hidden sm:table-cell">Members</th>
-                <th className="text-left px-4 py-3.5 font-medium text-muted-foreground hidden sm:table-cell">Created</th>
-                <th className="w-20 px-4 py-3.5" />
+                <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">Name</th>
+                <th className="text-left px-4 py-2.5 font-medium text-muted-foreground hidden md:table-cell">Description</th>
+                <th className="text-left px-4 py-2.5 font-medium text-muted-foreground hidden sm:table-cell">Members</th>
+                <th className="text-left px-4 py-2.5 font-medium text-muted-foreground hidden sm:table-cell">Created</th>
+                <th className="w-20 px-4 py-2.5" />
               </tr>
             </thead>
-            <tbody>
+            <tbody className="animate-pulse">
               {loading ? (
                 Array.from({ length: 3 }).map((_, i) => (
                   <tr key={i} className="border-b last:border-0">
                     {Array.from({ length: 5 }).map((_, j) => (
-                      <td key={j} className="px-4 py-3">
-                        <Skeleton className="h-5 w-full max-w-[120px]" />
+                      <td key={j} className="px-4 py-2">
+                        <Skeleton className="h-4 w-full max-w-[120px] animate-pulse" />
                       </td>
                     ))}
                   </tr>
@@ -161,17 +161,17 @@ export default function TeamsPage() {
               ) : (
                 teams.map((t) => (
                   <tr key={t.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors cursor-pointer" onClick={() => router.push(`/teams/${t.id}`)}>
-                    <td className="px-4 py-3 font-medium">{t.name}</td>
-                    <td className="px-4 py-3 text-muted-foreground hidden md:table-cell max-w-[200px] truncate">
+                    <td className="px-4 py-2 font-medium">{t.name}</td>
+                    <td className="px-4 py-2 text-muted-foreground hidden md:table-cell max-w-[200px] truncate">
                       {t.description || "-"}
                     </td>
-                    <td className="px-4 py-3 hidden sm:table-cell text-muted-foreground">
+                    <td className="px-4 py-2 hidden sm:table-cell text-muted-foreground">
                       {t.memberCount}
                     </td>
-                    <td className="px-4 py-3 text-muted-foreground hidden sm:table-cell">
+                    <td className="px-4 py-2 text-muted-foreground hidden sm:table-cell">
                       {t.createdAt ? new Date(t.createdAt).toLocaleDateString() : "-"}
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-2">
                       <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
                         <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(t)}>
                           <Pencil className="h-3.5 w-3.5" />

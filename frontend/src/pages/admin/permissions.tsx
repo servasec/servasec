@@ -332,7 +332,7 @@ export default function PermissionsPage() {
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="grantAction">Action</Label>
-                <Select value={grantForm.action} onValueChange={(v: any) => setGrantForm({ ...grantForm, action: v })}>
+                <Select value={grantForm.action} onValueChange={(v) => setGrantForm({ ...grantForm, action: v })}>
                   <SelectTrigger id="grantAction">
                     <SelectValue />
                   </SelectTrigger>

@@ -1,9 +1,10 @@
 "use client"
 
-import { useRouter } from "next/router";
-import { useAuth } from "@/context/AuthContext";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { BackToTop } from "@/components/back-to-top";
+import { useRouter } from "next/router"
+import { useAuth } from "@/context/AuthContext"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { BackToTop } from "@/components/back-to-top"
+import { useTheme } from "next-themes"
 import {
   AppWindow,
   FolderKanban,
@@ -21,22 +22,22 @@ import {
   ScrollText,
   ScanLine,
   ShieldAlert,
-} from "lucide-react";
-import { useTheme } from "next-themes";
-import { useState, useEffect, useRef } from "react";
-import Link from "next/link";
+} from "lucide-react"
+import { useState, useEffect, useRef } from "react"
+import Link from "next/link"
+import type { User as UserProfile } from "@/lib/types"
 
 interface NavItem {
-  label: string;
-  href: string;
-  icon: React.ReactNode;
-  adminOnly?: boolean;
-  feature?: string;
+  label: string
+  href: string
+  icon: React.ReactNode
+  adminOnly?: boolean
+  feature?: string
 }
 
 interface NavGroup {
-  label: string;
-  items: NavItem[];
+  label: string
+  items: NavItem[]
 }
 
 const navGroups: NavGroup[] = [
@@ -60,34 +61,50 @@ const navGroups: NavGroup[] = [
         { label: "Audit Log", href: "/admin/audit-log", icon: <ScrollText className="h-4 w-4" />, adminOnly: true, feature: "audit_log" },
       ],
     },
-];
+]
 
-function UserDropdown({
+function UserMenu({
   user,
   onLogout,
   collapsed,
 }: {
-  user: any;
-  onLogout: () => void;
-  collapsed: boolean;
+  user: UserProfile | null
+  onLogout: () => void
+  collapsed: boolean
 }) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
       if (ref.current && !ref.current.contains(e.target as Node)) {
-        setOpen(false);
+        setOpen(false)
       }
-    };
-    document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
-  }, []);
+    }
+    document.addEventListener("mousedown", handleClick)
+    return () => document.removeEventListener("mousedown", handleClick)
+  }, [])
+
+  if (collapsed) {
+    return (
+      <Link
+        href="/profile"
+        className="flex items-center justify-center w-full rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+        title="Profile"
+      >
+        <Avatar className="h-7 w-7 shrink-0">
+          <AvatarFallback className="bg-accent text-accent-foreground text-[11px]">
+            {user?.username?.charAt(0).toUpperCase() || "U"}
+          </AvatarFallback>
+        </Avatar>
+      </Link>
+    )
+  }
 
   return (
     <div ref={ref} className="relative">
       <button
-        onClick={() => !collapsed && setOpen(!open)}
+        onClick={() => setOpen(!open)}
         className={`flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground ${
           collapsed ? "justify-center" : ""
         }`}
@@ -116,7 +133,7 @@ function UserDropdown({
         )}
       </button>
 
-      {open && !collapsed && (
+      {open && (
         <div className="absolute bottom-full left-0 right-0 mb-1 rounded-md border bg-popover text-popover-foreground py-1 shadow-lg">
           <div className="px-3 py-2 text-xs text-muted-foreground border-b">
             Signed in as
@@ -139,48 +156,48 @@ function UserDropdown({
         </div>
       )}
     </div>
-  );
+  )
 }
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
-  const router = useRouter();
-  const { loggedIn, user, logout, authChecked } = useAuth();
-  const { theme, setTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-  const [collapsed, setCollapsed] = useState(false);
+  const router = useRouter()
+  const { loggedIn, user, logout, authChecked } = useAuth()
+  const { theme, setTheme } = useTheme()
+  const [collapsed, setCollapsed] = useState(false)
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    setMounted(true);
-  }, []);
+    setMounted(true)
+  }, [])
 
   useEffect(() => {
-    const saved = localStorage.getItem("servasec-sidebar-collapsed");
+    const saved = localStorage.getItem("servasec-sidebar-collapsed")
     if (saved === "true") {
-      setCollapsed(true);
+      setCollapsed(true)
     }
-  }, []);
+  }, [])
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      localStorage.setItem("servasec-sidebar-collapsed", String(collapsed));
+      localStorage.setItem("servasec-sidebar-collapsed", String(collapsed))
     }
-  }, [collapsed]);
+  }, [collapsed])
 
   const isPublicPage =
-    router.pathname === "/login" || router.pathname === "/register";
+    router.pathname === "/login" || router.pathname === "/register"
 
   if (!authChecked || !loggedIn || isPublicPage) {
-    return <>{children}</>;
+    return <>{children}</>
   }
 
   const handleLogout = async () => {
-    await logout(true);
-  };
+    await logout(true)
+  }
 
   const isActive = (href: string) => {
-    if (href === "/") return router.pathname === "/";
-    return router.pathname.startsWith(href);
-  };
+    if (href === "/") return router.pathname === "/"
+    return router.pathname.startsWith(href)
+  }
 
   return (
     <div className="h-screen overflow-hidden bg-background flex">
@@ -205,23 +222,23 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <nav className="flex-1 overflow-y-auto py-3 space-y-1">
           {navGroups.map((group) => {
             const visibleItems = group.items.filter((item) => {
-              if (item.adminOnly && user?.role !== "admin") return false;
-              if (item.feature && !user?.features?.includes(item.feature)) return false;
-              return true;
-            });
-            if (visibleItems.length === 0) return null;
+              if (item.adminOnly && user?.role !== "admin") return false
+              if (item.feature && !user?.features?.includes(item.feature)) return false
+              return true
+            })
+            if (visibleItems.length === 0) return null
 
             return (
               <div key={group.label}>
                 {!collapsed && (
                   <div className="px-4 py-1.5">
-                    <span className="text-[11px] font-semibold uppercase tracking-wider text-sidebar-foreground/40">
+                    <span className="text-xs font-semibold text-sidebar-foreground/60">
                       {group.label}
                     </span>
                   </div>
                 )}
                 {visibleItems.map((item) => {
-                  const active = isActive(item.href);
+                  const active = isActive(item.href)
                   return (
                     <Link
                       key={item.href}
@@ -241,10 +258,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                       <span className="shrink-0">{item.icon}</span>
                       {!collapsed && <span>{item.label}</span>}
                     </Link>
-                  );
+                  )
                 })}
               </div>
-            );
+            )
           })}
         </nav>
 
@@ -256,18 +273,18 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 collapsed ? "justify-center" : ""
               }`}
             >
-              {theme === "dark" ? (
+              {theme === "dark" || theme === "catppuccin" || theme === "github" || theme === "nord" ? (
                 <Sun className="h-4 w-4 shrink-0" />
               ) : (
                 <Moon className="h-4 w-4 shrink-0" />
               )}
               {!collapsed && (
-                <span>{theme === "dark" ? "Light mode" : "Dark mode"}</span>
+                <span>{theme === "light" ? "Dark mode" : "Light mode"}</span>
               )}
             </button>
           )}
 
-          <UserDropdown user={user} onLogout={handleLogout} collapsed={collapsed} />
+          <UserMenu user={user} onLogout={handleLogout} collapsed={collapsed} />
 
           <button
             onClick={() => setCollapsed(!collapsed)}
@@ -292,5 +309,5 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <BackToTop />
       </main>
     </div>
-  );
+  )
 }

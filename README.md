@@ -43,7 +43,7 @@ make prod
 # You're done ! Visit https://servasec.local
 ```
 
-Default admin: `admin` / password from `SSC_ADMIN_PASSWORD` (random hex if unset, check logs of backend container ;) ).
+Default admin: `admin` / password from `SSC_ADMIN_PASSWORD` env variable.
 
 
 ## Scanner Support

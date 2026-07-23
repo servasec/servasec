@@ -1,10 +1,11 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef, ReactNode } from "react";
 import api from "@/lib/api";
+import type { User } from "@/lib/types";
 
 interface AuthContextType {
   loggedIn: boolean;
-  user: any | null;
-  login: (user: any) => void;
+  user: User | null;
+  login: (user: User) => void;
   logout: (redirect?: boolean) => Promise<void>;
   checkAuth: () => Promise<void>;
   authChecked: boolean;
@@ -14,12 +15,12 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loggedIn, setLoggedIn] = useState(false);
-  const [user, setUser] = useState<any | null>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [authChecked, setAuthChecked] = useState(false);
   const authCheckedRef = useRef(false);
   const isCheckingRef = useRef(false);
 
-  const login = (userData: any) => {
+  const login = (userData: User) => {
     setLoggedIn(true);
     setUser(userData);
   };

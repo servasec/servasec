@@ -25,8 +25,9 @@ import { toast } from "sonner";
 import type { Finding, Comment } from "@/lib/types";
 import { statusLabels, statusColors, nextStatuses } from "@/lib/constants";
 import { UserSearch } from "@/components/user-search";
+import type { LucideIcon } from "lucide-react";
 
-const severityConfig: Record<string, { icon: any; color: string; bg: string }> = {
+const severityConfig: Record<string, { icon: LucideIcon; color: string; bg: string }> = {
   Critical: { icon: ShieldAlert, color: "text-red-600 dark:text-red-400", bg: "bg-red-500/10" },
   High: { icon: AlertTriangle, color: "text-orange-600 dark:text-orange-400", bg: "bg-orange-500/10" },
   Medium: { icon: AlertTriangle, color: "text-yellow-600 dark:text-yellow-400", bg: "bg-yellow-500/10" },
@@ -101,7 +102,7 @@ export default function FindingDetailPage() {
     if (!finding) return;
     setAssigning(true);
     try {
-      const payload: any = {};
+      const payload: { userId?: number | null; dueDate?: string } = {};
       payload.userId = assignUserId ? Number(assignUserId) : null;
       if (assignDueDate) payload.dueDate = assignDueDate;
       await axios.patch(`/api/findings/${finding.id}/assign`, payload);
@@ -198,8 +199,8 @@ export default function FindingDetailPage() {
         <div className="lg:col-span-2 space-y-6">
           {finding.description && (
             <Card>
-              <CardHeader>
-                <CardTitle className="text-base flex items-center gap-2">
+              <CardHeader className="p-4">
+                <CardTitle className="text-sm flex items-center gap-2">
                   <Bug className="h-4 w-4" />
                   Description
                 </CardTitle>
@@ -212,8 +213,8 @@ export default function FindingDetailPage() {
 
           {finding.remediation && (
             <Card>
-              <CardHeader>
-                <CardTitle className="text-base flex items-center gap-2">
+              <CardHeader className="p-4">
+                <CardTitle className="text-sm flex items-center gap-2">
                   <BookOpen className="h-4 w-4" />
                   Remediation
                 </CardTitle>
@@ -226,18 +227,18 @@ export default function FindingDetailPage() {
 
           {(finding.filePath || finding.lineStart || finding.lineEnd) && (
             <Card>
-              <CardHeader>
-                <CardTitle className="text-base flex items-center gap-2">
+              <CardHeader className="p-4">
+                <CardTitle className="text-sm flex items-center gap-2">
                   <FileCode className="h-4 w-4" />
                   Location
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 {finding.filePath && (
-                  <div className="flex items-center gap-2 text-sm">
-                    <code className="rounded bg-muted px-2 py-1 text-xs flex-1 break-all">{finding.filePath}</code>
+                  <div className="flex items-center gap-2 text-xs">
+                    <code className="rounded bg-muted px-2 py-1 text-[11px] font-mono flex-1 break-all">{finding.filePath}</code>
                     {(finding.lineStart || finding.lineEnd) && (
-                      <span className="text-muted-foreground whitespace-nowrap text-xs">
+                      <span className="text-muted-foreground whitespace-nowrap text-[11px]">
                         Lines {finding.lineStart || "?"}{finding.lineEnd && finding.lineEnd !== finding.lineStart ? `-${finding.lineEnd}` : ""}
                       </span>
                     )}
@@ -248,13 +249,13 @@ export default function FindingDetailPage() {
           )}
 
           <Card>
-            <CardHeader>
-              <CardTitle className="text-base flex items-center gap-2">
+            <CardHeader className="p-4">
+              <CardTitle className="text-sm flex items-center gap-2">
                 <MessageSquare className="h-4 w-4" />
                 Comments
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="p-4 space-y-3">
               <form onSubmit={handlePostComment} className="space-y-2">
                 <Textarea
                   placeholder="Add a comment..."
@@ -283,7 +284,7 @@ export default function FindingDetailPage() {
                           <span className="text-sm font-medium">{c.user?.username || "Unknown"}</span>
                           <span className="text-xs text-muted-foreground">{new Date(c.createdAt).toLocaleString()}</span>
                         </div>
-                        <p className="text-sm text-muted-foreground mt-0.5 whitespace-pre-wrap">{c.body}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5 whitespace-pre-wrap">{c.body}</p>
                       </div>
                     </div>
                   ))}
@@ -295,13 +296,13 @@ export default function FindingDetailPage() {
 
         <div className="space-y-6">
           <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Status</CardTitle>
+            <CardHeader className="p-4">
+              <CardTitle className="text-sm">Status</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="p-4 space-y-3">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" className={`w-full justify-between gap-2 ${statusColors[finding.status] || ""}`}>
+                  <Button variant="outline" className={`w-full justify-between gap-2 h-8 text-xs ${statusColors[finding.status] || ""}`}>
                     <span className="inline-flex items-center gap-1.5">
                       <span className="h-1.5 w-1.5 rounded-full bg-current" />
                       {statusLabels[finding.status] || finding.status}
@@ -328,10 +329,10 @@ export default function FindingDetailPage() {
           </Card>
 
           <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Assignee</CardTitle>
+            <CardHeader className="p-4">
+              <CardTitle className="text-sm">Assignee</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="p-4 space-y-3">
               {finding.assignedToUser && (
                 <div className="flex items-center gap-2 text-sm text-muted-foreground pb-2 border-b">
                   <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center">
@@ -342,7 +343,7 @@ export default function FindingDetailPage() {
                 </div>
               )}
               <div className="space-y-2">
-                <Label>Assign to</Label>
+                <Label className="text-xs">Assign to</Label>
                 <UserSearch
                   value={assignUserId}
                   onSelect={(userId) => setAssignUserId(userId)}
@@ -351,18 +352,18 @@ export default function FindingDetailPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="assignDueDate">Due date</Label>
-                <Input id="assignDueDate" type="date" value={assignDueDate} onChange={(e) => setAssignDueDate(e.target.value)} />
+                <Label htmlFor="assignDueDate" className="text-xs">Due date</Label>
+                <Input id="assignDueDate" type="date" value={assignDueDate} onChange={(e) => setAssignDueDate(e.target.value)} className="h-8 text-xs" />
               </div>
-              <Button onClick={handleAssign} disabled={assigning} className="w-full" size="sm">
+              <Button onClick={handleAssign} disabled={assigning} className="w-full h-8 text-xs" size="sm">
                 {assigning ? "Assigning..." : "Assign"}
               </Button>
             </CardContent>
           </Card>
 
           <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Review</CardTitle>
+            <CardHeader className="p-4">
+              <CardTitle className="text-sm">Review</CardTitle>
             </CardHeader>
             <CardContent>
               {finding.reviewedByUser ? (
@@ -381,10 +382,10 @@ export default function FindingDetailPage() {
 
           {user?.features?.includes("risk_scoring") && finding.riskScore != null && (
             <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Risk Breakdown</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
+            <CardHeader className="p-4">
+              <CardTitle className="text-sm">Risk Breakdown</CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-muted-foreground">Risk score</span>
                   <span className={`text-lg font-bold ${finding.riskScore >= 0.6 ? "text-red-500" : finding.riskScore >= 0.3 ? "text-orange-500" : "text-emerald-500"}`}>
@@ -442,13 +443,13 @@ export default function FindingDetailPage() {
           )}
 
           <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Details</CardTitle>
+            <CardHeader className="p-4">
+              <CardTitle className="text-sm">Details</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3 text-sm">
+            <CardContent className="p-4 space-y-3 text-xs">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Rule ID</span>
-                <code className="text-xs bg-muted px-1.5 py-0.5 rounded">{finding.ruleId || "-"}</code>
+                <code className="text-[11px] font-mono bg-muted px-1.5 py-0.5 rounded">{finding.ruleId || "-"}</code>
               </div>
               <Separator />
               <div className="flex justify-between">
