@@ -1,5 +1,6 @@
 "use client"
 
+import { useRouter } from "next/router"
 import { useTheme } from "next-themes"
 import { useState, useEffect } from "react"
 import { Sun, Moon } from "lucide-react"
@@ -15,13 +16,13 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex min-h-[100dvh] bg-background">
-      <div className="relative flex w-full lg:w-[30%] items-center justify-center p-8 bg-white dark:bg-card">
+      <div className="relative flex w-full lg:w-[30%] items-center justify-center p-8 bg-card">
         {mounted && (
           <button
             onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
             className="absolute bottom-4 left-4 flex h-9 w-9 items-center justify-center rounded-lg border bg-card text-muted-foreground hover:text-foreground transition-colors shadow-sm"
           >
-            {theme === "dark" ? (
+            {theme === "dark" || theme === "catppuccin" || theme === "atom-one" || theme === "nord" ? (
               <Sun className="h-4 w-4" />
             ) : (
               <Moon className="h-4 w-4" />
