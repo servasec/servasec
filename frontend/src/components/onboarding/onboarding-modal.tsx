@@ -16,7 +16,7 @@ interface Slide {
 
 const slides: Slide[] = [
   {
-    title: "Welcome to ServaSec",
+    title: "Welcome to servasec",
     description:
       "Your vulnerability management platform. Centralize, analyze, and track security findings across all your applications.",
     isLogo: true,
