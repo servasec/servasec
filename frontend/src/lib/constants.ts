@@ -7,11 +7,11 @@ export const severityColors: Record<string, string> = {
 };
 
 export const severityBadgeColors: Record<string, string> = {
-  Critical: "bg-red-500/15 text-red-600 dark:text-red-400 border-red-500/30",
-  High: "bg-orange-500/15 text-orange-600 dark:text-orange-400 border-orange-500/30",
-  Medium: "bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30",
-  Low: "bg-slate-500/15 text-slate-600 dark:text-slate-400 border-slate-500/30",
-  Info: "bg-blue-500/15 text-blue-600 dark:text-blue-400 border-blue-500/30",
+  critical: "bg-red-500/15 text-red-600 dark:text-red-400 border-red-500/30",
+  high: "bg-orange-500/15 text-orange-600 dark:text-orange-400 border-orange-500/30",
+  medium: "bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30",
+  low: "bg-slate-500/15 text-slate-600 dark:text-slate-400 border-slate-500/30",
+  info: "bg-blue-500/15 text-blue-600 dark:text-blue-400 border-blue-500/30",
 };
 
 export const severityBarColors: Record<string, string> = {
@@ -36,7 +36,7 @@ export const statusLabels: Record<string, string> = {
   fixed: "Fixed",
 };
 
-export const severityOptions = ["Critical", "High", "Medium", "Low", "Info"];
+export const severityOptions = ["critical", "high", "medium", "low", "info"];
 
 export const statusScanColors: Record<string, string> = {
   pending: "text-amber-500",

@@ -28,11 +28,11 @@ import { UserSearch } from "@/components/user-search";
 import type { LucideIcon } from "lucide-react";
 
 const severityConfig: Record<string, { icon: LucideIcon; color: string; bg: string }> = {
-  Critical: { icon: ShieldAlert, color: "text-red-600 dark:text-red-400", bg: "bg-red-500/10" },
-  High: { icon: AlertTriangle, color: "text-orange-600 dark:text-orange-400", bg: "bg-orange-500/10" },
-  Medium: { icon: CircleAlert, color: "text-amber-600 dark:text-amber-400", bg: "bg-amber-500/10" },
-  Low: { icon: Circle, color: "text-slate-600 dark:text-slate-400", bg: "bg-slate-500/10" },
-  Info: { icon: Info, color: "text-blue-600 dark:text-blue-400", bg: "bg-blue-500/10" },
+  critical: { icon: ShieldAlert, color: "text-red-600 dark:text-red-400", bg: "bg-red-500/10" },
+  high: { icon: AlertTriangle, color: "text-orange-600 dark:text-orange-400", bg: "bg-orange-500/10" },
+  medium: { icon: CircleAlert, color: "text-amber-600 dark:text-amber-400", bg: "bg-amber-500/10" },
+  low: { icon: Circle, color: "text-slate-600 dark:text-slate-400", bg: "bg-slate-500/10" },
+  info: { icon: Info, color: "text-blue-600 dark:text-blue-400", bg: "bg-blue-500/10" },
 };
 
 function findingSmartLabel(finding: Finding): { label: string; href?: string } {

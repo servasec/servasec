@@ -21,11 +21,11 @@ import { severityBadgeColors, statusColors, statusLabels, nextStatuses, severity
 import type { LucideIcon } from "lucide-react";
 
 const severityIconMap: Record<string, LucideIcon> = {
-  Critical: ShieldAlert,
-  High: AlertTriangle,
-  Medium: CircleAlert,
-  Low: Circle,
-  Info: Info,
+  critical: ShieldAlert,
+  high: AlertTriangle,
+  medium: CircleAlert,
+  low: Circle,
+  info: Info,
 };
 
 const filterKeys = ["applicationId", "applicationVersionId", "scanId", "severity", "status", "scannerTypeId", "assignedTo"] as const;
