@@ -25,6 +25,7 @@
 | Team-based collaboration | ✓ | ✓ |
 | Webhook notifications | ✓ | ✓ |
 | RBAC | ✓ | ✓ |
+| Issue Tracker (GitHub, GitLab) | ✓ | ✓ |
 | Resource-level permissions | ✓ | ✓ |
 | Scanner ingest (Semgrep, Trivy, etc.) | ✓ | ✓ |
 | Version comparison | ✓ | ✓ |
@@ -49,6 +50,12 @@ Default admin: `admin` / password displayed at the end of the install.
 
 ```bash
 ./scripts/install.sh -i
+```
+
+**Install with pro features** (requires `servasec-pro` repo):
+
+```bash
+./scripts/install.sh --pro --pro-repo ../servasec-pro
 ```
 
 **Manual setup** (without the install script):

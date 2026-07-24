@@ -3,6 +3,7 @@
 # Usage:
 #   ./scripts/install.sh              # non-interactive (safe defaults)
 #   ./scripts/install.sh -i           # interactive (ask questions)
+#   ./scripts/install.sh --pro --pro-repo ../servasec-pro  # install with pro features
 #   ./scripts/install.sh --no-check   # skip git branch/tag check
 #
 # Builds the stack locally using docker-compose.prod.yml.
@@ -16,19 +17,35 @@ set -e
 
 INTERACTIVE=false
 CHECK_GIT=true
+PRO_ENABLED=false
+PRO_REPO_DIR=""
 
-for arg in "$@"; do
-    case "$arg" in
+while [ $# -gt 0 ]; do
+    case "$1" in
         -i|--interactive) INTERACTIVE=true ;;
         --no-check)       CHECK_GIT=false ;;
+        --pro)            PRO_ENABLED=true ;;
+        --pro-repo)
+            PRO_ENABLED=true
+            PRO_REPO_DIR="$2"
+            shift
+            ;;
         -h|--help)
-            echo "Usage: $0 [-i|--interactive] [--no-check]"
+            echo "Usage: $0 [OPTIONS]"
             echo ""
-            echo "  -i, --interactive   Ask questions before install"
-            echo "  --no-check          Skip git branch/tag verification"
+            echo "Options:"
+            echo "  -i, --interactive        Ask questions before install"
+            echo "  --no-check               Skip git branch/tag verification"
+            echo "  --pro                    Build with pro features (requires servasec-pro repo)"
+            echo "  --pro-repo <path>        Path to servasec-pro repo (default: ../servasec-pro)"
+            echo "  -h, --help               Show this help"
             exit 0
             ;;
+        *)
+            fail "Unknown option: $1 (use -h for help)"
+            ;;
     esac
+    shift
 done
 
 # ──────────────────────────────────────────────
@@ -44,6 +61,7 @@ SSC_EXAMPLE=".env.example"
 DEFAULT_DOMAIN="servasec.local"
 DEFAULT_ADMIN_PASSWORD=""
 DEFAULT_SSO_ENABLED=false
+DEFAULT_PRO_REPO="../servasec-pro"
 
 # ──────────────────────────────────────────────
 #  Colors & helpers (same as upgrade.sh)
@@ -148,6 +166,42 @@ fi
 # ──────────────────────────────────────────────
 
 [ -f "$SSC_EXAMPLE" ] || fail "File $SSC_EXAMPLE not found. Are you in the Servasec root directory?"
+
+# ──────────────────────────────────────────────
+#  4. Copy pro files (if --pro)
+# ──────────────────────────────────────────────
+
+if [ "$PRO_ENABLED" = true ]; then
+    printf "\n"
+    info "Setting up pro features..."
+
+    if [ -z "$PRO_REPO_DIR" ]; then
+        PRO_REPO_DIR="$DEFAULT_PRO_REPO"
+    fi
+
+    if [ ! -d "$PRO_REPO_DIR" ]; then
+        fail "Pro repo not found at: $PRO_REPO_DIR"
+    fi
+
+    if [ ! -d "$PRO_REPO_DIR/backend/pro" ]; then
+        fail "Pro backend not found at: $PRO_REPO_DIR/backend/pro/"
+    fi
+
+    mkdir -p backend/pro
+    cp "$PRO_REPO_DIR"/backend/pro/*.go backend/pro/
+    ok "Pro files copied from $PRO_REPO_DIR"
+
+    # Set BUILD_TAGS=pro in .env
+    if [ -f "$SSC_ENV_FILE" ]; then
+        if grep -q "^BUILD_TAGS=" "$SSC_ENV_FILE" 2>/dev/null; then
+            sed -i.bak 's|^BUILD_TAGS=.*|BUILD_TAGS=pro|' "$SSC_ENV_FILE" && rm -f "$SSC_ENV_FILE.bak"
+        else
+            echo "BUILD_TAGS=pro" >> "$SSC_ENV_FILE"
+        fi
+    fi
+
+    ok "BUILD_TAGS=pro configured"
+fi
 
 # ──────────────────────────────────────────────
 #  4. Generate secrets
@@ -289,7 +343,11 @@ info "Building and starting Servasec..."
 info "This may take a few minutes on first run..."
 echo ""
 
-$SSC_COMPOSE up --build -d
+if [ "$PRO_ENABLED" = true ]; then
+    BUILD_TAGS=pro $SSC_COMPOSE up --build -d
+else
+    $SSC_COMPOSE up --build -d
+fi
 
 ok "Services started"
 
@@ -318,7 +376,11 @@ fi
 echo ""
 echo "────────────────────────────────────────────────"
 echo ""
-echo "  ${GREEN}Servasec is running!${NC}"
+if [ "$PRO_ENABLED" = true ]; then
+    echo "  ${GREEN}Servasec (Pro) is running!${NC}"
+else
+    echo "  ${GREEN}Servasec is running!${NC}"
+fi
 echo ""
 echo "  URL:      https://${DOMAIN}"
 echo "  Login:    admin"
