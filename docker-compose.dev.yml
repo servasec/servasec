@@ -6,6 +6,7 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       target: dev
+      no_cache: true
     environment:
       - INTERNAL_API_URL=http://backend:8080
       - NODE_ENV=development
