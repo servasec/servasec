@@ -83,7 +83,7 @@ export default function CompareVersionsPage() {
             <p className="px-4 pb-4 text-sm text-muted-foreground">No findings</p>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="w-full text-xs">
                 <thead>
                   <tr className="border-b bg-muted/30">
                     <th className="text-left px-4 py-2.5 font-medium text-muted-foreground text-xs">Rule</th>
@@ -95,16 +95,16 @@ export default function CompareVersionsPage() {
                 <tbody>
                   {findings.map((f) => (
                     <tr key={f.ruleId + f.filePath} className="border-b last:border-0 hover:bg-muted/20 transition-colors">
-                      <td className="px-4 py-2.5">
-                        <code className="text-xs bg-muted px-1.5 py-0.5 rounded">{f.ruleId}</code>
+                      <td className="px-4 py-2">
+                        <code className="text-[11px] font-mono bg-muted px-1.5 py-0.5 rounded">{f.ruleId}</code>
                       </td>
-                      <td className="px-4 py-2.5 max-w-[300px] truncate">{f.title}</td>
-                      <td className="px-4 py-2.5 hidden sm:table-cell">
+                      <td className="px-4 py-2 max-w-[300px] truncate">{f.title}</td>
+                      <td className="px-4 py-2 hidden sm:table-cell">
                         <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium border ${severityBadgeColors[f.severity] || ""}`}>
                           {f.severity}
                         </span>
                       </td>
-                      <td className="px-4 py-2.5 text-muted-foreground text-xs hidden lg:table-cell max-w-[200px] truncate">
+                      <td className="px-4 py-2 text-muted-foreground text-xs hidden lg:table-cell max-w-[200px] truncate">
                         {f.filePath || "-"}
                       </td>
                     </tr>

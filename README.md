@@ -25,6 +25,7 @@
 | Team-based collaboration | ✓ | ✓ |
 | Webhook notifications | ✓ | ✓ |
 | RBAC | ✓ | ✓ |
+| Issue Tracker (GitHub, GitLab) | ✓ | ✓ |
 | Resource-level permissions | ✓ | ✓ |
 | Scanner ingest (Semgrep, Trivy, etc.) | ✓ | ✓ |
 | Version comparison | ✓ | ✓ |
@@ -37,13 +38,35 @@
 ## Quick Start
 
 ```bash
+git clone -b v2.3.0 https://github.com/servasec/servasec.git
+cd servasec
+./scripts/install.sh
+# Visit https://servasec.local
+```
+
+Default admin: `admin` / password displayed at the end of the install.
+
+**Interactive mode** (prompts for admin password, domain, SSO):
+
+```bash
+./scripts/install.sh -i
+```
+
+**Install with pro features** (requires `servasec-pro` repo):
+
+```bash
+./scripts/install.sh --pro --pro-repo ../servasec-pro
+```
+
+**Manual setup** (without the install script):
+
+```bash
 cp .env.example .env
 # Edit secrets (JWT_SECRET, REFRESH_SECRET, CSRF_SECRET, SSC_ADMIN_PASSWORD)
 make prod
-# You're done ! Visit https://servasec.local
 ```
 
-Default admin: `admin` / password from `SSC_ADMIN_PASSWORD` (random hex if unset, check logs of backend container ;) ).
+See [Environment Variables](#environment-variables) for all available options.
 
 
 ## Scanner Support

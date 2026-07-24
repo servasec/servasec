@@ -300,8 +300,8 @@ func UpdateCurrentUser(c *gin.Context) {
 	}
 
 	var input struct {
-		Username string `json:"username" binding:"omitnil,min=1,max=32"`
-		Email    string `json:"email" binding:"omitnil,email,max=254"`
+		Username string `json:"username" binding:"omitempty,min=1,max=32"`
+		Email    string `json:"email" binding:"omitempty,email,max=254"`
 	}
 	if err := c.ShouldBindJSON(&input); err != nil {
 		utils.BadRequestError(c, "Invalid input")
@@ -351,8 +351,8 @@ func UpdateCurrentUserPassword(c *gin.Context) {
 	}
 
 	var input struct {
-		Current string `json:"current"`
-		New     string `json:"new" binding:"min=8,max=72"`
+		Current string `json:"currentPassword"`
+		New     string `json:"newPassword" binding:"min=8,max=72"`
 	}
 	if err := c.ShouldBindJSON(&input); err != nil {
 		utils.BadRequestError(c, "Password must be 8-72 characters")

@@ -1,3 +1,13 @@
+export type ThemeName = "light" | "dark" | "catppuccin" | "github" | "nord";
+
+export const THEMES: { name: ThemeName; label: string; dark: boolean }[] = [
+  { name: "light", label: "Light", dark: false },
+  { name: "dark", label: "Dark", dark: true },
+  { name: "catppuccin", label: "Catppuccin Mocha", dark: true },
+  { name: "github", label: "GitHub", dark: true },
+  { name: "nord", label: "Nord", dark: true },
+];
+
 export interface User {
   id: number;
   username: string;
@@ -6,7 +16,9 @@ export interface User {
   banned: boolean;
   avatarUrl?: string;
   oauthProvider?: string;
+  theme?: string;
   hasSeenOnboarding: boolean;
+  features?: string[];
   createdAt: string;
 }
 
@@ -36,6 +48,7 @@ export interface ScannerType {
 export interface ApplicationVersion {
   id: number;
   applicationId: number;
+  application: Application | null;
   name: string;
   branch: string;
   tag: string;
@@ -159,6 +172,18 @@ export interface Policy {
   updatedAt: string;
 }
 
+export interface PolicyCondition {
+  field: string;
+  op: string;
+  value: string;
+}
+
+export interface PolicyAction {
+  type: string;
+  target?: string;
+  config?: Record<string, unknown>;
+}
+
 export interface PolicyLog {
   id: number;
   policyId: number;
@@ -188,10 +213,49 @@ export interface CreateApiKeyResponse {
   key: string;
 }
 
+export interface Group {
+  id: number;
+  name: string;
+}
+
+export interface AppPermission {
+  id: number;
+  subject: string;
+  resource: string;
+  action: string;
+}
+
 export interface Permission {
   userId: number;
   user: User;
   resource: string;
   action: string;
   createdAt: string;
+}
+
+export interface IssueTracker {
+  id: number;
+  provider: "github" | "gitlab";
+  authType: "pat" | "github_app";
+  repositoryUrl: string;
+  severityThreshold: "critical" | "high" | "medium" | "low" | "info";
+  isActive: boolean;
+  hasToken: boolean;
+  hasGitHubAppKey?: boolean;
+  githubAppId?: number;
+  githubInstallationId?: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface IssueTrackerIssue {
+  id: number;
+  issueTrackerId: number;
+  findingId: number;
+  finding: Finding;
+  externalIssueId: string;
+  externalIssueUrl: string;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
 }

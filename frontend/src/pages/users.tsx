@@ -8,16 +8,7 @@ import { Shield, ShieldCheck, Ban, ShieldAlert } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import axios from "@/lib/api";
 import { toast } from "sonner";
-
-interface User {
-  id: number;
-  username: string;
-  email: string;
-  role: string;
-  banned: boolean;
-  oauthProvider?: string;
-  createdAt: string;
-}
+import type { User } from "@/lib/types";
 
 export default function UsersPage() {
   const router = useRouter();
@@ -64,14 +55,14 @@ export default function UsersPage() {
 
       <Card>
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full text-xs">
             <thead>
               <tr className="border-b bg-muted/50">
-                <th className="text-left px-4 py-3.5 font-medium text-muted-foreground">User</th>
-                <th className="text-left px-4 py-3.5 font-medium text-muted-foreground hidden md:table-cell">Email</th>
-                <th className="text-left px-4 py-3.5 font-medium text-muted-foreground hidden sm:table-cell">Role</th>
-                <th className="text-left px-4 py-3.5 font-medium text-muted-foreground hidden lg:table-cell">Status</th>
-                <th className="text-left px-4 py-3.5 font-medium text-muted-foreground hidden lg:table-cell">Joined</th>
+                <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">User</th>
+                <th className="text-left px-4 py-2.5 font-medium text-muted-foreground hidden md:table-cell">Email</th>
+                <th className="text-left px-4 py-2.5 font-medium text-muted-foreground hidden sm:table-cell">Role</th>
+                <th className="text-left px-4 py-2.5 font-medium text-muted-foreground hidden lg:table-cell">Status</th>
+                <th className="text-left px-4 py-2.5 font-medium text-muted-foreground hidden lg:table-cell">Joined</th>
               </tr>
             </thead>
             <tbody>
@@ -79,7 +70,7 @@ export default function UsersPage() {
                 Array.from({ length: 3 }).map((_, i) => (
                   <tr key={i} className="border-b last:border-0">
                     {Array.from({ length: 5 }).map((_, j) => (
-                      <td key={j} className="px-4 py-3">
+                      <td key={j} className="px-4 py-2">
                         <Skeleton className="h-5 w-full max-w-[120px]" />
                       </td>
                     ))}
@@ -102,9 +93,9 @@ export default function UsersPage() {
               ) : (
                 users.map((u) => (
                   <tr key={u.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors">
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-2">
                       <div className="flex items-center gap-3">
-                        <Avatar className="h-8 w-8">
+                        <Avatar className="h-6 w-6">
                           <AvatarFallback className="bg-primary/10 text-primary text-xs">
                             {u.username.charAt(0).toUpperCase()}
                           </AvatarFallback>
@@ -119,11 +110,11 @@ export default function UsersPage() {
                         </span>
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-muted-foreground hidden md:table-cell">
+                    <td className="px-4 py-2 text-muted-foreground hidden md:table-cell">
                       {u.email}
                     </td>
-                    <td className="px-4 py-3 hidden sm:table-cell">
-                      <span className="inline-flex items-center gap-1.5 text-sm">
+                    <td className="px-4 py-2 hidden sm:table-cell">
+                      <span className="inline-flex items-center gap-1.5 text-xs">
                         {u.role === "admin" ? (
                           <ShieldCheck className="h-3.5 w-3.5 text-primary" />
                         ) : (
@@ -132,20 +123,20 @@ export default function UsersPage() {
                         <span className="capitalize">{u.role}</span>
                       </span>
                     </td>
-                    <td className="px-4 py-3 hidden lg:table-cell">
+                    <td className="px-4 py-2 hidden lg:table-cell">
                       {u.banned ? (
-                        <span className="inline-flex items-center gap-1.5 text-destructive text-sm">
+                        <span className="inline-flex items-center gap-1.5 text-destructive text-xs">
                           <Ban className="h-3.5 w-3.5" />
                           Banned
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1.5 text-emerald-500 text-sm">
+                        <span className="inline-flex items-center gap-1.5 text-emerald-500 text-xs">
                           <span className="h-1.5 w-1.5 rounded-full bg-current" />
                           Active
                         </span>
                       )}
                     </td>
-                    <td className="px-4 py-3 text-muted-foreground hidden lg:table-cell">
+                    <td className="px-4 py-2 text-muted-foreground hidden lg:table-cell">
                       {u.createdAt ? new Date(u.createdAt).toLocaleDateString() : "-"}
                     </td>
                   </tr>

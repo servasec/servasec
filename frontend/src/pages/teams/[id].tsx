@@ -131,8 +131,8 @@ export default function TeamDetailPage() {
     return (
       <div className="space-y-6">
         <PageHeader crumbs={[{ label: "Administration", href: "/teams" }, { label: "..." }]} />
-        <Card><CardContent className="p-8"><Skeleton className="h-6 w-48" /></CardContent></Card>
-        <Card><CardHeader><Skeleton className="h-5 w-32" /></CardHeader><CardContent><Skeleton className="h-20 w-full" /></CardContent></Card>
+        <Card><CardContent className="p-6"><Skeleton className="h-5 w-48 animate-pulse" /></CardContent></Card>
+        <Card><CardHeader><Skeleton className="h-4 w-32 animate-pulse" /></CardHeader><CardContent><Skeleton className="h-16 w-full animate-pulse" /></CardContent></Card>
       </div>
     );
   }
@@ -150,22 +150,22 @@ export default function TeamDetailPage() {
           </Button>
         </Link>
         <div>
-          <h1 className="text-xl font-bold">{team.name}</h1>
+          <h1 className="text-base font-bold">{team.name}</h1>
           {team.description && (
-            <p className="text-sm text-muted-foreground mt-0.5">{team.description}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">{team.description}</p>
           )}
         </div>
       </div>
 
       <Card>
-        <CardHeader>
+        <CardHeader className="py-3 px-4">
           <div className="flex items-center justify-between">
-            <CardTitle className="text-base flex items-center gap-2">
+            <CardTitle className="text-sm flex items-center gap-2">
               <UsersRound className="h-4 w-4" />
               Members
             </CardTitle>
             {currentMemberRole === "admin" && (
-              <Button size="sm" className="gap-2" onClick={() => setAddDialogOpen(true)}>
+              <Button size="sm" className="h-8 text-xs gap-1.5" onClick={() => setAddDialogOpen(true)}>
                 <Plus className="h-3.5 w-3.5" />
                 Add member
               </Button>
@@ -174,15 +174,15 @@ export default function TeamDetailPage() {
         </CardHeader>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full text-xs">
               <thead>
                 <tr className="border-b bg-muted/50">
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">User</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Role</th>
-                  <th className="w-12 px-4 py-3" />
+                  <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">User</th>
+                  <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">Role</th>
+                  <th className="w-12 px-4 py-2.5" />
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="animate-pulse">
                   {(members || []).length === 0 ? (
                     <tr>
                       <td colSpan={3} className="px-4 py-8 text-center text-muted-foreground">
@@ -192,18 +192,18 @@ export default function TeamDetailPage() {
                   ) : (
                     members.map((m) => (
                       <tr key={m.userId} className="border-b last:border-0 hover:bg-muted/30 transition-colors">
-                        <td className="px-4 py-3">
-                          <div className="flex items-center gap-3">
-                            <Avatar className="h-7 w-7">
-                              <AvatarFallback className="bg-primary/10 text-primary text-[11px]">
+                        <td className="px-4 py-2">
+                          <div className="flex items-center gap-2.5">
+                            <Avatar className="h-6 w-6">
+                              <AvatarFallback className="bg-primary/10 text-primary text-[10px]">
                                 {(m.userName || "?").charAt(0).toUpperCase()}
                               </AvatarFallback>
                             </Avatar>
                             <span className="font-medium">{m.userName || `User #${m.userId}`}</span>
                           </div>
                         </td>
-                      <td className="px-4 py-3">
-                        <span className="inline-flex items-center gap-1.5 text-sm">
+                      <td className="px-4 py-2">
+                        <span className="inline-flex items-center gap-1.5 text-xs">
                           {m.role === "admin" ? (
                             <ShieldCheck className="h-3.5 w-3.5 text-primary" />
                           ) : (
@@ -212,7 +212,7 @@ export default function TeamDetailPage() {
                           <span className="capitalize">{m.role}</span>
                         </span>
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-2">
                         {currentMemberRole === "admin" && (
                           <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={() => setRemoveTarget(m)}>
                             <UserMinus className="h-3.5 w-3.5" />

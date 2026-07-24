@@ -95,27 +95,27 @@ export default function PoliciesPage() {
 
       <Card className="overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full text-xs">
             <thead>
               <tr className="border-b bg-muted/50">
-                <th className="text-left px-4 py-3.5 font-medium text-muted-foreground">Name</th>
-                <th className="text-left px-4 py-3.5 font-medium text-muted-foreground hidden sm:table-cell">Scope</th>
-                <th className="text-left px-4 py-3.5 font-medium text-muted-foreground hidden sm:table-cell">Events</th>
-                <th className="text-left px-4 py-3.5 font-medium text-muted-foreground hidden md:table-cell">Priority</th>
-                <th className="text-left px-4 py-3.5 font-medium text-muted-foreground">Status</th>
-                <th className="w-28 px-4 py-3.5" />
+                <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">Name</th>
+                <th className="text-left px-4 py-2.5 font-medium text-muted-foreground hidden sm:table-cell">Scope</th>
+                <th className="text-left px-4 py-2.5 font-medium text-muted-foreground hidden sm:table-cell">Events</th>
+                <th className="text-left px-4 py-2.5 font-medium text-muted-foreground hidden md:table-cell">Priority</th>
+                <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">Status</th>
+                <th className="w-28 px-4 py-2.5" />
               </tr>
             </thead>
-            <tbody>
+            <tbody className="animate-pulse">
               {loading ? (
                 Array.from({ length: 4 }).map((_, i) => (
                   <tr key={i} className="border-b">
-                    <td className="px-4 py-3"><Skeleton className="h-4 w-32" /></td>
-                    <td className="px-4 py-3 hidden sm:table-cell"><Skeleton className="h-4 w-16" /></td>
-                    <td className="px-4 py-3 hidden sm:table-cell"><Skeleton className="h-4 w-24" /></td>
-                    <td className="px-4 py-3 hidden md:table-cell"><Skeleton className="h-4 w-8" /></td>
-                    <td className="px-4 py-3"><Skeleton className="h-4 w-16" /></td>
-                    <td className="px-4 py-3"><Skeleton className="h-4 w-20" /></td>
+                    <td className="px-4 py-2"><Skeleton className="h-3.5 w-32 animate-pulse" /></td>
+                    <td className="px-4 py-2 hidden sm:table-cell"><Skeleton className="h-3.5 w-16 animate-pulse" /></td>
+                    <td className="px-4 py-2 hidden sm:table-cell"><Skeleton className="h-3.5 w-24 animate-pulse" /></td>
+                    <td className="px-4 py-2 hidden md:table-cell"><Skeleton className="h-3.5 w-8 animate-pulse" /></td>
+                    <td className="px-4 py-2"><Skeleton className="h-3.5 w-16 animate-pulse" /></td>
+                    <td className="px-4 py-2"><Skeleton className="h-3.5 w-20 animate-pulse" /></td>
                   </tr>
                 ))
               ) : policies.length === 0 ? (
@@ -129,30 +129,30 @@ export default function PoliciesPage() {
               ) : (
                 policies.map((p) => (
                   <tr key={p.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors">
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-2">
                       <Link href={`/policies/${p.id}`} className="font-medium hover:text-primary transition-colors">
                         {p.name}
                       </Link>
                     </td>
-                    <td className="px-4 py-3 text-muted-foreground hidden sm:table-cell capitalize">
+                    <td className="px-4 py-2 text-muted-foreground hidden sm:table-cell capitalize">
                       {p.scopeType}
                       {p.scopeValue && <span className="text-xs ml-1">#{p.scopeValue}</span>}
                     </td>
-                    <td className="px-4 py-3 hidden sm:table-cell">
-                      <code className="text-xs bg-muted rounded px-1.5 py-0.5">
+                    <td className="px-4 py-2 hidden sm:table-cell">
+                      <code className="text-[11px] font-mono bg-muted rounded px-1.5 py-0.5">
                         {p.eventTypes || "none"}
                       </code>
                     </td>
-                    <td className="px-4 py-3 text-muted-foreground hidden md:table-cell">
+                    <td className="px-4 py-2 text-muted-foreground hidden md:table-cell">
                       {p.priority}
                     </td>
-                    <td className="px-4 py-3">
-                      <span className={`inline-flex items-center gap-1.5 text-sm ${p.isActive ? "text-emerald-500" : "text-muted-foreground"}`}>
+                    <td className="px-4 py-2">
+                      <span className={`inline-flex items-center gap-1.5 text-xs ${p.isActive ? "text-emerald-500" : "text-muted-foreground"}`}>
                         <span className="h-1.5 w-1.5 rounded-full bg-current" />
                         {p.isActive ? "Active" : "Inactive"}
                       </span>
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-2">
                       <div className="flex items-center gap-1">
                         <Button
                           variant="outline"

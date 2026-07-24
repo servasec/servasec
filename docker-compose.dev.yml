@@ -6,6 +6,7 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       target: dev
+      no_cache: true
     environment:
       - INTERNAL_API_URL=http://backend:8080
       - NODE_ENV=development
@@ -45,6 +46,7 @@ services:
       SSC_ADMIN_PASSWORD: ${SSC_ADMIN_PASSWORD}
       SSC_LICENSE_KEY: ${SSC_LICENSE_KEY}
       SSC_API_PREFIX: /api
+      SSC_FEATURES_ENCRYPTION_KEY: ${SSC_FEATURES_ENCRYPTION_KEY}
       BUILD_TAGS: ${BUILD_TAGS:-}
       SSO_GITHUB_CLIENT_ID: ${SSO_GITHUB_CLIENT_ID}
       SSO_GITHUB_CLIENT_SECRET: ${SSO_GITHUB_CLIENT_SECRET}

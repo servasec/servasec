@@ -13,7 +13,7 @@ type ApplicationVersion struct {
 	Branch        string         `gorm:"size:200" json:"branch"`
 	Tag           string         `gorm:"size:100" json:"tag"`
 	IsDefault     bool           `gorm:"default:false" json:"isDefault"`
-	Application   Application    `gorm:"foreignKey:ApplicationID" json:"-"`
+	Application   Application    `gorm:"foreignKey:ApplicationID" json:"application"`
 	Scans         []Scan         `gorm:"foreignKey:ApplicationVersionID" json:"-"`
 	CreatedAt     time.Time      `json:"createdAt"`
 	UpdatedAt     time.Time      `json:"updatedAt"`

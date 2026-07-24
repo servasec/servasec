@@ -51,9 +51,9 @@ export default function EditPolicyPage() {
 
   if (loading) {
     return (
-      <div className="space-y-6">
-        <Skeleton className="h-6 w-48" />
-        <Card><div className="p-6 space-y-4"><Skeleton className="h-6 w-64" /><Skeleton className="h-4 w-full" /><Skeleton className="h-4 w-3/4" /></div></Card>
+      <div className="space-y-4">
+        <Skeleton className="h-5 w-48 animate-pulse" />
+        <Card><div className="p-4 space-y-3"><Skeleton className="h-5 w-64 animate-pulse" /><Skeleton className="h-3.5 w-full animate-pulse" /><Skeleton className="h-3.5 w-3/4 animate-pulse" /></div></Card>
       </div>
     );
   }
@@ -75,8 +75,8 @@ export default function EditPolicyPage() {
         { label: "Edit" },
       ]} />
 
-      <div className="rounded-lg border p-6">
-        <h2 className="text-lg font-semibold mb-6">Edit policy</h2>
+      <div className="rounded-lg border p-4">
+        <h2 className="text-sm font-semibold mb-4">Edit policy</h2>
         <PolicyForm initialData={policy} onSubmit={handleSubmit} saving={saving} />
       </div>
     </div>

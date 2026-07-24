@@ -19,22 +19,7 @@ import {
 } from "@/components/ui/dialog";
 import axios from "@/lib/api";
 import { toast } from "sonner";
-
-interface Application {
-  id: number;
-  name: string;
-  description: string;
-  slug: string;
-  groupId: number;
-  repositoryUrl: string;
-  apiToken?: string;
-  createdAt: string;
-}
-
-interface Group {
-  id: number;
-  name: string;
-}
+import type { Application, Group } from "@/lib/types";
 
 interface FormData {
   name: string;
@@ -106,7 +91,7 @@ export default function ApplicationsListPage() {
       slug: a.slug,
       groupId: String(a.groupId),
       repositoryUrl: a.repositoryUrl || "",
-      assetCriticality: (a as any).assetCriticality || "medium",
+      assetCriticality: a.assetCriticality || "medium",
     });
     setSlugManuallyEdited(true);
     setDialogOpen(true);
@@ -176,7 +161,7 @@ export default function ApplicationsListPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <PageHeader crumbs={[{ label: "Security" }, { label: "Applications" }]} />
-        <Button onClick={openCreate} className="gap-2">
+        <Button onClick={openCreate} className="gap-1.5">
           <Plus className="h-4 w-4" />
           New application
         </Button>
@@ -184,15 +169,15 @@ export default function ApplicationsListPage() {
 
       <Card>
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full text-xs">
             <thead>
               <tr className="border-b bg-muted/50">
-                <th className="text-left px-4 py-3.5 font-medium text-muted-foreground">Name</th>
-                <th className="text-left px-4 py-3.5 font-medium text-muted-foreground hidden md:table-cell">Slug</th>
-                <th className="text-left px-4 py-3.5 font-medium text-muted-foreground hidden sm:table-cell">Group</th>
-                <th className="text-left px-4 py-3.5 font-medium text-muted-foreground hidden lg:table-cell">Repository</th>
-                <th className="text-left px-4 py-3.5 font-medium text-muted-foreground hidden lg:table-cell">Created</th>
-                <th className="w-36 px-4 py-3.5" />
+                <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">Name</th>
+                <th className="text-left px-4 py-2.5 font-medium text-muted-foreground hidden md:table-cell">Slug</th>
+                <th className="text-left px-4 py-2.5 font-medium text-muted-foreground hidden sm:table-cell">Group</th>
+                <th className="text-left px-4 py-2.5 font-medium text-muted-foreground hidden lg:table-cell">Repository</th>
+                <th className="text-left px-4 py-2.5 font-medium text-muted-foreground hidden lg:table-cell">Created</th>
+                <th className="w-36 px-4 py-2.5" />
               </tr>
             </thead>
             <tbody>
@@ -200,7 +185,7 @@ export default function ApplicationsListPage() {
                 Array.from({ length: 3 }).map((_, i) => (
                   <tr key={i} className="border-b last:border-0">
                     {Array.from({ length: 6 }).map((_, j) => (
-                      <td key={j} className="px-4 py-3">
+                      <td key={j} className="px-4 py-2">
                         <Skeleton className="h-5 w-full max-w-[120px]" />
                       </td>
                     ))}
@@ -217,21 +202,21 @@ export default function ApplicationsListPage() {
               ) : (
                 apps.map((a) => (
                   <tr key={a.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors cursor-pointer" onClick={() => router.push(`/applications/${a.id}`)}>
-                    <td className="px-4 py-3 font-medium">{a.name}</td>
-                    <td className="px-4 py-3 hidden md:table-cell">
-                      <code className="text-xs bg-muted px-1.5 py-0.5 rounded">{a.slug}</code>
+                    <td className="px-4 py-2 font-medium">{a.name}</td>
+                    <td className="px-4 py-2 hidden md:table-cell">
+                      <code className="text-[11px] font-mono bg-muted px-1.5 py-0.5 rounded">{a.slug}</code>
                     </td>
-                    <td className="px-4 py-3 hidden sm:table-cell text-muted-foreground">
+                    <td className="px-4 py-2 hidden sm:table-cell text-muted-foreground">
                       {groupMap[a.groupId] || `#${a.groupId}`}
                     </td>
-                    <td className="px-4 py-3 text-muted-foreground hidden lg:table-cell max-w-[160px] truncate">
+                    <td className="px-4 py-2 text-muted-foreground hidden lg:table-cell max-w-[160px] truncate">
                       {a.repositoryUrl || "-"}
                     </td>
-                    <td className="px-4 py-3 text-muted-foreground hidden lg:table-cell">
+                    <td className="px-4 py-2 text-muted-foreground hidden lg:table-cell">
                       {a.createdAt ? new Date(a.createdAt).toLocaleDateString() : "-"}
                     </td>
-                    <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
-                      <div className="flex items-center gap-1">
+                    <td className="px-4 py-2" onClick={(e) => e.stopPropagation()}>
+                      <div className="flex items-center gap-1.5">
                         <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleRegenerateToken(a)} title="Regenerate API token">
                           <Key className="h-3.5 w-3.5" />
                         </Button>
@@ -343,7 +328,7 @@ export default function ApplicationsListPage() {
             </DialogDescription>
           </DialogHeader>
           <div className="flex items-center gap-2 py-4">
-            <code className="flex-1 rounded border bg-muted px-3 py-2 text-sm font-mono break-all select-all">{newToken}</code>
+            <code className="flex-1 rounded border bg-muted px-3 py-2 text-[11px] font-mono break-all select-all">{newToken}</code>
             <Button variant="outline" size="icon" onClick={copyToken}>
               <Copy className="h-4 w-4" />
             </Button>

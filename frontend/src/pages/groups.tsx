@@ -127,22 +127,22 @@ export default function GroupsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <PageHeader crumbs={[{ label: "Security" }, { label: "Groups" }]} />
-        <Button onClick={openCreate} className="gap-2">
-          <Plus className="h-4 w-4" />
-          New group
-        </Button>
+          <Button onClick={openCreate} className="h-8 text-xs gap-1.5">
+            <Plus className="h-3.5 w-3.5" />
+            New group
+          </Button>
       </div>
 
       <Card>
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full text-xs">
             <thead>
               <tr className="border-b bg-muted/50">
-                <th className="text-left px-4 py-3.5 font-medium text-muted-foreground">Name</th>
-                <th className="text-left px-4 py-3.5 font-medium text-muted-foreground hidden md:table-cell">Description</th>
-                <th className="text-left px-4 py-3.5 font-medium text-muted-foreground hidden sm:table-cell">Path</th>
-                <th className="text-left px-4 py-3.5 font-medium text-muted-foreground hidden lg:table-cell">Created</th>
-                <th className="w-20 px-4 py-3.5" />
+                <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">Name</th>
+                <th className="text-left px-4 py-2.5 font-medium text-muted-foreground hidden md:table-cell">Description</th>
+                <th className="text-left px-4 py-2.5 font-medium text-muted-foreground hidden sm:table-cell">Path</th>
+                <th className="text-left px-4 py-2.5 font-medium text-muted-foreground hidden lg:table-cell">Created</th>
+                <th className="w-20 px-4 py-2.5" />
               </tr>
             </thead>
             <tbody>
@@ -150,8 +150,8 @@ export default function GroupsPage() {
                 Array.from({ length: 3 }).map((_, i) => (
                   <tr key={i} className="border-b last:border-0">
                     {Array.from({ length: 5 }).map((_, j) => (
-                      <td key={j} className="px-4 py-3">
-                        <Skeleton className="h-5 w-full max-w-[120px]" />
+                      <td key={j} className="px-4 py-2">
+                        <Skeleton className="h-4 w-full max-w-[120px] animate-pulse" />
                       </td>
                     ))}
                   </tr>
@@ -167,17 +167,17 @@ export default function GroupsPage() {
               ) : (
                 groups.map((g) => (
                   <tr key={g.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors">
-                    <td className="px-4 py-3 font-medium">{g.name}</td>
-                    <td className="px-4 py-3 text-muted-foreground hidden md:table-cell max-w-[200px] truncate">
+                    <td className="px-4 py-2 font-medium">{g.name}</td>
+                    <td className="px-4 py-2 text-muted-foreground hidden md:table-cell max-w-[200px] truncate">
                       {g.description || "-"}
                     </td>
-                    <td className="px-4 py-3 hidden sm:table-cell">
-                      <code className="text-xs bg-muted px-1.5 py-0.5 rounded">{g.path}</code>
+                    <td className="px-4 py-2 hidden sm:table-cell">
+                      <code className="text-[11px] font-mono bg-muted px-1.5 py-0.5 rounded">{g.path}</code>
                     </td>
-                    <td className="px-4 py-3 text-muted-foreground hidden lg:table-cell">
+                    <td className="px-4 py-2 text-muted-foreground hidden lg:table-cell">
                       {g.createdAt ? new Date(g.createdAt).toLocaleDateString() : "-"}
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-2">
                       <div className="flex items-center gap-1">
                         <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(g)}>
                           <Pencil className="h-3.5 w-3.5" />

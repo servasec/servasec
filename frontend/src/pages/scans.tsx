@@ -1,45 +1,15 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import { useAuth } from "@/context/AuthContext";
-import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageHeader } from "@/components/page-header";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Scan, ArrowRight, ShieldAlert } from "lucide-react";
-import Link from "next/link";
+import { Scan, ShieldAlert } from "lucide-react";
 import axios from "@/lib/api";
 import { toast } from "sonner";
 import { statusScanColors } from "@/lib/constants";
-
-interface ApplicationVersion {
-  id: number;
-  applicationId: number;
-  name: string;
-}
-
-interface ScannerType {
-  id: number;
-  name: string;
-  description: string;
-}
-
-interface ScanItem {
-  id: number;
-  applicationVersionId: number;
-  applicationVersion: ApplicationVersion | null;
-  scannerTypeId: number;
-  scannerType: ScannerType | null;
-  status: string;
-  startedAt: string | null;
-  completedAt: string | null;
-  createdAt: string;
-}
-
-interface Application {
-  id: number;
-  name: string;
-}
+import type { ScanItem, Application, ApplicationVersion } from "@/lib/types";
 
 export default function ScansPage() {
   const router = useRouter();
@@ -168,32 +138,31 @@ export default function ScansPage() {
           </div>
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full text-xs">
             <thead>
               <tr className="border-b bg-muted/50">
-                <th className="text-left px-4 py-3.5 font-medium text-muted-foreground">Scanner</th>
-                <th className="text-left px-4 py-3.5 font-medium text-muted-foreground hidden md:table-cell">Application</th>
-                <th className="text-left px-4 py-3.5 font-medium text-muted-foreground hidden sm:table-cell">Version</th>
-                <th className="text-left px-4 py-3.5 font-medium text-muted-foreground hidden sm:table-cell">Status</th>
-                <th className="text-left px-4 py-3.5 font-medium text-muted-foreground hidden lg:table-cell">Started</th>
-                <th className="text-left px-4 py-3.5 font-medium text-muted-foreground hidden lg:table-cell">Completed</th>
-                <th className="w-12 px-4 py-3.5" />
+                <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">Scanner</th>
+                <th className="text-left px-4 py-2.5 font-medium text-muted-foreground hidden md:table-cell">Application</th>
+                <th className="text-left px-4 py-2.5 font-medium text-muted-foreground hidden sm:table-cell">Version</th>
+                <th className="text-left px-4 py-2.5 font-medium text-muted-foreground hidden sm:table-cell">Status</th>
+                <th className="text-left px-4 py-2.5 font-medium text-muted-foreground hidden lg:table-cell">Started</th>
+                <th className="text-left px-4 py-2.5 font-medium text-muted-foreground hidden lg:table-cell">Completed</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 Array.from({ length: 3 }).map((_, i) => (
                   <tr key={i} className="border-b last:border-0">
-                    {Array.from({ length: 7 }).map((_, j) => (
-                      <td key={j} className="px-4 py-3">
-                        <Skeleton className="h-5 w-full max-w-[100px]" />
+                    {Array.from({ length: 6 }).map((_, j) => (
+                      <td key={j} className="px-4 py-2">
+                        <Skeleton className="h-5 w-full max-w-[100px] animate-pulse" />
                       </td>
                     ))}
                   </tr>
                 ))
               ) : loadError ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-12 text-center text-muted-foreground">
+                  <td colSpan={6} className="px-4 py-12 text-center text-muted-foreground">
                     <ShieldAlert className="h-8 w-8 mx-auto mb-2 opacity-40" />
                     <p>Failed to load scans</p>
                     <p className="text-xs mt-1">The server may be unavailable</p>
@@ -201,7 +170,7 @@ export default function ScansPage() {
                 </tr>
               ) : scans.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-12 text-center text-muted-foreground">
+                  <td colSpan={6} className="px-4 py-12 text-center text-muted-foreground">
                     <Scan className="h-8 w-8 mx-auto mb-2 opacity-40" />
                     <p>No scans yet</p>
                     <p className="text-xs mt-1">Run a scan via the API to see results here</p>
@@ -209,31 +178,24 @@ export default function ScansPage() {
                 </tr>
               ) : (
                 scans.map((s) => (
-                  <tr key={s.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors">
-                    <td className="px-4 py-3 font-medium">{s.scannerType?.name || "-"}</td>
-                    <td className="px-4 py-3 text-muted-foreground hidden md:table-cell">
+                  <tr key={s.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors cursor-pointer" onClick={() => router.push(`/findings?applicationId=${s.applicationVersion?.applicationId || ''}&applicationVersionId=${s.applicationVersionId}&scanId=${s.id}`)}>
+                    <td className="px-4 py-2 font-medium">{s.scannerType?.name || "-"}</td>
+                    <td className="px-4 py-2 text-muted-foreground hidden md:table-cell">
                       {s.applicationVersion
                         ? (appMap[s.applicationVersion.applicationId] || `App #${s.applicationVersion.applicationId}`)
                         : "-"}
                     </td>
-                    <td className="px-4 py-3 text-muted-foreground hidden sm:table-cell">
-                      {s.applicationVersion?.name || `#${s.applicationVersionId}`}
+                    <td className="px-4 py-2 text-muted-foreground hidden sm:table-cell">
+                      <code className="text-[11px] font-mono">{s.applicationVersion?.name || `#${s.applicationVersionId}`}</code>
                     </td>
-                    <td className="px-4 py-3 hidden sm:table-cell">
-                      <span className={`inline-flex items-center gap-1.5 text-sm ${statusScanColors[s.status] || ""}`}>
+                    <td className="px-4 py-2 hidden sm:table-cell">
+                      <span className={`inline-flex items-center gap-1.5 ${statusScanColors[s.status] || ""}`}>
                         <span className="h-1.5 w-1.5 rounded-full bg-current" />
                         {s.status}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-muted-foreground hidden lg:table-cell">{formatDate(s.startedAt)}</td>
-                    <td className="px-4 py-3 text-muted-foreground hidden lg:table-cell">{formatDate(s.completedAt)}</td>
-                    <td className="px-4 py-3">
-                      <Link href={`/findings?applicationId=${s.applicationVersion?.applicationId || ''}&applicationVersionId=${s.applicationVersionId}&scanId=${s.id}`}>
-                        <Button variant="ghost" size="icon" className="h-8 w-8" title="View findings">
-                          <ArrowRight className="h-3.5 w-3.5" />
-                        </Button>
-                      </Link>
-                    </td>
+                    <td className="px-4 py-2 text-muted-foreground hidden lg:table-cell">{formatDate(s.startedAt)}</td>
+                    <td className="px-4 py-2 text-muted-foreground hidden lg:table-cell">{formatDate(s.completedAt)}</td>
                   </tr>
                 ))
               )}
