@@ -9,7 +9,8 @@ If you need to use servasec without the copyleft requirements of the AGPLv3 (for
 The following features are available only under a commercial license:
 
 - Audit Log
-- SSO / OIDC (coming soon)
+- SSO / OIDC
+- MCP Server
 - SLA Management (coming soon)
 - Advanced Reporting (coming soon)
 
@@ -27,8 +28,8 @@ The AGPLv3 still governs the free features of servasec; only the Pro features ar
 
 ## How to Obtain a Commercial License
 
-Contact **servasec** at `license@servasec.com` to request a quote or obtain a license key.
+Contact us at https://servasec.com/contact  or send an email at `contact@servasec.com` to request a quote.
 
-## License Key Validation
+## License key validation
 
 Pro features are activated at runtime by setting the `SSC_LICENSE_KEY` environment variable to a signed JWT issued by servasec. See the [README](./README.md) and backend documentation for details.
