@@ -32,6 +32,12 @@ func RegisterApplicationRoutes(router *gin.Engine) {
 		a.GET("/:id/permissions", middleware.CheckPolicy("/applications/*", "read"), middleware.RequireResourceAccessByParam("applications", "id", "read"), controllers.GetApplicationPermissions)
 		a.POST("/:id/permissions", middleware.CheckPolicy("/applications/*", "write"), middleware.RequireResourceAccessByParam("applications", "id", "write"), controllers.GrantApplicationPermission)
 		a.DELETE("/:id/permissions", middleware.CheckPolicy("/applications/*", "write"), middleware.RequireResourceAccessByParam("applications", "id", "write"), controllers.RevokeApplicationPermission)
+
+		a.GET("/:id/issue-tracker", middleware.CheckPolicy("/applications/*", "read"), middleware.RequireResourceAccessByParam("applications", "id", "read"), controllers.GetIssueTracker)
+		a.POST("/:id/issue-tracker", middleware.CheckPolicy("/applications/*", "write"), middleware.RequireResourceAccessByParam("applications", "id", "write"), controllers.UpsertIssueTracker)
+		a.DELETE("/:id/issue-tracker", middleware.CheckPolicy("/applications/*", "write"), middleware.RequireResourceAccessByParam("applications", "id", "write"), controllers.DeleteIssueTracker)
+		a.POST("/:id/issue-tracker/test", middleware.CheckPolicy("/applications/*", "write"), middleware.RequireResourceAccessByParam("applications", "id", "write"), controllers.TestIssueTracker)
+		a.GET("/:id/issue-tracker/issues", middleware.CheckPolicy("/applications/*", "read"), middleware.RequireResourceAccessByParam("applications", "id", "read"), controllers.ListIssueTrackerIssues)
 	}
 
 	g := router.Group("/groups/:id/applications", middleware.AuthRequired(), middleware.CSRFProtection())

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { useTheme } from "next-themes";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
@@ -16,7 +16,7 @@ interface Slide {
 
 const slides: Slide[] = [
   {
-    title: "Welcome to ServaSec",
+    title: "Welcome to servasec",
     description:
       "Your vulnerability management platform. Centralize, analyze, and track security findings across all your applications.",
     isLogo: true,
@@ -65,6 +65,7 @@ export function OnboardingModal({ open, onComplete, user }: OnboardingModalProps
   const { resolvedTheme } = useTheme();
   const [step, setStep] = useState(0);
   const [direction, setDirection] = useState(0);
+  const preloaded = useRef(new Set<string>());
 
   const slide = slides[step];
   const isLast = step === slides.length - 1;
@@ -77,6 +78,19 @@ export function OnboardingModal({ open, onComplete, user }: OnboardingModalProps
       ? slide.image.dark
       : slide.image.light
     : null;
+
+  // Preload adjacent images
+  useEffect(() => {
+    slides.forEach((s, i) => {
+      if (!s.image) return;
+      const src = isDark ? s.image.dark : s.image.light;
+      if (src && !preloaded.current.has(src)) {
+        const img = new Image();
+        img.src = src;
+        preloaded.current.add(src);
+      }
+    });
+  }, [isDark]);
 
   const markSeen = async () => {
     if (user.hasSeenOnboarding) return;
@@ -108,18 +122,9 @@ export function OnboardingModal({ open, onComplete, user }: OnboardingModalProps
   };
 
   const slideVariants = {
-    enter: (d: number) => ({
-      x: d > 0 ? 80 : -80,
-      opacity: 0,
-    }),
-    center: {
-      x: 0,
-      opacity: 1,
-    },
-    exit: (d: number) => ({
-      x: d > 0 ? -80 : 80,
-      opacity: 0,
-    }),
+    enter: (d: number) => ({ x: d > 0 ? 60 : -60, opacity: 0 }),
+    center: { x: 0, opacity: 1 },
+    exit: (d: number) => ({ x: d > 0 ? -60 : 60, opacity: 0 }),
   };
 
   return (
@@ -138,25 +143,25 @@ export function OnboardingModal({ open, onComplete, user }: OnboardingModalProps
             <X className="h-4 w-4" />
           </button>
 
-          <div className="flex items-center justify-center gap-1 mb-4">
+          {/* Progress dots */}
+          <div className="flex items-center justify-center gap-1.5 mb-5">
             {slides.map((_, i) => (
-              <motion.div
+              <div
                 key={i}
-                className="h-1 rounded-full"
-                animate={{
+                className="h-1 rounded-full transition-all duration-300 ease-out"
+                style={{
                   width: i === step ? 20 : 5,
-                  backgroundColor:
-                    i === step
-                      ? "hsl(var(--primary))"
-                      : "hsl(var(--muted-foreground) / 0.2)",
+                  backgroundColor: i === step
+                    ? "hsl(var(--primary))"
+                    : "hsl(var(--muted-foreground) / 0.2)",
                 }}
-                transition={{ type: "spring", stiffness: 300, damping: 25 }}
               />
             ))}
           </div>
 
-          <div className="relative min-h-[15rem]">
-            <AnimatePresence mode="wait" custom={direction}>
+          {/* Slide content */}
+          <div className="relative min-h-[16rem]">
+            <AnimatePresence mode="popLayout" custom={direction}>
               <motion.div
                 key={step}
                 custom={direction}
@@ -164,21 +169,16 @@ export function OnboardingModal({ open, onComplete, user }: OnboardingModalProps
                 initial="enter"
                 animate="center"
                 exit="exit"
-                transition={{ type: "spring", stiffness: 280, damping: 28 }}
+                transition={{ duration: 0.25, ease: [0.25, 0.1, 0.25, 1] }}
                 className="w-full"
               >
                 {slide.isLogo ? (
                   <div className="flex flex-col items-center text-center pt-4">
-                    <motion.div
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      transition={{ type: "spring", stiffness: 400, damping: 15 }}
-                      className="mb-5"
-                    >
+                    <div className="mb-5">
                       <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center">
                         <img src={markSrc} alt="ServaSec" className="w-9 h-9" />
                       </div>
-                    </motion.div>
+                    </div>
                     <h2 className="text-lg font-semibold mb-2">{slide.title}</h2>
                     <p className="text-sm text-muted-foreground max-w-xs leading-relaxed">
                       {slide.description}
@@ -186,13 +186,10 @@ export function OnboardingModal({ open, onComplete, user }: OnboardingModalProps
                   </div>
                 ) : imgSrc ? (
                   <div className="flex flex-col items-center text-center">
-                    <motion.img
+                    <img
                       src={imgSrc}
                       alt={slide.title}
                       className="w-full rounded-lg border border-border mb-4"
-                      initial={{ scale: 0.95, opacity: 0, y: 8 }}
-                      animate={{ scale: 1, opacity: 1, y: 0 }}
-                      transition={{ type: "spring", stiffness: 300, damping: 22, delay: 0.05 }}
                     />
                     <h2 className="text-lg font-semibold mb-1.5">{slide.title}</h2>
                     <p className="text-sm text-muted-foreground max-w-xs leading-relaxed">
@@ -201,21 +198,11 @@ export function OnboardingModal({ open, onComplete, user }: OnboardingModalProps
                   </div>
                 ) : (
                   <div className="flex flex-col items-center text-center pt-8">
-                    <motion.div
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      transition={{
-                        type: "spring",
-                        stiffness: 400,
-                        damping: 15,
-                        delay: 0.05,
-                      }}
-                      className="mb-4"
-                    >
+                    <div className="mb-4">
                       <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center">
                         <Sparkles className="h-7 w-7 text-primary" />
                       </div>
-                    </motion.div>
+                    </div>
                     <h2 className="text-lg font-semibold mb-2">{slide.title}</h2>
                     <p className="text-sm text-muted-foreground max-w-xs leading-relaxed">
                       {slide.description}
@@ -226,6 +213,7 @@ export function OnboardingModal({ open, onComplete, user }: OnboardingModalProps
             </AnimatePresence>
           </div>
 
+          {/* Navigation */}
           <div className="flex items-center justify-between mt-6">
             <div>
               {!isFirst && (
