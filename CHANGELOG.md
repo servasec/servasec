@@ -1,5 +1,30 @@
 # Changelog
 
+## [2.4.0](https://github.com/servasec/servasec/compare/v2.3.0...v2.4.0) (2026-07-24)
+
+
+### 🧩 Features
+
+* **frontend:** Add shadcn/ui, command palette, and collapsible sidebar ([291a608](https://github.com/servasec/servasec/commit/291a608d1bc3b6f3244f43f79290b146ada9b0e5))
+* **frontend:** Add theme system and page transitions ([1184e9e](https://github.com/servasec/servasec/commit/1184e9e026f6a2b78c72ba8ed0af238ec9a9efa5))
+* **frontend:** GitHub theme added ([cec8ba4](https://github.com/servasec/servasec/commit/cec8ba4afc3e06c4a25b1d877a21ae6628099d36))
+* Install script added (using compose) ([97c6e70](https://github.com/servasec/servasec/commit/97c6e709e5b564c139b96ae6e6f04246509d6fcd))
+* Issue tracker for GitHub & GitLab ([d432bc9](https://github.com/servasec/servasec/commit/d432bc9242c4b713116c7db4ec1be88d8bbf789a))
+
+
+### 🐛 Bug fixes
+
+* **backend:** UpdateCurrentUser resetpwd wrong json property name ([1a887f7](https://github.com/servasec/servasec/commit/1a887f7bc0bad59204558eb00f51ee1b8318046e))
+* **frontend:** Findings page & details enhance ([919e7dc](https://github.com/servasec/servasec/commit/919e7dc8757e3a79a856f4b06b279df716e146f3))
+* **frontend:** Onboarding modal flickering fixd ([c25810c](https://github.com/servasec/servasec/commit/c25810c5c8abb69b9c43511f889bf69eb56f714f))
+* **frontend:** Severity badges UI fix in findings list & details ([12d8c39](https://github.com/servasec/servasec/commit/12d8c3993e4fded0bb550996550ca89052b6298a))
+* Install script support pro edition ([72eaf6b](https://github.com/servasec/servasec/commit/72eaf6bb5ad93b5c74bef8c952ce50d27273cdad))
+
+
+### 📝 Documentation
+
+* Readme fix ([da464b0](https://github.com/servasec/servasec/commit/da464b058d019285d37e07bd53664a9ebc19c3a7))
+
 ## [2.3.0](https://github.com/servasec/servasec/compare/v2.2.0...v2.3.0) (2026-07-17)
 
 
