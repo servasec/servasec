@@ -231,3 +231,30 @@ export interface Permission {
   action: string;
   createdAt: string;
 }
+
+export interface IssueTracker {
+  id: number;
+  provider: "github" | "gitlab";
+  authType: "pat" | "github_app";
+  repositoryUrl: string;
+  severityThreshold: "critical" | "high" | "medium" | "low" | "info";
+  isActive: boolean;
+  hasToken: boolean;
+  hasGitHubAppKey?: boolean;
+  githubAppId?: number;
+  githubInstallationId?: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface IssueTrackerIssue {
+  id: number;
+  issueTrackerId: number;
+  findingId: number;
+  finding: Finding;
+  externalIssueId: string;
+  externalIssueUrl: string;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+}

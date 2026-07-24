@@ -3,6 +3,7 @@ package controllers
 import (
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"strconv"
 	"time"
@@ -12,6 +13,7 @@ import (
 	"github.com/servasec/servasec/backend/models"
 	"github.com/servasec/servasec/backend/parsers"
 	"github.com/servasec/servasec/backend/pro"
+	"github.com/servasec/servasec/backend/providers"
 	"github.com/servasec/servasec/backend/services"
 	"github.com/servasec/servasec/backend/utils"
 	"gorm.io/gorm"
@@ -313,6 +315,9 @@ func IngestScan(c *gin.Context) {
 		services.EvaluatePolicies("finding.created", &inserted[i], app, 0)
 	}
 
+	// Issue tracker dispatch (async, best-effort)
+	go dispatchIssueTrackerIssues(app, inserted)
+
 	utils.CreatedResponse(c, gin.H{
 		"id":                scanResult.ID,
 		"status":            scanResult.Status,
@@ -320,4 +325,100 @@ func IngestScan(c *gin.Context) {
 		"findingsCount":     len(inserted),
 		"skippedDuplicates": skipped,
 	})
+}
+
+func dispatchIssueTrackerIssues(app *models.Application, findings []models.Finding) {
+	var tracker models.IssueTracker
+	if err := config.DB.Where("application_id = ? AND is_active = ?", app.ID, true).First(&tracker).Error; err != nil {
+		return
+	}
+
+	provider, ok := providers.Get(tracker.Provider)
+	if !ok {
+		log.Printf("issue tracker: unknown provider %s for app %d", tracker.Provider, app.ID)
+		return
+	}
+
+	key, err := utils.GetEncryptionKey()
+	if err != nil {
+		log.Printf("issue tracker: encryption key not configured: %v", err)
+		return
+	}
+
+	cfg := providers.IssueTrackerConfig{
+		Provider:      tracker.Provider,
+		RepositoryURL: app.RepositoryURL,
+		AuthType:      tracker.AuthType,
+		ServaSecURL:   providers.GetServaSecURL(),
+	}
+
+	if tracker.AuthType == "github_app" {
+		if tracker.GitHubAppID == nil || tracker.GitHubInstallationID == nil || tracker.EncryptedGitHubAppKey == "" {
+			log.Printf("issue tracker: GitHub App configuration incomplete for app %d", app.ID)
+			return
+		}
+
+		privateKey, err := utils.Decrypt(tracker.EncryptedGitHubAppKey, tracker.EncryptedGitHubAppKeyIV, key)
+		if err != nil {
+			log.Printf("issue tracker: failed to decrypt GitHub App key for app %d: %v", app.ID, err)
+			return
+		}
+
+		cfg.GitHubAppID = tracker.GitHubAppID
+		cfg.GitHubInstallationID = tracker.GitHubInstallationID
+		cfg.GitHubPrivateKey = privateKey
+	} else {
+		token, err := utils.Decrypt(tracker.EncryptedToken, tracker.EncryptedTokenIV, key)
+		if err != nil {
+			log.Printf("issue tracker: failed to decrypt token for app %d: %v", app.ID, err)
+			return
+		}
+		cfg.Token = token
+	}
+
+	created := 0
+	for _, finding := range findings {
+		if !providers.SeverityMeetsThreshold(finding.Severity, tracker.SeverityThreshold) {
+			continue
+		}
+
+		issueData := providers.IssueData{
+			FindingID:   finding.ID,
+			Title:       finding.Title,
+			Description: finding.Description,
+			Severity:    finding.Severity,
+			FilePath:    finding.FilePath,
+			LineStart:   finding.LineStart,
+			LineEnd:     finding.LineEnd,
+			CWEID:       finding.CWEID,
+			RuleID:      finding.RuleID,
+		}
+
+		if finding.ScannerType.Name != "" {
+			issueData.ScannerType = finding.ScannerType.Name
+		}
+
+		extIssue, err := provider.CreateIssue(cfg, issueData)
+		if err != nil {
+			log.Printf("issue tracker: failed to create issue for finding %d on app %d: %v", finding.ID, app.ID, err)
+			continue
+		}
+
+		issueRecord := models.IssueTrackerIssue{
+			IssueTrackerID:   tracker.ID,
+			FindingID:        finding.ID,
+			ExternalIssueID:  extIssue.IssueID,
+			ExternalIssueURL: extIssue.IssueURL,
+			Status:           "open",
+		}
+		if err := config.DB.Create(&issueRecord).Error; err != nil {
+			log.Printf("issue tracker: failed to save issue record for finding %d: %v", finding.ID, err)
+			continue
+		}
+		created++
+	}
+
+	if created > 0 {
+		log.Printf("issue tracker: created %d issues for app %d", created, app.ID)
+	}
 }

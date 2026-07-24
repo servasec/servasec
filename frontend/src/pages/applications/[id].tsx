@@ -9,7 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { PageHeader } from "@/components/page-header";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
-  ChevronLeft, Plus, Pencil, Trash2, Upload, Bug, Star, StarOff, Globe, GitCompare, Shield, Scan as ScanIcon, Calendar,
+  ChevronLeft, Plus, Pencil, Trash2, Upload, Bug, Star, StarOff, Globe, GitCompare, Shield, Scan as ScanIcon, Calendar, ExternalLink,
 } from "lucide-react";
 import {
   Dialog,
@@ -66,6 +66,7 @@ export default function ApplicationDetailPage() {
   const [loadingFindings, setLoadingFindings] = useState(false);
   const [latestScan, setLatestScan] = useState<ScanItem | null>(null);
   const [loadingScan, setLoadingScan] = useState(false);
+  const [scanVersion, setScanVersion] = useState(0);
 
   const groupMap = Object.fromEntries(groups.map((g) => [g.id, g.name]));
 
@@ -104,7 +105,7 @@ export default function ApplicationDetailPage() {
       .then((res) => setVersionFindings(res.data || []))
       .catch(() => setVersionFindings([]))
       .finally(() => setLoadingFindings(false));
-  }, [id, app?.defaultVersion?.id]);
+  }, [id, app?.defaultVersion?.id, scanVersion]);
 
   useEffect(() => {
     if (!id) return;
@@ -116,7 +117,7 @@ export default function ApplicationDetailPage() {
       })
       .catch(() => setLatestScan(null))
       .finally(() => setLoadingScan(false));
-  }, [id]);
+  }, [id, scanVersion]);
 
   const openCreateVersion = () => {
     setEditingVersion(null);
@@ -206,6 +207,8 @@ export default function ApplicationDetailPage() {
       });
       toast.success(`Scan completed - ${res.data.findingsCount} findings`);
       setIngestDialogOpen(false);
+      setScanVersion((v) => v + 1);
+      fetchApp();
     } catch (error: any) {
       toast.error(error?.response?.data?.error || "Failed to upload scan");
     } finally {
@@ -539,6 +542,18 @@ export default function ApplicationDetailPage() {
 
       {activeTab === "settings" && (
         <div key="settings" className="animate-in fade-in duration-200">
+          <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold">Issue Tracker</h3>
+            <Button variant="outline" onClick={() => router.push(`/applications/${id}/issue-tracker`)} className="h-8 px-2.5 text-xs gap-1.5">
+              <ExternalLink className="h-3.5 w-3.5" />
+              Configure
+            </Button>
+          </div>
+
+          <p className="text-xs text-muted-foreground mb-6">
+            Automatically create GitHub or GitLab issues from findings that meet a severity threshold.
+          </p>
+
           <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold">Webhooks</h3>
             <Button onClick={openCreateWebhook} className="h-8 px-2.5 text-xs gap-1.5">
