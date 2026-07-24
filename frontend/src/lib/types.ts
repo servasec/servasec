@@ -48,6 +48,7 @@ export interface ScannerType {
 export interface ApplicationVersion {
   id: number;
   applicationId: number;
+  application: Application | null;
   name: string;
   branch: string;
   tag: string;

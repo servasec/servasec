@@ -16,8 +16,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-  ChevronDown, Bug, ArrowLeft, ShieldAlert, AlertTriangle, Info,
-  FileCode, BookOpen, Hash, ExternalLink, User as UserIcon, Calendar, MessageSquare, CheckCircle2,
+  ChevronDown, Bug, ArrowLeft, ShieldAlert, AlertTriangle, Info, CircleAlert,
+  FileCode, BookOpen, Hash, ExternalLink, User as UserIcon, Calendar, MessageSquare, CheckCircle2, Circle,
 } from "lucide-react";
 import Link from "next/link";
 import axios from "@/lib/api";
@@ -30,10 +30,24 @@ import type { LucideIcon } from "lucide-react";
 const severityConfig: Record<string, { icon: LucideIcon; color: string; bg: string }> = {
   Critical: { icon: ShieldAlert, color: "text-red-600 dark:text-red-400", bg: "bg-red-500/10" },
   High: { icon: AlertTriangle, color: "text-orange-600 dark:text-orange-400", bg: "bg-orange-500/10" },
-  Medium: { icon: AlertTriangle, color: "text-yellow-600 dark:text-yellow-400", bg: "bg-yellow-500/10" },
-  Low: { icon: Info, color: "text-green-600 dark:text-green-400", bg: "bg-green-500/10" },
+  Medium: { icon: CircleAlert, color: "text-amber-600 dark:text-amber-400", bg: "bg-amber-500/10" },
+  Low: { icon: Circle, color: "text-slate-600 dark:text-slate-400", bg: "bg-slate-500/10" },
   Info: { icon: Info, color: "text-blue-600 dark:text-blue-400", bg: "bg-blue-500/10" },
 };
+
+function findingSmartLabel(finding: Finding): { label: string; href?: string } {
+  const cweMatch = finding.cweId?.match(/CWE-(\d+)/);
+  if (cweMatch) {
+    return {
+      label: finding.cweId,
+      href: `https://cwe.mitre.org/data/definitions/${cweMatch[1]}.html`,
+    };
+  }
+  if (finding.ruleId) {
+    return { label: finding.ruleId };
+  }
+  return { label: finding.title.length > 80 ? finding.title.slice(0, 80) + "…" : finding.title };
+}
 
 export default function FindingDetailPage() {
   const router = useRouter();
@@ -142,8 +156,6 @@ export default function FindingDetailPage() {
     }
   };
 
-  const cweNumber = finding?.cweId?.match(/CWE-(\d+)/)?.[1];
-
   if (!authChecked || !loggedIn) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -166,10 +178,13 @@ export default function FindingDetailPage() {
   const sevConf = severityConfig[finding.severity] || severityConfig.Info;
   const SevIcon = sevConf.icon;
   const isOverdue = finding.dueDate && finding.status !== "fixed" && finding.status !== "false_positive" && new Date(finding.dueDate) < new Date();
+  const smartLabel = findingSmartLabel(finding);
+  const appName = finding.applicationVersion?.application?.name;
+  const appSlug = finding.applicationVersion?.application?.slug;
 
   return (
     <div className="space-y-6">
-      <PageHeader crumbs={[{ label: "Findings", href: "/findings" }, { label: finding.title }]} />
+      <PageHeader crumbs={[{ label: "Findings", href: "/findings" }, { label: smartLabel.label }]} />
 
       <div className="flex items-start gap-4">
         <Link href="/findings">
@@ -179,18 +194,36 @@ export default function FindingDetailPage() {
         </Link>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-3 flex-wrap">
-            <h1 className="text-xl font-bold break-words">{finding.title}</h1>
+            {smartLabel.href ? (
+              <a
+                href={smartLabel.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xl font-bold text-primary hover:underline inline-flex items-center gap-1.5"
+              >
+                {smartLabel.label}
+                <ExternalLink className="h-4 w-4" />
+              </a>
+            ) : (
+              <h1 className="text-xl font-bold font-mono">{smartLabel.label}</h1>
+            )}
             <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium ${sevConf.bg} ${sevConf.color}`}>
               <SevIcon className="h-3.5 w-3.5" />
               {finding.severity}
             </span>
           </div>
-          <p className="text-sm text-muted-foreground mt-1">
-            {finding.scannerType?.name || "Unknown scanner"}
-            {finding.cweId && <span className="mx-1.5">·</span>}
-            {finding.cweId && <span>{finding.cweId}</span>}
-            <span className="mx-1.5">·</span>
-            Created {new Date(finding.createdAt).toLocaleDateString()}
+          <p className="text-sm text-muted-foreground mt-1.5 space-x-1.5">
+            {appName && appSlug && (
+              <>
+                <Link href={`/applications/${appSlug}`} className="hover:underline font-medium text-foreground/80">
+                  {appName}
+                </Link>
+                <span>·</span>
+              </>
+            )}
+            <span>{finding.scannerType?.name || "Unknown scanner"}</span>
+            <span>·</span>
+            <span>{new Date(finding.createdAt).toLocaleDateString()}</span>
           </p>
         </div>
       </div>
@@ -447,6 +480,18 @@ export default function FindingDetailPage() {
               <CardTitle className="text-sm">Details</CardTitle>
             </CardHeader>
             <CardContent className="p-4 space-y-3 text-xs">
+              {appName && appSlug && (
+                <>
+                  <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground">Application</span>
+                    <Link href={`/applications/${appSlug}`} className="font-medium text-primary hover:underline inline-flex items-center gap-1">
+                      {appName}
+                      <ExternalLink className="h-3 w-3" />
+                    </Link>
+                  </div>
+                  <Separator />
+                </>
+              )}
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Rule ID</span>
                 <code className="text-[11px] font-mono bg-muted px-1.5 py-0.5 rounded">{finding.ruleId || "-"}</code>
@@ -467,23 +512,6 @@ export default function FindingDetailPage() {
                 <span>#{finding.scanId}</span>
               </div>
               <Separator />
-              {finding.cweId && cweNumber && (
-                <>
-                  <div className="flex justify-between items-center">
-                    <span className="text-muted-foreground">CWE</span>
-                    <a
-                      href={`https://cwe.mitre.org/data/definitions/${cweNumber}.html`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 text-primary hover:underline"
-                    >
-                      {cweNumber}
-                      <ExternalLink className="h-3 w-3" />
-                    </a>
-                  </div>
-                  <Separator />
-                </>
-              )}
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Created</span>
                 <span>{new Date(finding.createdAt).toLocaleDateString()}</span>

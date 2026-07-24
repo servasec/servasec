@@ -1,23 +1,24 @@
 export const severityColors: Record<string, string> = {
   critical: "bg-red-500/15 text-red-600 dark:text-red-400",
   high: "bg-orange-500/15 text-orange-600 dark:text-orange-400",
-  medium: "bg-yellow-500/15 text-yellow-600 dark:text-yellow-400",
-  low: "bg-green-500/15 text-green-600 dark:text-green-400",
+  medium: "bg-amber-500/15 text-amber-600 dark:text-amber-400",
+  low: "bg-slate-500/15 text-slate-600 dark:text-slate-400",
+  info: "bg-blue-500/15 text-blue-600 dark:text-blue-400",
 };
 
 export const severityBadgeColors: Record<string, string> = {
   Critical: "bg-red-500/15 text-red-600 dark:text-red-400 border-red-500/30",
   High: "bg-orange-500/15 text-orange-600 dark:text-orange-400 border-orange-500/30",
-  Medium: "bg-yellow-500/15 text-yellow-600 dark:text-yellow-400 border-yellow-500/30",
-  Low: "bg-green-500/15 text-green-600 dark:text-green-400 border-green-500/30",
+  Medium: "bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30",
+  Low: "bg-slate-500/15 text-slate-600 dark:text-slate-400 border-slate-500/30",
   Info: "bg-blue-500/15 text-blue-600 dark:text-blue-400 border-blue-500/30",
 };
 
 export const severityBarColors: Record<string, string> = {
   critical: "#ef4444",
   high: "#f97316",
-  medium: "#eab308",
-  low: "#22c55e",
+  medium: "#f59e0b",
+  low: "#64748b",
   info: "#3b82f6",
 };
 

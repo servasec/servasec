@@ -113,6 +113,7 @@ func GetFindings(c *gin.Context) {
 		Session(&gorm.Session{}).
 		Preload("ScannerType").
 		Preload("ApplicationVersion").
+		Preload("ApplicationVersion.Application").
 		Preload("AssignedToUser").
 		Preload("ReviewedByUser").
 		Order(orderClause).
@@ -148,6 +149,7 @@ func GetFinding(c *gin.Context) {
 	if err := config.DB.
 		Preload("ScannerType").
 		Preload("ApplicationVersion").
+		Preload("ApplicationVersion.Application").
 		Preload("AssignedToUser").
 		Preload("ReviewedByUser").
 		First(&finding, c.Param("id")).Error; err != nil {

@@ -12,12 +12,21 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Bug, ChevronDown, User as UserIcon, Clock, ChevronLeft, ChevronRight, ShieldAlert } from "lucide-react";
+import { Bug, ChevronDown, User as UserIcon, Clock, ChevronLeft, ChevronRight, ShieldAlert, AlertTriangle, Info, CircleAlert, Circle } from "lucide-react";
 import Link from "next/link";
 import axios from "@/lib/api";
 import { toast } from "sonner";
 import type { Finding, Application, ScannerType, ApplicationVersion } from "@/lib/types";
 import { severityBadgeColors, statusColors, statusLabels, nextStatuses, severityOptions, riskScoreColor } from "@/lib/constants";
+import type { LucideIcon } from "lucide-react";
+
+const severityIconMap: Record<string, LucideIcon> = {
+  Critical: ShieldAlert,
+  High: AlertTriangle,
+  Medium: CircleAlert,
+  Low: Circle,
+  Info: Info,
+};
 
 const filterKeys = ["applicationId", "applicationVersionId", "scanId", "severity", "status", "scannerTypeId", "assignedTo"] as const;
 
@@ -319,9 +328,15 @@ export default function FindingsPage() {
                       )}
                     </td>
                     <td className="px-4 py-2 hidden sm:table-cell">
-                      <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium border ${severityBadgeColors[f.severity] || ""}`}>
-                        {f.severity}
-                      </span>
+                      {(() => {
+                        const SevIcon = severityIconMap[f.severity] || Info;
+                        return (
+                          <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium border ${severityBadgeColors[f.severity] || ""}`}>
+                            <SevIcon className="h-3 w-3" />
+                            {f.severity}
+                          </span>
+                        );
+                      })()}
                     </td>
                     {hasRisk && (
                       <td className="px-4 py-2 hidden md:table-cell">
