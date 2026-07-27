@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.4.2](https://github.com/servasec/servasec/compare/v2.4.1...v2.4.2) (2026-07-27)
+
+
+### 🐛 Bug fixes
+
+* Install script enhance ([197127f](https://github.com/servasec/servasec/commit/197127f8fb52e7b5c753f22aa8f1d419e67aac6c))
+
+
+### 📝 Documentation
+
+* Readme update ([170580d](https://github.com/servasec/servasec/commit/170580db3813260e90887b437770796fe499108d))
+
 ## [2.4.1](https://github.com/servasec/servasec/compare/v2.4.0...v2.4.1) (2026-07-27)
 
 
