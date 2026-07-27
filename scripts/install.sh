@@ -1,15 +1,74 @@
 #!/bin/sh
 # Servasec Install Script
 # Usage:
-#   ./scripts/install.sh              # non-interactive (safe defaults)
-#   ./scripts/install.sh -i           # interactive (ask questions)
-#   ./scripts/install.sh --pro --pro-repo ../servasec-pro  # install with pro features
-#   ./scripts/install.sh --no-check   # skip git branch/tag check
+#   curl -fsSL https://servasec.com/install.sh | sh          # one-liner (clones repo)
+#   curl -fsSL https://servasec.com/install.sh | sh -s -- -i  # interactive
+#   ./scripts/install.sh                                      # from repo root
+#   ./scripts/install.sh -i                                   # interactive
+#   ./scripts/install.sh --no-check                           # skip git check
 #
-# Builds the stack locally using docker-compose.prod.yml.
-# Ensures you are on a stable release tag (not main/develop).
+# Builds the stack using docker-compose.prod.yml.
 
 set -e
+
+# ──────────────────────────────────────────────
+#  Resolve script directory
+# ──────────────────────────────────────────────
+
+REPO_URL="https://github.com/servasec/servasec.git"
+CLONE_DIR="$HOME/.servasec-install"
+
+resolve_script_dir() {
+    case "$0" in
+        */*/*|*/*)
+            if [ -f "$0" ]; then
+                SCRIPT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+                if [ -f "$SCRIPT_DIR/.env.example" ]; then
+                    echo "$SCRIPT_DIR"
+                    return
+                fi
+            fi
+            ;;
+    esac
+    echo ""
+}
+
+REPO_ROOT="$(resolve_script_dir)"
+
+# ──────────────────────────────────────────────
+#  If not in a repo, clone it
+# ──────────────────────────────────────────────
+
+if [ -z "$REPO_ROOT" ]; then
+    printf "\n"
+    printf "\033[0;34mi\033[0m  Not inside Servasec repo — cloning latest release...\n"
+
+    command -v git >/dev/null 2>&1 || {
+        printf "\033[0;31m✗\033[0m  git is required for remote install. Install git first.\n"
+        exit 1
+    }
+
+    if [ -d "$CLONE_DIR/.git" ]; then
+        printf "\033[0;34mi\033[0m  Updating existing clone at %s...\n" "$CLONE_DIR"
+        git -C "$CLONE_DIR" fetch --tags --quiet 2>/dev/null || true
+    else
+        rm -rf "$CLONE_DIR"
+        git clone --quiet --no-checkout "$REPO_URL" "$CLONE_DIR"
+    fi
+
+    # Always checkout latest release tag, never default branch
+    LATEST_TAG=$(git -C "$CLONE_DIR" tag --list --sort=-version:refname | head -1)
+    if [ -n "$LATEST_TAG" ]; then
+        git -C "$CLONE_DIR" checkout --quiet "$LATEST_TAG"
+        printf "\033[0;32m✓\033[0m  On release %s\n" "$LATEST_TAG"
+    else
+        fail "No release tags found. Cannot install from remote."
+    fi
+
+    REPO_ROOT="$CLONE_DIR"
+fi
+
+cd "$REPO_ROOT" || { printf "\033[0;31m✗\033[0m  Cannot cd to %s\n" "$REPO_ROOT"; exit 1; }
 
 # ──────────────────────────────────────────────
 #  Flags
@@ -42,7 +101,8 @@ while [ $# -gt 0 ]; do
             exit 0
             ;;
         *)
-            fail "Unknown option: $1 (use -h for help)"
+            printf "\033[0;31m✗\033[0m  Unknown option: %s (use -h for help)\n" "$1"
+            exit 1
             ;;
     esac
     shift
@@ -57,26 +117,30 @@ SSC_COMPOSE="docker compose -f $COMPOSE_FILE"
 SSC_ENV_FILE=".env"
 SSC_EXAMPLE=".env.example"
 
-# Defaults
 DEFAULT_DOMAIN="servasec.local"
-DEFAULT_ADMIN_PASSWORD=""
 DEFAULT_SSO_ENABLED=false
 DEFAULT_PRO_REPO="../servasec-pro"
 
 # ──────────────────────────────────────────────
-#  Colors & helpers (same as upgrade.sh)
+#  Colors & helpers
 # ──────────────────────────────────────────────
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
+CYAN='\033[0;36m'
+BOLD='\033[1m'
+DIM='\033[2m'
 NC='\033[0m'
 
 info()  { printf "${BLUE}i${NC}  %s\n" "$1"; }
 ok()    { printf "${GREEN}✓${NC}  %s\n" "$1"; }
 warn()  { printf "${YELLOW}⚠${NC}  %s\n" "$1"; }
 fail()  { printf "${RED}✗${NC}  %s\n" "$1"; exit 1; }
+header() { printf "\n${BOLD}${CYAN}── %s ──${NC}\n" "$1"; }
+prompt() { printf "  ${BOLD}%s${NC} " "$1"; }
+dim()   { printf "${DIM}%s${NC}" "$1"; }
 
 # ──────────────────────────────────────────────
 #  1. Check prerequisites
@@ -85,16 +149,10 @@ fail()  { printf "${RED}✗${NC}  %s\n" "$1"; exit 1; }
 printf "\n"
 info "Checking prerequisites..."
 
-# Docker
 command -v docker >/dev/null 2>&1 || fail "Docker is not installed. Install it first: https://docs.docker.com/get-docker/"
-
-# Docker must be running
 docker info >/dev/null 2>&1 || fail "Docker daemon is not running. Start Docker and try again."
-
-# Docker Compose
 docker compose version --short 2>/dev/null  || fail "Docker Compose v2 is required. Install it: https://docs.docker.com/compose/install/"
 
-# OpenSSL (with fallback)
 HAS_OPENSSL=true
 command -v openssl >/dev/null 2>&1 || HAS_OPENSSL=false
 
@@ -107,7 +165,7 @@ else
 fi
 
 # ──────────────────────────────────────────────
-#  2. Check git state (ensure stable release)
+#  2. Check git state
 # ──────────────────────────────────────────────
 
 if [ "$CHECK_GIT" = true ] && command -v git >/dev/null 2>&1 && git rev-parse --git-dir >/dev/null 2>&1; then
@@ -155,10 +213,6 @@ if [ "$CHECK_GIT" = true ] && command -v git >/dev/null 2>&1 && git rev-parse --
             fi
         fi
     fi
-elif [ "$CHECK_GIT" = false ]; then
-    :
-else
-    info "Not a git repository — assuming release tarball"
 fi
 
 # ──────────────────────────────────────────────
@@ -168,7 +222,204 @@ fi
 [ -f "$SSC_EXAMPLE" ] || fail "File $SSC_EXAMPLE not found. Are you in the Servasec root directory?"
 
 # ──────────────────────────────────────────────
-#  4. Copy pro files (if --pro)
+#  4. Generate secrets
+# ──────────────────────────────────────────────
+
+printf "\n"
+info "Generating secrets..."
+
+generate_secret() {
+    if [ "$HAS_OPENSSL" = true ]; then
+        openssl rand -base64 32 | tr -d '\n'
+    else
+        head -c 32 /dev/urandom | base64 | tr -d '\n'
+    fi
+}
+
+JWT_SECRET=$(generate_secret)
+REFRESH_SECRET=$(generate_secret)
+CSRF_SECRET=$(generate_secret)
+ENCRYPTION_KEY=$(generate_secret)
+
+ok "Secrets generated"
+
+# ──────────────────────────────────────────────
+#  5. Interactive prompts (-i mode)
+# ──────────────────────────────────────────────
+
+DOMAIN="$DEFAULT_DOMAIN"
+ADMIN_PASSWORD=""
+SSO_ENABLED=false
+SSO_PROVIDER=""
+REGISTRATION_ENABLED=true
+
+if [ "$INTERACTIVE" = true ]; then
+    printf "\n"
+    header "Configuration"
+    echo ""
+
+    prompt "Admin password"
+    dim "(leave empty for random):"
+    printf " "
+    read -r INPUT_PASSWORD
+    if [ -n "$INPUT_PASSWORD" ]; then
+        ADMIN_PASSWORD="$INPUT_PASSWORD"
+    else
+        ADMIN_PASSWORD=$(generate_secret | head -c 16)
+    fi
+
+    printf "\n"
+    prompt "Domain"
+    dim "[$DOMAIN]:"
+    printf " "
+    read -r INPUT_DOMAIN
+    if [ -n "$INPUT_DOMAIN" ]; then
+        DOMAIN="$INPUT_DOMAIN"
+    fi
+
+    printf "\n"
+    prompt "Allow public registration? [Y/n]: "
+    read -r INPUT_REG
+    case "$INPUT_REG" in
+        [nN]|no|NO) REGISTRATION_ENABLED=false ;;
+    esac
+
+    printf "\n"
+    header "SSO Configuration"
+    echo ""
+    printf "  ${DIM}1)${NC} None (default)\n"
+    printf "  ${DIM}2)${NC} GitHub\n"
+    printf "  ${DIM}3)${NC} GitLab\n"
+    printf "  ${DIM}4)${NC} OIDC (Keycloak, Auth0, etc.)\n"
+    printf "  ${DIM}5)${NC} Multiple providers\n"
+    echo ""
+    prompt "SSO provider"
+    dim "[1]:"
+    printf " "
+    read -r INPUT_SSO
+
+    case "$INPUT_SSO" in
+        2) SSO_ENABLED=true; SSO_PROVIDER="github" ;;
+        3) SSO_ENABLED=true; SSO_PROVIDER="gitlab" ;;
+        4) SSO_ENABLED=true; SSO_PROVIDER="oidc" ;;
+        5) SSO_ENABLED=true; SSO_PROVIDER="multiple" ;;
+        "") SSO_ENABLED=false ;;
+        *)
+            SSO_ENABLED=true
+            case "$INPUT_SSO" in
+                [gG][iI][tT][hH][uU][bB]) SSO_PROVIDER="github" ;;
+                [gG][iI][tT][lL][aA][bB]) SSO_PROVIDER="gitlab" ;;
+                [oO][iI][dD][cC]) SSO_PROVIDER="oidc" ;;
+                *) SSO_ENABLED=false ;;
+            esac
+            ;;
+    esac
+
+    if [ "$SSO_ENABLED" = true ]; then
+        printf "\n"
+        case "$SSO_PROVIDER" in
+            github)
+                prompt "GitHub Client ID: "
+                read -r SSO_GITHUB_CLIENT_ID
+                prompt "GitHub Client Secret: "
+                read -r SSO_GITHUB_CLIENT_SECRET
+                ;;
+            gitlab)
+                prompt "GitLab Client ID: "
+                read -r SSO_GITLAB_CLIENT_ID
+                prompt "GitLab Client Secret: "
+                read -r SSO_GITLAB_CLIENT_SECRET
+                prompt "GitLab URL"
+                dim " [https://gitlab.com]:"
+                printf " "
+                read -r SSO_GITLAB_BASE_URL
+                if [ -z "$SSO_GITLAB_BASE_URL" ]; then
+                    SSO_GITLAB_BASE_URL="https://gitlab.com"
+                fi
+                ;;
+            oidc)
+                prompt "OIDC Client ID: "
+                read -r SSO_OIDC_CLIENT_ID
+                prompt "OIDC Client Secret: "
+                read -r SSO_OIDC_CLIENT_SECRET
+                prompt "OIDC Issuer URL: "
+                read -r SSO_OIDC_ISSUER_URL
+                prompt "OIDC Scopes"
+                dim " [openid profile email]:"
+                printf " "
+                read -r SSO_OIDC_SCOPES
+                if [ -z "$SSO_OIDC_SCOPES" ]; then
+                    SSO_OIDC_SCOPES="openid profile email"
+                fi
+                ;;
+            multiple)
+                printf "\n"
+                info "Configure each provider below. Press Enter to skip."
+                echo ""
+
+                prompt "GitHub Client ID: "
+                read -r SSO_GITHUB_CLIENT_ID
+                prompt "GitHub Client Secret: "
+                read -r SSO_GITHUB_CLIENT_SECRET
+
+                printf "\n"
+                prompt "GitLab Client ID: "
+                read -r SSO_GITLAB_CLIENT_ID
+                prompt "GitLab Client Secret: "
+                read -r SSO_GITLAB_CLIENT_SECRET
+                prompt "GitLab URL"
+                dim " [https://gitlab.com]:"
+                printf " "
+                read -r SSO_GITLAB_BASE_URL
+                if [ -z "$SSO_GITLAB_BASE_URL" ]; then
+                    SSO_GITLAB_BASE_URL="https://gitlab.com"
+                fi
+
+                printf "\n"
+                prompt "OIDC Client ID: "
+                read -r SSO_OIDC_CLIENT_ID
+                prompt "OIDC Client Secret: "
+                read -r SSO_OIDC_CLIENT_SECRET
+                prompt "OIDC Issuer URL: "
+                read -r SSO_OIDC_ISSUER_URL
+                prompt "OIDC Scopes"
+                dim " [openid profile email]:"
+                printf " "
+                read -r SSO_OIDC_SCOPES
+                if [ -z "$SSO_OIDC_SCOPES" ]; then
+                    SSO_OIDC_SCOPES="openid profile email"
+                fi
+                ;;
+        esac
+    fi
+
+    # ── Summary ──
+    printf "\n"
+    header "Install Summary"
+    echo ""
+    printf "  Domain:        ${BOLD}%s${NC}\n" "$DOMAIN"
+    printf "  Admin pass:    ${BOLD}%s${NC}\n" "$ADMIN_PASSWORD"
+    printf "  Registration:  ${BOLD}%s${NC}\n" "$([ "$REGISTRATION_ENABLED" = true ] && echo 'enabled' || echo 'disabled')"
+    if [ "$SSO_ENABLED" = true ]; then
+        printf "  SSO:           ${BOLD}%s${NC}\n" "$SSO_PROVIDER"
+    else
+        printf "  SSO:           ${BOLD}disabled${NC}\n"
+    fi
+    printf "  Pro features:  ${BOLD}%s${NC}\n" "$([ "$PRO_ENABLED" = true ] && echo 'yes' || echo 'no')"
+    echo ""
+    prompt "Proceed with install? [Y/n]: "
+    read -r CONFIRM
+    case "$CONFIRM" in
+        [nN]|no|NO)
+            printf "\n"
+            info "Install cancelled."
+            exit 0
+            ;;
+    esac
+fi
+
+# ──────────────────────────────────────────────
+#  6. Copy pro files (if --pro)
 # ──────────────────────────────────────────────
 
 if [ "$PRO_ENABLED" = true ]; then
@@ -191,7 +442,6 @@ if [ "$PRO_ENABLED" = true ]; then
     cp "$PRO_REPO_DIR"/backend/pro/*.go backend/pro/
     ok "Pro files copied from $PRO_REPO_DIR"
 
-    # Set BUILD_TAGS=pro in .env
     if [ -f "$SSC_ENV_FILE" ]; then
         if grep -q "^BUILD_TAGS=" "$SSC_ENV_FILE" 2>/dev/null; then
             sed -i.bak 's|^BUILD_TAGS=.*|BUILD_TAGS=pro|' "$SSC_ENV_FILE" && rm -f "$SSC_ENV_FILE.bak"
@@ -204,74 +454,16 @@ if [ "$PRO_ENABLED" = true ]; then
 fi
 
 # ──────────────────────────────────────────────
-#  4. Generate secrets
-# ──────────────────────────────────────────────
-
-printf "\n"
-info "Generating secrets..."
-
-generate_secret() {
-    if [ "$HAS_OPENSSL" = true ]; then
-        openssl rand -base64 32 | tr -d '\n'
-    else
-        head -c 32 /dev/urandom | base64 | tr -d '\n'
-    fi
-}
-
-JWT_SECRET=$(generate_secret)
-REFRESH_SECRET=$(generate_secret)
-CSRF_SECRET=$(generate_secret)
-ENCRYPTION_KEY=$(generate_secret)
-ADMIN_PASSWORD=$(generate_secret | head -c 16)
-
-ok "Secrets generated"
-
-# ──────────────────────────────────────────────
-#  5. Interactive prompts (-i mode)
-# ──────────────────────────────────────────────
-
-DOMAIN="$DEFAULT_DOMAIN"
-SSO_ENABLED="$DEFAULT_SSO_ENABLED"
-
-if [ "$INTERACTIVE" = true ]; then
-    printf "\n"
-    info "Configuration (press Enter for defaults)"
-    echo ""
-
-    # Admin password
-    printf "  Admin password [%s]: " "$ADMIN_PASSWORD"
-    read -r INPUT_PASSWORD
-    if [ -n "$INPUT_PASSWORD" ]; then
-        ADMIN_PASSWORD="$INPUT_PASSWORD"
-    fi
-
-    # Domain
-    printf "  Domain [%s]: " "$DOMAIN"
-    read -r INPUT_DOMAIN
-    if [ -n "$INPUT_DOMAIN" ]; then
-        DOMAIN="$INPUT_DOMAIN"
-    fi
-
-    # SSO
-    printf "  Enable SSO (GitHub/GitLab/OIDC)? [y/N]: "
-    read -r INPUT_SSO
-    case "$INPUT_SSO" in
-        [yY]|yes|YES) SSO_ENABLED=true ;;
-    esac
-
-    if [ "$SSO_ENABLED" = true ]; then
-        echo ""
-        warn "SSO is enabled. You will need to configure the OAuth providers"
-        warn "in .env after install (SSO_GITHUB_CLIENT_ID, etc.)"
-    fi
-fi
-
-# ──────────────────────────────────────────────
-#  6. Build .env
+#  7. Build .env
 # ──────────────────────────────────────────────
 
 printf "\n"
 info "Creating .env..."
+
+# Fill defaults for non-interactive mode
+if [ "$INTERACTIVE" = false ]; then
+    ADMIN_PASSWORD=$(generate_secret | head -c 16)
+fi
 
 if [ -f "$SSC_ENV_FILE" ]; then
     if [ "$INTERACTIVE" = true ]; then
@@ -294,10 +486,8 @@ else
     ok ".env created from $SSC_EXAMPLE"
 fi
 
-# Update secrets in .env
 if [ -f "$SSC_ENV_FILE" ]; then
     update_env() {
-        # $1 = key, $2 = value
         if grep -q "^$1=" "$SSC_ENV_FILE" 2>/dev/null; then
             sed -i.bak "s|^$1=.*|$1=$2|" "$SSC_ENV_FILE" && rm -f "$SSC_ENV_FILE.bak"
         else
@@ -313,11 +503,21 @@ if [ -f "$SSC_ENV_FILE" ]; then
     update_env "SSC_PUBLIC_DOMAIN" "$DOMAIN"
     update_env "SSC_PUBLIC_URL" "https://$DOMAIN"
     update_env "SSC_SITE_NAME" "servasec"
-    update_env "SSC_REGISTRATION_ENABLED" "true"
+    update_env "SSC_REGISTRATION_ENABLED" "$REGISTRATION_ENABLED"
     update_env "SSC_SEED_DATABASE" "true"
 
-    # Disable SSO by default (comment out SSO vars)
-    if [ "$SSO_ENABLED" = false ]; then
+    # SSO
+    if [ "$SSO_ENABLED" = true ]; then
+        [ -n "$SSO_GITHUB_CLIENT_ID" ]     && update_env "SSO_GITHUB_CLIENT_ID" "$SSO_GITHUB_CLIENT_ID"
+        [ -n "$SSO_GITHUB_CLIENT_SECRET" ]  && update_env "SSO_GITHUB_CLIENT_SECRET" "$SSO_GITHUB_CLIENT_SECRET"
+        [ -n "$SSO_GITLAB_CLIENT_ID" ]      && update_env "SSO_GITLAB_CLIENT_ID" "$SSO_GITLAB_CLIENT_ID"
+        [ -n "$SSO_GITLAB_CLIENT_SECRET" ]  && update_env "SSO_GITLAB_CLIENT_SECRET" "$SSO_GITLAB_CLIENT_SECRET"
+        [ -n "$SSO_GITLAB_BASE_URL" ]       && update_env "SSO_GITLAB_BASE_URL" "$SSO_GITLAB_BASE_URL"
+        [ -n "$SSO_OIDC_CLIENT_ID" ]        && update_env "SSO_OIDC_CLIENT_ID" "$SSO_OIDC_CLIENT_ID"
+        [ -n "$SSO_OIDC_CLIENT_SECRET" ]    && update_env "SSO_OIDC_CLIENT_SECRET" "$SSO_OIDC_CLIENT_SECRET"
+        [ -n "$SSO_OIDC_ISSUER_URL" ]       && update_env "SSO_OIDC_ISSUER_URL" "$SSO_OIDC_ISSUER_URL"
+        [ -n "$SSO_OIDC_SCOPES" ]           && update_env "SSO_OIDC_SCOPES" "$SSO_OIDC_SCOPES"
+    else
         sed -i.bak \
             -e 's|^SSO_GITHUB_CLIENT_ID=.*|# SSO_GITHUB_CLIENT_ID=|' \
             -e 's|^SSO_GITHUB_CLIENT_SECRET=.*|# SSO_GITHUB_CLIENT_SECRET=|' \
@@ -335,7 +535,7 @@ if [ -f "$SSC_ENV_FILE" ]; then
 fi
 
 # ──────────────────────────────────────────────
-#  7. Start stack
+#  8. Start stack
 # ──────────────────────────────────────────────
 
 printf "\n"
@@ -352,7 +552,7 @@ fi
 ok "Services started"
 
 # ──────────────────────────────────────────────
-#  8. Verify
+#  9. Verify
 # ──────────────────────────────────────────────
 
 printf "\n"
@@ -360,7 +560,6 @@ info "Waiting for services to be ready..."
 
 sleep 5
 
-# Check if services are running
 RUNNING=$($SSC_COMPOSE ps --services --filter status=running 2>/dev/null | wc -l)
 if [ "$RUNNING" -ge 2 ]; then
     ok " services running"
@@ -370,16 +569,16 @@ else
 fi
 
 # ──────────────────────────────────────────────
-#  9. Summary
+#  10. Summary
 # ──────────────────────────────────────────────
 
 echo ""
 echo "────────────────────────────────────────────────"
 echo ""
 if [ "$PRO_ENABLED" = true ]; then
-    echo "  ${GREEN} servasec (Pro) is running!${NC}"
+    printf "  ${GREEN}${BOLD}servasec (Pro) is running!${NC}\n"
 else
-    echo "  ${GREEN} servasec is running!${NC}"
+    printf "  ${GREEN}${BOLD}servasec is running!${NC}\n"
 fi
 echo ""
 echo "  URL:      https://${DOMAIN}"
@@ -388,7 +587,7 @@ echo "  Password: ${ADMIN_PASSWORD}"
 echo ""
 echo "  Useful commands:"
 echo "    View logs:    $SSC_COMPOSE logs -f"
-echo "    Stop:         make down-prod"
+echo "    Stop:         $SSC_COMPOSE down"
 echo "    Upgrade:      bash ./scripts/upgrade.sh"
 echo ""
 echo "  Note: Change the admin password after first login."
