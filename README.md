@@ -29,43 +29,43 @@
 | Resource-level permissions | ✓ | ✓ |
 | Scanner ingest (Semgrep, Trivy, etc.) | ✓ | ✓ |
 | Version comparison | ✓ | ✓ |
-| SSO / OIDC | ? | ✓ |
-| Audit log |  | ✓ |
-| MCP Server |  | ✓ |
-| SLA management (planned) |  | ✓ |
-| Advanced reporting (planned) |  | ✓ |
+| SSO / OIDC | | ✓ |
+| Audit log | | ✓ |
+| MCP Server | | ✓ |
+| SLA management (planned) | | ✓ |
+| Advanced reporting (planned) | | ✓ |
 
 ## Quick Start
 
 ```bash
-curl https://servasec.com/install.sh | sh
-# Visit https://servasec.local
+curl -fsSL https://servasec.com/install.sh | sh
 ```
 
 Default admin: `admin` / password displayed at the end of the install.
 
-**Interactive mode** (prompts for admin password, domain, SSO):
+**Interactive mode** (prompts for admin password, domain, SSO, registration):
 
 ```bash
-./scripts/install.sh -i
+curl -fsSL https://servasec.com/install.sh | sh -s -- -i
 ```
 
 **Install with pro features** (requires `servasec-pro` repo):
 
 ```bash
-./scripts/install.sh --pro --pro-repo ../servasec-pro
+curl -fsSL https://servasec.com/install.sh | sh -s -- --pro --pro-repo ../servasec-pro
 ```
 
 **Manual setup** (without the install script):
 
 ```bash
+git clone https://github.com/servasec/servasec.git
+cd servasec
 cp .env.example .env
 # Edit secrets (JWT_SECRET, REFRESH_SECRET, CSRF_SECRET, SSC_ADMIN_PASSWORD)
-make prod
+make community
 ```
 
 See [Environment Variables](#environment-variables) for all available options.
-
 
 ## Scanner Support
 
