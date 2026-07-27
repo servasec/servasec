@@ -73,7 +73,7 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m'
 
-info()  { printf "${BLUE}ℹ${NC}  %s\n" "$1"; }
+info()  { printf "${BLUE}i${NC}  %s\n" "$1"; }
 ok()    { printf "${GREEN}✓${NC}  %s\n" "$1"; }
 warn()  { printf "${YELLOW}⚠${NC}  %s\n" "$1"; }
 fail()  { printf "${RED}✗${NC}  %s\n" "$1"; exit 1; }
