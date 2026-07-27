@@ -38,9 +38,7 @@
 ## Quick Start
 
 ```bash
-git clone -b v2.4.1 https://github.com/servasec/servasec.git
-cd servasec
-./scripts/install.sh
+curl https://servasec.com/install.sh | sh
 # Visit https://servasec.local
 ```
 
