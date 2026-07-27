@@ -38,7 +38,7 @@ else
 fi
 
 # --- Python SAST ---
-# bandit exits 1 when findings exist — only treat >1 as failure
+# bandit exits 1 when findings exist - only treat >1 as failure
 echo "[scanning] bandit..."
 bandit_exit=0
 bandit -r "$TARGET_DIR" -f json > "$REPORTS_DIR/bandit.json" 2>/dev/null || bandit_exit=$?

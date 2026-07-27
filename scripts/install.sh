@@ -41,7 +41,7 @@ REPO_ROOT="$(resolve_script_dir)"
 
 if [ -z "$REPO_ROOT" ]; then
     printf "\n"
-    printf "\033[0;34mi\033[0m  Not inside Servasec repo — cloning latest release...\n"
+    printf "\033[0;34mi\033[0m  Not inside Servasec repo - cloning latest release...\n"
 
     command -v git >/dev/null 2>&1 || {
         printf "\033[0;31m✗\033[0m  git is required for remote install. Install git first.\n"
@@ -161,7 +161,7 @@ ok "Docker Compose v2 found"
 if [ "$HAS_OPENSSL" = true ]; then
     ok "OpenSSL found"
 else
-    warn "OpenSSL not found — using /dev/urandom as fallback"
+    warn "OpenSSL not found - using /dev/urandom as fallback"
 fi
 
 # ──────────────────────────────────────────────
@@ -185,7 +185,7 @@ if [ "$CHECK_GIT" = true ] && command -v git >/dev/null 2>&1 && git rev-parse --
         ok "On release tag: $CURRENT_REF"
     elif [ "$CURRENT_REF" = "main" ]; then
         if [ -n "$LATEST_TAG" ]; then
-            warn "On 'main' branch — switching to latest release: $LATEST_TAG"
+            warn "On 'main' branch - switching to latest release: $LATEST_TAG"
             git fetch --tags --quiet 2>/dev/null || true
             git checkout "$LATEST_TAG" --quiet
             ok "Now on $LATEST_TAG"
@@ -205,7 +205,7 @@ if [ "$CHECK_GIT" = true ] && command -v git >/dev/null 2>&1 && git rev-parse --
                         ok "Now on $LATEST_TAG"
                         ;;
                     *)
-                        warn "Continuing on $CURRENT_REF — not recommended for production"
+                        warn "Continuing on $CURRENT_REF - not recommended for production"
                         ;;
                 esac
             else
@@ -479,7 +479,7 @@ if [ -f "$SSC_ENV_FILE" ]; then
                 ;;
         esac
     else
-        warn ".env already exists — keeping it (use -i to overwrite)"
+        warn ".env already exists - keeping it (use -i to overwrite)"
     fi
 else
     cp "$SSC_EXAMPLE" "$SSC_ENV_FILE"

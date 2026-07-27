@@ -35,7 +35,7 @@ RUN go install github.com/securego/gosec/v2/cmd/gosec@latest
 RUN pip3 install --break-system-packages checkov
 
     # --- tfsec (Terraform scanner) ---
-    # Download directly — Alpine's BusyBox sha256sum doesn't support -q flag
+    # Download directly - Alpine's BusyBox sha256sum doesn't support -q flag
     # used by the official install script
 RUN curl -sSL -o /usr/local/bin/tfsec \
         https://github.com/aquasecurity/tfsec/releases/latest/download/tfsec-linux-amd64 \
