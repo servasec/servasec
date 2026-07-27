@@ -91,8 +91,8 @@ command -v docker >/dev/null 2>&1 || fail "Docker is not installed. Install it f
 # Docker must be running
 docker info >/dev/null 2>&1 || fail "Docker daemon is not running. Start Docker and try again."
 
-# Docker Compose v2
-docker compose version --short 2>/dev/null | grep -q '^2' || fail "Docker Compose v2 is required. Install it: https://docs.docker.com/compose/install/"
+# Docker Compose
+docker compose version --short 2>/dev/null  || fail "Docker Compose v2 is required. Install it: https://docs.docker.com/compose/install/"
 
 # OpenSSL (with fallback)
 HAS_OPENSSL=true
