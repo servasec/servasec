@@ -363,7 +363,7 @@ sleep 5
 # Check if services are running
 RUNNING=$($SSC_COMPOSE ps --services --filter status=running 2>/dev/null | wc -l)
 if [ "$RUNNING" -ge 2 ]; then
-    ok "$RUNNING services running"
+    ok " services running"
 else
     warn "Some services may not be running. Check logs:"
     warn "  $SSC_COMPOSE logs --tail=20"
@@ -377,9 +377,9 @@ echo ""
 echo "────────────────────────────────────────────────"
 echo ""
 if [ "$PRO_ENABLED" = true ]; then
-    echo "  ${GREEN}Servasec (Pro) is running!${NC}"
+    echo "  ${GREEN} servasec (Pro) is running!${NC}"
 else
-    echo "  ${GREEN}Servasec is running!${NC}"
+    echo "  ${GREEN} servasec is running!${NC}"
 fi
 echo ""
 echo "  URL:      https://${DOMAIN}"
@@ -388,8 +388,8 @@ echo "  Password: ${ADMIN_PASSWORD}"
 echo ""
 echo "  Useful commands:"
 echo "    View logs:    $SSC_COMPOSE logs -f"
-echo "    Stop:         $SSC_COMPOSE down"
-echo "    Upgrade:      ./scripts/upgrade.sh"
+echo "    Stop:         make down"
+echo "    Upgrade:      bash ./scripts/upgrade.sh"
 echo ""
 echo "  Note: Change the admin password after first login."
 echo ""
