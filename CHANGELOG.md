@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.4.1](https://github.com/servasec/servasec/compare/v2.4.0...v2.4.1) (2026-07-27)
+
+
+### 🐛 Bug fixes
+
+* Install script requirements wrong conditions ([7e9b8ee](https://github.com/servasec/servasec/commit/7e9b8ee91ad6d44b5e4a27f02754bfe3beb485a4))
+
 ## [2.4.0](https://github.com/servasec/servasec/compare/v2.3.0...v2.4.0) (2026-07-24)
 
 
