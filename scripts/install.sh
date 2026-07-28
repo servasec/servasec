@@ -79,6 +79,39 @@ while [ $# -gt 0 ]; do
 done
 
 # ──────────────────────────────────────────────
+#  Colors & helpers
+# ──────────────────────────────────────────────
+
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+CYAN='\033[0;36m'
+BOLD='\033[1m'
+DIM='\033[2m'
+NC='\033[0m'
+
+info()  { printf "${BLUE}i${NC}  %s\n" "$1"; }
+ok()    { printf "${GREEN}✓${NC}  %s\n" "$1"; }
+warn()  { printf "${YELLOW}⚠${NC}  %s\n" "$1"; }
+fail()  { printf "${RED}✗${NC}  %s\n" "$1"; exit 1; }
+header() { printf "\n${BOLD}${CYAN}── %s ──${NC}\n" "$1"; }
+prompt() { printf "  ${BOLD}%s${NC} " "$1"; }
+dim()   { printf "${DIM}%s${NC}" "$1"; }
+
+# ──────────────────────────────────────────────
+#  Config
+# ──────────────────────────────────────────────
+
+COMPOSE_FILE="docker-compose.prod.yml"
+SSC_COMPOSE="docker compose -f $COMPOSE_FILE"
+SSC_ENV_FILE=".env"
+SSC_EXAMPLE=".env.example"
+
+DEFAULT_DOMAIN="servasec.local"
+DEFAULT_PRO_REPO="../servasec-pro"
+
+# ──────────────────────────────────────────────
 #  If not in a repo, clone it
 # ──────────────────────────────────────────────
 
@@ -127,39 +160,6 @@ if [ -z "$REPO_ROOT" ]; then
 fi
 
 cd "$REPO_ROOT" || { printf "\033[0;31m✗\033[0m  Cannot cd to %s\n" "$REPO_ROOT"; exit 1; }
-
-# ──────────────────────────────────────────────
-#  Config
-# ──────────────────────────────────────────────
-
-COMPOSE_FILE="docker-compose.prod.yml"
-SSC_COMPOSE="docker compose -f $COMPOSE_FILE"
-SSC_ENV_FILE=".env"
-SSC_EXAMPLE=".env.example"
-
-DEFAULT_DOMAIN="servasec.local"
-DEFAULT_PRO_REPO="../servasec-pro"
-
-# ──────────────────────────────────────────────
-#  Colors & helpers
-# ──────────────────────────────────────────────
-
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-CYAN='\033[0;36m'
-BOLD='\033[1m'
-DIM='\033[2m'
-NC='\033[0m'
-
-info()  { printf "${BLUE}i${NC}  %s\n" "$1"; }
-ok()    { printf "${GREEN}✓${NC}  %s\n" "$1"; }
-warn()  { printf "${YELLOW}⚠${NC}  %s\n" "$1"; }
-fail()  { printf "${RED}✗${NC}  %s\n" "$1"; exit 1; }
-header() { printf "\n${BOLD}${CYAN}── %s ──${NC}\n" "$1"; }
-prompt() { printf "  ${BOLD}%s${NC} " "$1"; }
-dim()   { printf "${DIM}%s${NC}" "$1"; }
 
 # ──────────────────────────────────────────────
 #  1. Check prerequisites
@@ -303,113 +303,115 @@ if [ "$INTERACTIVE" = true ]; then
         [nN]|no|NO) REGISTRATION_ENABLED=false ;;
     esac
 
-    printf "\n"
-    header "SSO Configuration"
-    echo ""
-    printf "  ${DIM}1)${NC} None (default)\n"
-    printf "  ${DIM}2)${NC} GitHub\n"
-    printf "  ${DIM}3)${NC} GitLab\n"
-    printf "  ${DIM}4)${NC} OIDC (Keycloak, Auth0, etc.)\n"
-    printf "  ${DIM}5)${NC} Multiple providers\n"
-    echo ""
-    prompt "SSO provider"
-    dim "[1]:"
-    printf " "
-    read -r INPUT_SSO </dev/tty
-
-    case "$INPUT_SSO" in
-        2) SSO_ENABLED=true; SSO_PROVIDER="github" ;;
-        3) SSO_ENABLED=true; SSO_PROVIDER="gitlab" ;;
-        4) SSO_ENABLED=true; SSO_PROVIDER="oidc" ;;
-        5) SSO_ENABLED=true; SSO_PROVIDER="multiple" ;;
-        "") SSO_ENABLED=false ;;
-        *)
-            SSO_ENABLED=true
-            case "$INPUT_SSO" in
-                [gG][iI][tT][hH][uU][bB]) SSO_PROVIDER="github" ;;
-                [gG][iI][tT][lL][aA][bB]) SSO_PROVIDER="gitlab" ;;
-                [oO][iI][dD][cC]) SSO_PROVIDER="oidc" ;;
-                *) SSO_ENABLED=false ;;
-            esac
-            ;;
-    esac
-
-    if [ "$SSO_ENABLED" = true ]; then
+    if [ "$PRO_ENABLED" = true ]; then
         printf "\n"
-        case "$SSO_PROVIDER" in
-            github)
-                prompt "GitHub Client ID: "
-                read -r SSO_GITHUB_CLIENT_ID </dev/tty
-                prompt "GitHub Client Secret: "
-                read -r SSO_GITHUB_CLIENT_SECRET </dev/tty
-                ;;
-            gitlab)
-                prompt "GitLab Client ID: "
-                read -r SSO_GITLAB_CLIENT_ID </dev/tty
-                prompt "GitLab Client Secret: "
-                read -r SSO_GITLAB_CLIENT_SECRET </dev/tty
-                prompt "GitLab URL"
-                dim " [https://gitlab.com]:"
-                printf " "
-                read -r SSO_GITLAB_BASE_URL </dev/tty
-                if [ -z "$SSO_GITLAB_BASE_URL" ]; then
-                    SSO_GITLAB_BASE_URL="https://gitlab.com"
-                fi
-                ;;
-            oidc)
-                prompt "OIDC Client ID: "
-                read -r SSO_OIDC_CLIENT_ID </dev/tty
-                prompt "OIDC Client Secret: "
-                read -r SSO_OIDC_CLIENT_SECRET </dev/tty
-                prompt "OIDC Issuer URL: "
-                read -r SSO_OIDC_ISSUER_URL </dev/tty
-                prompt "OIDC Scopes"
-                dim " [openid profile email]:"
-                printf " "
-                read -r SSO_OIDC_SCOPES </dev/tty
-                if [ -z "$SSO_OIDC_SCOPES" ]; then
-                    SSO_OIDC_SCOPES="openid profile email"
-                fi
-                ;;
-            multiple)
-                printf "\n"
-                info "Configure each provider below. Press Enter to skip."
-                echo ""
+        header "SSO Configuration"
+        echo ""
+        printf "  ${DIM}1)${NC} None (default)\n"
+        printf "  ${DIM}2)${NC} GitHub\n"
+        printf "  ${DIM}3)${NC} GitLab\n"
+        printf "  ${DIM}4)${NC} OIDC (Keycloak, Auth0, etc.)\n"
+        printf "  ${DIM}5)${NC} Multiple providers\n"
+        echo ""
+        prompt "SSO provider"
+        dim "[1]:"
+        printf " "
+        read -r INPUT_SSO </dev/tty
 
-                prompt "GitHub Client ID: "
-                read -r SSO_GITHUB_CLIENT_ID </dev/tty
-                prompt "GitHub Client Secret: "
-                read -r SSO_GITHUB_CLIENT_SECRET </dev/tty
-
-                printf "\n"
-                prompt "GitLab Client ID: "
-                read -r SSO_GITLAB_CLIENT_ID </dev/tty
-                prompt "GitLab Client Secret: "
-                read -r SSO_GITLAB_CLIENT_SECRET </dev/tty
-                prompt "GitLab URL"
-                dim " [https://gitlab.com]:"
-                printf " "
-                read -r SSO_GITLAB_BASE_URL </dev/tty
-                if [ -z "$SSO_GITLAB_BASE_URL" ]; then
-                    SSO_GITLAB_BASE_URL="https://gitlab.com"
-                fi
-
-                printf "\n"
-                prompt "OIDC Client ID: "
-                read -r SSO_OIDC_CLIENT_ID </dev/tty
-                prompt "OIDC Client Secret: "
-                read -r SSO_OIDC_CLIENT_SECRET </dev/tty
-                prompt "OIDC Issuer URL: "
-                read -r SSO_OIDC_ISSUER_URL </dev/tty
-                prompt "OIDC Scopes"
-                dim " [openid profile email]:"
-                printf " "
-                read -r SSO_OIDC_SCOPES </dev/tty
-                if [ -z "$SSO_OIDC_SCOPES" ]; then
-                    SSO_OIDC_SCOPES="openid profile email"
-                fi
+        case "$INPUT_SSO" in
+            2) SSO_ENABLED=true; SSO_PROVIDER="github" ;;
+            3) SSO_ENABLED=true; SSO_PROVIDER="gitlab" ;;
+            4) SSO_ENABLED=true; SSO_PROVIDER="oidc" ;;
+            5) SSO_ENABLED=true; SSO_PROVIDER="multiple" ;;
+            "") SSO_ENABLED=false ;;
+            *)
+                SSO_ENABLED=true
+                case "$INPUT_SSO" in
+                    [gG][iI][tT][hH][uU][bB]) SSO_PROVIDER="github" ;;
+                    [gG][iI][tT][lL][aA][bB]) SSO_PROVIDER="gitlab" ;;
+                    [oO][iI][dD][cC]) SSO_PROVIDER="oidc" ;;
+                    *) SSO_ENABLED=false ;;
+                esac
                 ;;
         esac
+
+        if [ "$SSO_ENABLED" = true ]; then
+            printf "\n"
+            case "$SSO_PROVIDER" in
+                github)
+                    prompt "GitHub Client ID: "
+                    read -r SSO_GITHUB_CLIENT_ID </dev/tty
+                    prompt "GitHub Client Secret: "
+                    read -r SSO_GITHUB_CLIENT_SECRET </dev/tty
+                    ;;
+                gitlab)
+                    prompt "GitLab Client ID: "
+                    read -r SSO_GITLAB_CLIENT_ID </dev/tty
+                    prompt "GitLab Client Secret: "
+                    read -r SSO_GITLAB_CLIENT_SECRET </dev/tty
+                    prompt "GitLab URL"
+                    dim " [https://gitlab.com]:"
+                    printf " "
+                    read -r SSO_GITLAB_BASE_URL </dev/tty
+                    if [ -z "$SSO_GITLAB_BASE_URL" ]; then
+                        SSO_GITLAB_BASE_URL="https://gitlab.com"
+                    fi
+                    ;;
+                oidc)
+                    prompt "OIDC Client ID: "
+                    read -r SSO_OIDC_CLIENT_ID </dev/tty
+                    prompt "OIDC Client Secret: "
+                    read -r SSO_OIDC_CLIENT_SECRET </dev/tty
+                    prompt "OIDC Issuer URL: "
+                    read -r SSO_OIDC_ISSUER_URL </dev/tty
+                    prompt "OIDC Scopes"
+                    dim " [openid profile email]:"
+                    printf " "
+                    read -r SSO_OIDC_SCOPES </dev/tty
+                    if [ -z "$SSO_OIDC_SCOPES" ]; then
+                        SSO_OIDC_SCOPES="openid profile email"
+                    fi
+                    ;;
+                multiple)
+                    printf "\n"
+                    info "Configure each provider below. Press Enter to skip."
+                    echo ""
+
+                    prompt "GitHub Client ID: "
+                    read -r SSO_GITHUB_CLIENT_ID </dev/tty
+                    prompt "GitHub Client Secret: "
+                    read -r SSO_GITHUB_CLIENT_SECRET </dev/tty
+
+                    printf "\n"
+                    prompt "GitLab Client ID: "
+                    read -r SSO_GITLAB_CLIENT_ID </dev/tty
+                    prompt "GitLab Client Secret: "
+                    read -r SSO_GITLAB_CLIENT_SECRET </dev/tty
+                    prompt "GitLab URL"
+                    dim " [https://gitlab.com]:"
+                    printf " "
+                    read -r SSO_GITLAB_BASE_URL </dev/tty
+                    if [ -z "$SSO_GITLAB_BASE_URL" ]; then
+                        SSO_GITLAB_BASE_URL="https://gitlab.com"
+                    fi
+
+                    printf "\n"
+                    prompt "OIDC Client ID: "
+                    read -r SSO_OIDC_CLIENT_ID </dev/tty
+                    prompt "OIDC Client Secret: "
+                    read -r SSO_OIDC_CLIENT_SECRET </dev/tty
+                    prompt "OIDC Issuer URL: "
+                    read -r SSO_OIDC_ISSUER_URL </dev/tty
+                    prompt "OIDC Scopes"
+                    dim " [openid profile email]:"
+                    printf " "
+                    read -r SSO_OIDC_SCOPES </dev/tty
+                    if [ -z "$SSO_OIDC_SCOPES" ]; then
+                        SSO_OIDC_SCOPES="openid profile email"
+                    fi
+                    ;;
+            esac
+        fi
     fi
 
     # ── Summary ──
@@ -420,12 +422,14 @@ if [ "$INTERACTIVE" = true ]; then
     printf "  Domain:        ${BOLD}%s${NC}\n" "$DOMAIN"
     printf "  Admin pass:    ${BOLD}%s${NC}\n" "$ADMIN_PASSWORD"
     printf "  Registration:  ${BOLD}%s${NC}\n" "$([ "$REGISTRATION_ENABLED" = true ] && echo 'enabled' || echo 'disabled')"
-    if [ "$SSO_ENABLED" = true ]; then
-        printf "  SSO:           ${BOLD}%s${NC}\n" "$SSO_PROVIDER"
-    else
-        printf "  SSO:           ${BOLD}disabled${NC}\n"
-    fi
     printf "  Pro features:  ${BOLD}%s${NC}\n" "$([ "$PRO_ENABLED" = true ] && echo 'yes' || echo 'no')"
+    if [ "$PRO_ENABLED" = true ]; then
+        if [ "$SSO_ENABLED" = true ]; then
+            printf "  SSO:           ${BOLD}%s${NC}\n" "$SSO_PROVIDER"
+        else
+            printf "  SSO:           ${BOLD}disabled${NC}\n"
+        fi
+    fi
     echo ""
     prompt "Proceed with install? [Y/n]: "
     read -r CONFIRM </dev/tty
