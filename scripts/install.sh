@@ -16,7 +16,7 @@ set -e
 # ──────────────────────────────────────────────
 
 REPO_URL="https://github.com/servasec/servasec.git"
-CLONE_DIR="$HOME/.servasec-install"
+INSTALL_DIR="/opt/servasec"
 
 resolve_script_dir() {
     case "$0" in
@@ -36,42 +36,7 @@ resolve_script_dir() {
 REPO_ROOT="$(resolve_script_dir)"
 
 # ──────────────────────────────────────────────
-#  If not in a repo, clone it
-# ──────────────────────────────────────────────
-
-if [ -z "$REPO_ROOT" ]; then
-    printf "\n"
-    printf "\033[0;34mi\033[0m  Not inside Servasec repo — cloning latest release...\n"
-
-    command -v git >/dev/null 2>&1 || {
-        printf "\033[0;31m✗\033[0m  git is required for remote install. Install git first.\n"
-        exit 1
-    }
-
-    if [ -d "$CLONE_DIR/.git" ]; then
-        printf "\033[0;34mi\033[0m  Updating existing clone at %s...\n" "$CLONE_DIR"
-        git -C "$CLONE_DIR" fetch --tags --quiet 2>/dev/null || true
-    else
-        rm -rf "$CLONE_DIR"
-        git clone --quiet --no-checkout "$REPO_URL" "$CLONE_DIR"
-    fi
-
-    # Always checkout latest release tag, never default branch
-    LATEST_TAG=$(git -C "$CLONE_DIR" tag --list --sort=-version:refname | head -1)
-    if [ -n "$LATEST_TAG" ]; then
-        git -C "$CLONE_DIR" checkout --quiet "$LATEST_TAG"
-        printf "\033[0;32m✓\033[0m  On release %s\n" "$LATEST_TAG"
-    else
-        fail "No release tags found. Cannot install from remote."
-    fi
-
-    REPO_ROOT="$CLONE_DIR"
-fi
-
-cd "$REPO_ROOT" || { printf "\033[0;31m✗\033[0m  Cannot cd to %s\n" "$REPO_ROOT"; exit 1; }
-
-# ──────────────────────────────────────────────
-#  Flags
+#  Flags (parsed early so --dir is available before clone)
 # ──────────────────────────────────────────────
 
 INTERACTIVE=false
@@ -89,6 +54,10 @@ while [ $# -gt 0 ]; do
             PRO_REPO_DIR="$2"
             shift
             ;;
+        --dir)
+            INSTALL_DIR="$2"
+            shift
+            ;;
         -h|--help)
             echo "Usage: $0 [OPTIONS]"
             echo ""
@@ -97,6 +66,7 @@ while [ $# -gt 0 ]; do
             echo "  --no-check               Skip git branch/tag verification"
             echo "  --pro                    Build with pro features (requires servasec-pro repo)"
             echo "  --pro-repo <path>        Path to servasec-pro repo (default: ../servasec-pro)"
+            echo "  --dir <path>             Install directory (default: /opt/servasec)"
             echo "  -h, --help               Show this help"
             exit 0
             ;;
@@ -107,19 +77,6 @@ while [ $# -gt 0 ]; do
     esac
     shift
 done
-
-# ──────────────────────────────────────────────
-#  Config
-# ──────────────────────────────────────────────
-
-COMPOSE_FILE="docker-compose.prod.yml"
-SSC_COMPOSE="docker compose -f $COMPOSE_FILE"
-SSC_ENV_FILE=".env"
-SSC_EXAMPLE=".env.example"
-
-DEFAULT_DOMAIN="servasec.local"
-DEFAULT_SSO_ENABLED=false
-DEFAULT_PRO_REPO="../servasec-pro"
 
 # ──────────────────────────────────────────────
 #  Colors & helpers
@@ -143,6 +100,68 @@ prompt() { printf "  ${BOLD}%s${NC} " "$1"; }
 dim()   { printf "${DIM}%s${NC}" "$1"; }
 
 # ──────────────────────────────────────────────
+#  Config
+# ──────────────────────────────────────────────
+
+COMPOSE_FILE="docker-compose.prod.yml"
+SSC_COMPOSE="docker compose -f $COMPOSE_FILE"
+SSC_ENV_FILE=".env"
+SSC_EXAMPLE=".env.example"
+
+DEFAULT_DOMAIN="servasec.local"
+DEFAULT_PRO_REPO="../servasec-pro"
+
+# ──────────────────────────────────────────────
+#  If not in a repo, clone it
+# ──────────────────────────────────────────────
+
+# For remote interactive installs, ask install dir BEFORE cloning
+if [ -z "$REPO_ROOT" ] && [ "$INTERACTIVE" = true ]; then
+    printf "\n"
+    prompt "Install directory"
+    dim "[$INSTALL_DIR]:"
+    printf " "
+    read -r INPUT_DIR </dev/tty
+    if [ -n "$INPUT_DIR" ]; then
+        INSTALL_DIR="$INPUT_DIR"
+    fi
+fi
+
+if [ -z "$REPO_ROOT" ]; then
+    printf "\n"
+    printf "\033[0;34mi\033[0m  Not inside Servasec repo - cloning latest release...\n"
+
+    command -v git >/dev/null 2>&1 || {
+        printf "\033[0;31m✗\033[0m  git is required for remote install. Install git first.\n"
+        exit 1
+    }
+
+    # Create parent directory if needed
+    mkdir -p "$(dirname "$INSTALL_DIR")"
+
+    if [ -d "$INSTALL_DIR/.git" ]; then
+        printf "\033[0;34mi\033[0m  Updating existing clone at %s...\n" "$INSTALL_DIR"
+        git -C "$INSTALL_DIR" fetch --tags --quiet 2>/dev/null || true
+    else
+        rm -rf "$INSTALL_DIR"
+        git clone --quiet --no-checkout "$REPO_URL" "$INSTALL_DIR"
+    fi
+
+    # Always checkout latest release tag, never default branch
+    LATEST_TAG=$(git -C "$INSTALL_DIR" tag --list --sort=-version:refname | head -1)
+    if [ -n "$LATEST_TAG" ]; then
+        git -C "$INSTALL_DIR" checkout --quiet "$LATEST_TAG"
+        printf "\033[0;32m✓\033[0m  On release %s\n" "$LATEST_TAG"
+    else
+        fail "No release tags found. Cannot install from remote."
+    fi
+
+    REPO_ROOT="$INSTALL_DIR"
+fi
+
+cd "$REPO_ROOT" || { printf "\033[0;31m✗\033[0m  Cannot cd to %s\n" "$REPO_ROOT"; exit 1; }
+
+# ──────────────────────────────────────────────
 #  1. Check prerequisites
 # ──────────────────────────────────────────────
 
@@ -161,7 +180,7 @@ ok "Docker Compose v2 found"
 if [ "$HAS_OPENSSL" = true ]; then
     ok "OpenSSL found"
 else
-    warn "OpenSSL not found — using /dev/urandom as fallback"
+    warn "OpenSSL not found - using /dev/urandom as fallback"
 fi
 
 # ──────────────────────────────────────────────
@@ -185,7 +204,7 @@ if [ "$CHECK_GIT" = true ] && command -v git >/dev/null 2>&1 && git rev-parse --
         ok "On release tag: $CURRENT_REF"
     elif [ "$CURRENT_REF" = "main" ]; then
         if [ -n "$LATEST_TAG" ]; then
-            warn "On 'main' branch — switching to latest release: $LATEST_TAG"
+            warn "On 'main' branch - switching to latest release: $LATEST_TAG"
             git fetch --tags --quiet 2>/dev/null || true
             git checkout "$LATEST_TAG" --quiet
             ok "Now on $LATEST_TAG"
@@ -197,7 +216,7 @@ if [ "$CHECK_GIT" = true ] && command -v git >/dev/null 2>&1 && git rev-parse --
             warn "Not on a release tag (current: $CURRENT_REF, latest tag: $LATEST_TAG)"
             if [ "$INTERACTIVE" = true ]; then
                 printf "  Switch to latest tag ($LATEST_TAG)? [Y/n] "
-                read -r CONFIRM
+                read -r CONFIRM </dev/tty
                 case "$CONFIRM" in
                     ""|[yY]|yes|YES)
                         git fetch --tags --quiet 2>/dev/null || true
@@ -205,7 +224,7 @@ if [ "$CHECK_GIT" = true ] && command -v git >/dev/null 2>&1 && git rev-parse --
                         ok "Now on $LATEST_TAG"
                         ;;
                     *)
-                        warn "Continuing on $CURRENT_REF — not recommended for production"
+                        warn "Continuing on $CURRENT_REF - not recommended for production"
                         ;;
                 esac
             else
@@ -261,7 +280,7 @@ if [ "$INTERACTIVE" = true ]; then
     prompt "Admin password"
     dim "(leave empty for random):"
     printf " "
-    read -r INPUT_PASSWORD
+    read -r INPUT_PASSWORD </dev/tty
     if [ -n "$INPUT_PASSWORD" ]; then
         ADMIN_PASSWORD="$INPUT_PASSWORD"
     else
@@ -272,143 +291,148 @@ if [ "$INTERACTIVE" = true ]; then
     prompt "Domain"
     dim "[$DOMAIN]:"
     printf " "
-    read -r INPUT_DOMAIN
+    read -r INPUT_DOMAIN </dev/tty
     if [ -n "$INPUT_DOMAIN" ]; then
         DOMAIN="$INPUT_DOMAIN"
     fi
 
     printf "\n"
     prompt "Allow public registration? [Y/n]: "
-    read -r INPUT_REG
+    read -r INPUT_REG </dev/tty
     case "$INPUT_REG" in
         [nN]|no|NO) REGISTRATION_ENABLED=false ;;
     esac
 
-    printf "\n"
-    header "SSO Configuration"
-    echo ""
-    printf "  ${DIM}1)${NC} None (default)\n"
-    printf "  ${DIM}2)${NC} GitHub\n"
-    printf "  ${DIM}3)${NC} GitLab\n"
-    printf "  ${DIM}4)${NC} OIDC (Keycloak, Auth0, etc.)\n"
-    printf "  ${DIM}5)${NC} Multiple providers\n"
-    echo ""
-    prompt "SSO provider"
-    dim "[1]:"
-    printf " "
-    read -r INPUT_SSO
-
-    case "$INPUT_SSO" in
-        2) SSO_ENABLED=true; SSO_PROVIDER="github" ;;
-        3) SSO_ENABLED=true; SSO_PROVIDER="gitlab" ;;
-        4) SSO_ENABLED=true; SSO_PROVIDER="oidc" ;;
-        5) SSO_ENABLED=true; SSO_PROVIDER="multiple" ;;
-        "") SSO_ENABLED=false ;;
-        *)
-            SSO_ENABLED=true
-            case "$INPUT_SSO" in
-                [gG][iI][tT][hH][uU][bB]) SSO_PROVIDER="github" ;;
-                [gG][iI][tT][lL][aA][bB]) SSO_PROVIDER="gitlab" ;;
-                [oO][iI][dD][cC]) SSO_PROVIDER="oidc" ;;
-                *) SSO_ENABLED=false ;;
-            esac
-            ;;
-    esac
-
-    if [ "$SSO_ENABLED" = true ]; then
+    if [ "$PRO_ENABLED" = true ]; then
         printf "\n"
-        case "$SSO_PROVIDER" in
-            github)
-                prompt "GitHub Client ID: "
-                read -r SSO_GITHUB_CLIENT_ID
-                prompt "GitHub Client Secret: "
-                read -r SSO_GITHUB_CLIENT_SECRET
-                ;;
-            gitlab)
-                prompt "GitLab Client ID: "
-                read -r SSO_GITLAB_CLIENT_ID
-                prompt "GitLab Client Secret: "
-                read -r SSO_GITLAB_CLIENT_SECRET
-                prompt "GitLab URL"
-                dim " [https://gitlab.com]:"
-                printf " "
-                read -r SSO_GITLAB_BASE_URL
-                if [ -z "$SSO_GITLAB_BASE_URL" ]; then
-                    SSO_GITLAB_BASE_URL="https://gitlab.com"
-                fi
-                ;;
-            oidc)
-                prompt "OIDC Client ID: "
-                read -r SSO_OIDC_CLIENT_ID
-                prompt "OIDC Client Secret: "
-                read -r SSO_OIDC_CLIENT_SECRET
-                prompt "OIDC Issuer URL: "
-                read -r SSO_OIDC_ISSUER_URL
-                prompt "OIDC Scopes"
-                dim " [openid profile email]:"
-                printf " "
-                read -r SSO_OIDC_SCOPES
-                if [ -z "$SSO_OIDC_SCOPES" ]; then
-                    SSO_OIDC_SCOPES="openid profile email"
-                fi
-                ;;
-            multiple)
-                printf "\n"
-                info "Configure each provider below. Press Enter to skip."
-                echo ""
+        header "SSO Configuration"
+        echo ""
+        printf "  ${DIM}1)${NC} None (default)\n"
+        printf "  ${DIM}2)${NC} GitHub\n"
+        printf "  ${DIM}3)${NC} GitLab\n"
+        printf "  ${DIM}4)${NC} OIDC (Keycloak, Auth0, etc.)\n"
+        printf "  ${DIM}5)${NC} Multiple providers\n"
+        echo ""
+        prompt "SSO provider"
+        dim "[1]:"
+        printf " "
+        read -r INPUT_SSO </dev/tty
 
-                prompt "GitHub Client ID: "
-                read -r SSO_GITHUB_CLIENT_ID
-                prompt "GitHub Client Secret: "
-                read -r SSO_GITHUB_CLIENT_SECRET
-
-                printf "\n"
-                prompt "GitLab Client ID: "
-                read -r SSO_GITLAB_CLIENT_ID
-                prompt "GitLab Client Secret: "
-                read -r SSO_GITLAB_CLIENT_SECRET
-                prompt "GitLab URL"
-                dim " [https://gitlab.com]:"
-                printf " "
-                read -r SSO_GITLAB_BASE_URL
-                if [ -z "$SSO_GITLAB_BASE_URL" ]; then
-                    SSO_GITLAB_BASE_URL="https://gitlab.com"
-                fi
-
-                printf "\n"
-                prompt "OIDC Client ID: "
-                read -r SSO_OIDC_CLIENT_ID
-                prompt "OIDC Client Secret: "
-                read -r SSO_OIDC_CLIENT_SECRET
-                prompt "OIDC Issuer URL: "
-                read -r SSO_OIDC_ISSUER_URL
-                prompt "OIDC Scopes"
-                dim " [openid profile email]:"
-                printf " "
-                read -r SSO_OIDC_SCOPES
-                if [ -z "$SSO_OIDC_SCOPES" ]; then
-                    SSO_OIDC_SCOPES="openid profile email"
-                fi
+        case "$INPUT_SSO" in
+            2) SSO_ENABLED=true; SSO_PROVIDER="github" ;;
+            3) SSO_ENABLED=true; SSO_PROVIDER="gitlab" ;;
+            4) SSO_ENABLED=true; SSO_PROVIDER="oidc" ;;
+            5) SSO_ENABLED=true; SSO_PROVIDER="multiple" ;;
+            "") SSO_ENABLED=false ;;
+            *)
+                SSO_ENABLED=true
+                case "$INPUT_SSO" in
+                    [gG][iI][tT][hH][uU][bB]) SSO_PROVIDER="github" ;;
+                    [gG][iI][tT][lL][aA][bB]) SSO_PROVIDER="gitlab" ;;
+                    [oO][iI][dD][cC]) SSO_PROVIDER="oidc" ;;
+                    *) SSO_ENABLED=false ;;
+                esac
                 ;;
         esac
+
+        if [ "$SSO_ENABLED" = true ]; then
+            printf "\n"
+            case "$SSO_PROVIDER" in
+                github)
+                    prompt "GitHub Client ID: "
+                    read -r SSO_GITHUB_CLIENT_ID </dev/tty
+                    prompt "GitHub Client Secret: "
+                    read -r SSO_GITHUB_CLIENT_SECRET </dev/tty
+                    ;;
+                gitlab)
+                    prompt "GitLab Client ID: "
+                    read -r SSO_GITLAB_CLIENT_ID </dev/tty
+                    prompt "GitLab Client Secret: "
+                    read -r SSO_GITLAB_CLIENT_SECRET </dev/tty
+                    prompt "GitLab URL"
+                    dim " [https://gitlab.com]:"
+                    printf " "
+                    read -r SSO_GITLAB_BASE_URL </dev/tty
+                    if [ -z "$SSO_GITLAB_BASE_URL" ]; then
+                        SSO_GITLAB_BASE_URL="https://gitlab.com"
+                    fi
+                    ;;
+                oidc)
+                    prompt "OIDC Client ID: "
+                    read -r SSO_OIDC_CLIENT_ID </dev/tty
+                    prompt "OIDC Client Secret: "
+                    read -r SSO_OIDC_CLIENT_SECRET </dev/tty
+                    prompt "OIDC Issuer URL: "
+                    read -r SSO_OIDC_ISSUER_URL </dev/tty
+                    prompt "OIDC Scopes"
+                    dim " [openid profile email]:"
+                    printf " "
+                    read -r SSO_OIDC_SCOPES </dev/tty
+                    if [ -z "$SSO_OIDC_SCOPES" ]; then
+                        SSO_OIDC_SCOPES="openid profile email"
+                    fi
+                    ;;
+                multiple)
+                    printf "\n"
+                    info "Configure each provider below. Press Enter to skip."
+                    echo ""
+
+                    prompt "GitHub Client ID: "
+                    read -r SSO_GITHUB_CLIENT_ID </dev/tty
+                    prompt "GitHub Client Secret: "
+                    read -r SSO_GITHUB_CLIENT_SECRET </dev/tty
+
+                    printf "\n"
+                    prompt "GitLab Client ID: "
+                    read -r SSO_GITLAB_CLIENT_ID </dev/tty
+                    prompt "GitLab Client Secret: "
+                    read -r SSO_GITLAB_CLIENT_SECRET </dev/tty
+                    prompt "GitLab URL"
+                    dim " [https://gitlab.com]:"
+                    printf " "
+                    read -r SSO_GITLAB_BASE_URL </dev/tty
+                    if [ -z "$SSO_GITLAB_BASE_URL" ]; then
+                        SSO_GITLAB_BASE_URL="https://gitlab.com"
+                    fi
+
+                    printf "\n"
+                    prompt "OIDC Client ID: "
+                    read -r SSO_OIDC_CLIENT_ID </dev/tty
+                    prompt "OIDC Client Secret: "
+                    read -r SSO_OIDC_CLIENT_SECRET </dev/tty
+                    prompt "OIDC Issuer URL: "
+                    read -r SSO_OIDC_ISSUER_URL </dev/tty
+                    prompt "OIDC Scopes"
+                    dim " [openid profile email]:"
+                    printf " "
+                    read -r SSO_OIDC_SCOPES </dev/tty
+                    if [ -z "$SSO_OIDC_SCOPES" ]; then
+                        SSO_OIDC_SCOPES="openid profile email"
+                    fi
+                    ;;
+            esac
+        fi
     fi
 
     # ── Summary ──
     printf "\n"
     header "Install Summary"
     echo ""
+    printf "  Install dir:   ${BOLD}%s${NC}\n" "$INSTALL_DIR"
     printf "  Domain:        ${BOLD}%s${NC}\n" "$DOMAIN"
     printf "  Admin pass:    ${BOLD}%s${NC}\n" "$ADMIN_PASSWORD"
     printf "  Registration:  ${BOLD}%s${NC}\n" "$([ "$REGISTRATION_ENABLED" = true ] && echo 'enabled' || echo 'disabled')"
-    if [ "$SSO_ENABLED" = true ]; then
-        printf "  SSO:           ${BOLD}%s${NC}\n" "$SSO_PROVIDER"
-    else
-        printf "  SSO:           ${BOLD}disabled${NC}\n"
-    fi
     printf "  Pro features:  ${BOLD}%s${NC}\n" "$([ "$PRO_ENABLED" = true ] && echo 'yes' || echo 'no')"
+    if [ "$PRO_ENABLED" = true ]; then
+        if [ "$SSO_ENABLED" = true ]; then
+            printf "  SSO:           ${BOLD}%s${NC}\n" "$SSO_PROVIDER"
+        else
+            printf "  SSO:           ${BOLD}disabled${NC}\n"
+        fi
+    fi
     echo ""
     prompt "Proceed with install? [Y/n]: "
-    read -r CONFIRM
+    read -r CONFIRM </dev/tty
     case "$CONFIRM" in
         [nN]|no|NO)
             printf "\n"
@@ -468,7 +492,7 @@ fi
 if [ -f "$SSC_ENV_FILE" ]; then
     if [ "$INTERACTIVE" = true ]; then
         printf "  .env already exists. Overwrite? [y/N] "
-        read -r CONFIRM
+        read -r CONFIRM </dev/tty
         case "$CONFIRM" in
             ""|[nN]|no|NO)
                 warn "Keeping existing .env"
@@ -479,7 +503,7 @@ if [ -f "$SSC_ENV_FILE" ]; then
                 ;;
         esac
     else
-        warn ".env already exists — keeping it (use -i to overwrite)"
+        warn ".env already exists - keeping it (use -i to overwrite)"
     fi
 else
     cp "$SSC_EXAMPLE" "$SSC_ENV_FILE"

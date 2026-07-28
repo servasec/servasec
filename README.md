@@ -12,6 +12,7 @@
   <a href="https://github.com/servasec/servasec/releases"><img src="https://img.shields.io/github/v/release/servasec/servasec" alt="Release"></a>
   <a href="https://github.com/servasec/servasec/stargazers"><img src="https://img.shields.io/github/stars/servasec/servasec" alt="GitHub Stars"></a>
   <a href="https://discord.gg/jqFmBEPQz"><img src="https://img.shields.io/badge/chat-Discord-5865F2" alt="Discord"></a>
+  <a href="https://docs.servasec.com"><img src="https://img.shields.io/badge/docs-docs.servasec.com-blue" alt="Documentation"></a>
 </p>
 
 **Application Security Posture Management (ASPM)** platform that aggregates SAST/DAST/SCA scanner findings into a unified dashboard for triaging, tracking, and remediating security vulnerabilities across your application portfolio.
