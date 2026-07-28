@@ -1,5 +1,14 @@
 # Changelog
 
+## [2.4.3](https://github.com/servasec/servasec/compare/v2.4.2...v2.4.3) (2026-07-28)
+
+
+### 🐛 Bug fixes
+
+* **compose:** Default values for env vars ([d6a5238](https://github.com/servasec/servasec/commit/d6a5238abc6edb24998380b25afc2177bed9017f))
+* Install script enhance + default dir ([2211d75](https://github.com/servasec/servasec/commit/2211d750c29113174b14764e798f2432e625e3f6))
+* Install script wrong functions orders ([4082632](https://github.com/servasec/servasec/commit/4082632b4bdefbe9e7e29f7bb0a69ec3123ec267))
+
 ## [2.4.2](https://github.com/servasec/servasec/compare/v2.4.1...v2.4.2) (2026-07-27)
 
 
