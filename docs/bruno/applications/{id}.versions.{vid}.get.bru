@@ -1,0 +1,10 @@
+meta {
+  name: {id}.versions.{vid}.get
+  type: http
+}
+
+get {
+  url: {{base_url}}{{api_prefix}}/applications/{{app_id}}/versions/{{version_id}}
+  body: none
+  auth: none
+}

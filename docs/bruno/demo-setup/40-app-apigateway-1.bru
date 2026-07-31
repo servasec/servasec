@@ -1,0 +1,27 @@
+meta {
+  name: 40-app-apigateway-1
+  type: http
+  seq: 10
+}
+post {
+  url: {{base_url}}{{api_prefix}}/applications
+  body: json
+  auth: none
+}
+headers {
+  Content-Type: application/json
+  X-CSRF-Token: {{csrf_token}}
+}
+body:json {
+  {
+    "name": "API Gateway 1 {{run_id}}",
+    "slug": "api-gateway-1-{{run_id}}",
+    "description": "API Gateway 1 instance",
+    "groupId": {{engineering_group_id}},
+    "repositoryUrl": "https://github.com/servasec/api-gateway-1-{{run_id}}",
+    "assetCriticality": "critical"
+  }
+}
+script:post-response {
+  bru.setVar("api_gateway_1_app_id", res.body.id);
+}

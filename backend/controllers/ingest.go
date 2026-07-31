@@ -30,7 +30,8 @@ func findApplication(c *gin.Context) (*models.Application, error) {
 
 	if apiToken != "" {
 		var app models.Application
-		if err := config.DB.Where("api_token = ?", apiToken).First(&app).Error; err != nil {
+		hashStr := utils.HashToHex(apiToken)
+		if err := config.DB.Where("api_token = ?", hashStr).First(&app).Error; err != nil {
 			return nil, fmt.Errorf("invalid API token")
 		}
 		return &app, nil

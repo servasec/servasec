@@ -128,8 +128,10 @@ func AuthRequired() gin.HandlerFunc {
 		}
 
 		if apiToken := c.GetHeader("X-Api-Token"); apiToken != "" {
+			tokenHash := sha256.Sum256([]byte(apiToken))
+			hashStr := hex.EncodeToString(tokenHash[:])
 			var app models.Application
-			if err := config.DB.Where("api_token = ?", apiToken).First(&app).Error; err == nil {
+			if err := config.DB.Where("api_token = ?", hashStr).First(&app).Error; err == nil {
 				c.Set("app", &app)
 				c.Set("auth_method", "app_token")
 				c.Next()

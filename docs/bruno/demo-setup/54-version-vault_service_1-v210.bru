@@ -1,0 +1,21 @@
+meta {
+  name: 54-version-vault_service_1-v210
+  type: http
+  seq: 29
+}
+post {
+  url: {{base_url}}{{api_prefix}}/applications/{{vault_service_1_app_id}}/versions
+  body: json
+  auth: none
+}
+headers {
+  Content-Type: application/json
+  X-CSRF-Token: {{csrf_token}}
+}
+body:json {
+  {
+    "name": "v2.1.0",
+    "tag": "v2.1.0",
+    "branch": "main"
+  }
+}

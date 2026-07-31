@@ -1,0 +1,14 @@
+meta {
+  name: patch.me.onboarding
+  type: http
+}
+
+patch {
+  url: {{base_url}}{{api_prefix}}/me/onboarding
+  body: none
+  auth: none
+}
+
+headers {
+  X-CSRF-Token: {{csrf_token}}
+}

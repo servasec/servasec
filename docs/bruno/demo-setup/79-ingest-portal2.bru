@@ -1,0 +1,17 @@
+meta {
+  name: 79-ingest-portal2
+  type: http
+  seq: 52
+}
+post {
+  url: {{base_url}}{{api_prefix}}/applications/{{customer_portal_2_app_id}}/ingest
+  body: multipartForm
+  auth: none
+}
+headers {
+  X-CSRF-Token: {{csrf_token}}
+}
+body:multipart-form {
+  file: @file(demo-setup/samples/trivy-infra.json)
+  version: staging
+}

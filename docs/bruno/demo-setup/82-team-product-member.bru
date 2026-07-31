@@ -1,0 +1,20 @@
+meta {
+  name: 82-team-product-member
+  type: http
+  seq: 43
+}
+post {
+  url: {{base_url}}{{api_prefix}}/teams/{{product_team_id}}/members
+  body: json
+  auth: none
+}
+headers {
+  Content-Type: application/json
+  X-CSRF-Token: {{csrf_token}}
+}
+body:json {
+  {
+    "userId": {{pm_user_id}},
+    "role": "member"
+  }
+}

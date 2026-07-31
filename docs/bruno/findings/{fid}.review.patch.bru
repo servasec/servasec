@@ -1,0 +1,22 @@
+meta {
+  name: {fid}.review.patch
+  type: http
+}
+
+patch {
+  url: {{base_url}}{{api_prefix}}/findings/{{finding_id}}/review
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  X-CSRF-Token: {{csrf_token}}
+}
+
+body:json {
+  {
+    "status": "false_positive",
+    "comment": "Reviewed and marked as false positive"
+  }
+}

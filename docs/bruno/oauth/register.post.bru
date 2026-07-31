@@ -1,0 +1,30 @@
+meta {
+  name: register.post
+  type: http
+}
+
+post {
+  url: {{base_url}}/oauth/register
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "client_name": "My OAuth Client",
+    "redirect_uris": ["http://localhost:3000/callback"],
+    "token_endpoint_auth_method": "none"
+  }
+}
+
+script:post-response {
+
+  bru.setVar("client_id", res.body.client_id);
+
+  bru.setVar("client_secret", res.body.client_secret);
+
+}

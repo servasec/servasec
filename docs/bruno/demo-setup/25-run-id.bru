@@ -1,0 +1,14 @@
+meta {
+  name: 25-run-id
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{base_url}}/ping
+  body: none
+  auth: none
+}
+script:pre-request {
+  bru.setVar("run_id", Math.random().toString(36).substring(2, 8));
+}

@@ -1,0 +1,15 @@
+meta {
+  name: 99-findings
+  type: http
+  seq: 99
+}
+
+get {
+  url: {{base_url}}{{api_prefix}}/findings
+  body: none
+  auth: none
+}
+headers {
+  Authorization: Bearer {{access_token}}
+  X-CSRF-Token: {{csrf_token}}
+}

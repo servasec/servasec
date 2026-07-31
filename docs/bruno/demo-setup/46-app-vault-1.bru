@@ -1,0 +1,27 @@
+meta {
+  name: 46-app-vault-1
+  type: http
+  seq: 16
+}
+post {
+  url: {{base_url}}{{api_prefix}}/applications
+  body: json
+  auth: none
+}
+headers {
+  Content-Type: application/json
+  X-CSRF-Token: {{csrf_token}}
+}
+body:json {
+  {
+    "name": "Vault Service 1 {{run_id}}",
+    "slug": "vault-service-1-{{run_id}}",
+    "description": "Vault Service 1 instance",
+    "groupId": {{security_group_id}},
+    "repositoryUrl": "https://github.com/servasec/vault-service-1-{{run_id}}",
+    "assetCriticality": "critical"
+  }
+}
+script:post-response {
+  bru.setVar("vault_service_1_app_id", res.body.id);
+}

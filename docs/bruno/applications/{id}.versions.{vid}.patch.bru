@@ -1,0 +1,22 @@
+meta {
+  name: {id}.versions.{vid}.patch
+  type: http
+}
+
+patch {
+  url: {{base_url}}{{api_prefix}}/applications/{{app_id}}/versions/{{version_id}}
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  X-CSRF-Token: {{csrf_token}}
+}
+
+body:json {
+  {
+    "tag": "v1.0.1",
+    "branch": "release-1.0"
+  }
+}

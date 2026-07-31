@@ -1,0 +1,33 @@
+meta {
+  name: post
+  type: http
+}
+
+post {
+  url: {{base_url}}{{api_prefix}}/applications
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  X-CSRF-Token: {{csrf_token}}
+}
+
+body:json {
+  {
+    "name": "My App",
+    "description": "Application description",
+    "slug": "my-app",
+    "groupId": {{group_id}},
+    "assetCriticality": "high"
+  }
+}
+
+script:post-response {
+
+  bru.setVar("app_id", res.body.id);
+
+  bru.setVar("api_token", res.body.apiToken);
+
+}

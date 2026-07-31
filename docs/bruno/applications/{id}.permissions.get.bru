@@ -1,0 +1,14 @@
+meta {
+  name: {id}.permissions.get
+  type: http
+}
+
+get {
+  url: {{base_url}}{{api_prefix}}/applications/{{app_id}}/permissions
+  body: none
+  auth: none
+}
+
+headers {
+  X-CSRF-Token: {{csrf_token}}
+}

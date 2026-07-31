@@ -1,0 +1,24 @@
+meta {
+  name: 32-group-product
+  type: http
+  seq: 6
+}
+post {
+  url: {{base_url}}{{api_prefix}}/groups
+  body: json
+  auth: none
+}
+headers {
+  Content-Type: application/json
+  X-CSRF-Token: {{csrf_token}}
+}
+body:json {
+  {
+    "name": "Product {{run_id}}",
+    "description": "Product & Design teams",
+    "path": "product-{{run_id}}"
+  }
+}
+script:post-response {
+  bru.setVar("product_group_id", res.body.id);
+}

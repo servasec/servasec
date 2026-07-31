@@ -1,0 +1,14 @@
+meta {
+  name: {akid}.delete
+  type: http
+}
+
+delete {
+  url: {{base_url}}{{api_prefix}}/api-keys/{{api_key_id}}
+  body: none
+  auth: none
+}
+
+headers {
+  X-CSRF-Token: {{csrf_token}}
+}

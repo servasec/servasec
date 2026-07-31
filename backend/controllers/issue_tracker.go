@@ -10,6 +10,13 @@ import (
 	"github.com/servasec/servasec/backend/utils"
 )
 
+// @Summary Get issue tracker configuration
+// @Tags Issue Tracker
+// @Produce json
+// @Param id path string true "Application ID"
+// @Success 200 {object} gin.H "Issue tracker config"
+// @Failure 404 {object} gin.H "Application or issue tracker not found"
+// @Router /applications/{id}/issue-tracker [get]
 func GetIssueTracker(c *gin.Context) {
 	appID := c.Param("id")
 
@@ -52,6 +59,17 @@ func GetIssueTracker(c *gin.Context) {
 	utils.OKResponse(c, resp)
 }
 
+// @Summary Upsert issue tracker configuration
+// @Tags Issue Tracker
+// @Accept json
+// @Produce json
+// @Param id path string true "Application ID"
+// @Param input body object true "Issue tracker config (provider, authType, token, severityThreshold, etc.)"
+// @Success 200 {object} gin.H "Updated issue tracker"
+// @Success 201 {object} gin.H "Created issue tracker"
+// @Failure 400 {object} gin.H "Invalid input"
+// @Failure 404 {object} gin.H "Application not found"
+// @Router /applications/{id}/issue-tracker [post]
 func UpsertIssueTracker(c *gin.Context) {
 	appID := c.Param("id")
 
@@ -269,6 +287,13 @@ func UpsertIssueTracker(c *gin.Context) {
 	}
 }
 
+// @Summary Delete issue tracker configuration
+// @Tags Issue Tracker
+// @Produce json
+// @Param id path string true "Application ID"
+// @Success 204 "No content"
+// @Failure 404 {object} gin.H "Issue tracker not found"
+// @Router /applications/{id}/issue-tracker [delete]
 func DeleteIssueTracker(c *gin.Context) {
 	appID := c.Param("id")
 	var tracker models.IssueTracker
@@ -285,6 +310,14 @@ func DeleteIssueTracker(c *gin.Context) {
 	utils.NoContentResponse(c)
 }
 
+// @Summary Test issue tracker connection
+// @Tags Issue Tracker
+// @Produce json
+// @Param id path string true "Application ID"
+// @Success 200 {object} gin.H "Connection successful"
+// @Failure 400 {object} gin.H "Connection failed"
+// @Failure 404 {object} gin.H "Application or issue tracker not found"
+// @Router /applications/{id}/issue-tracker/test [post]
 func TestIssueTracker(c *gin.Context) {
 	appID := c.Param("id")
 
@@ -355,6 +388,13 @@ func TestIssueTracker(c *gin.Context) {
 	utils.OKResponse(c, gin.H{"message": "Connection successful"})
 }
 
+// @Summary List issue tracker issues associated with findings
+// @Tags Issue Tracker
+// @Produce json
+// @Param id path string true "Application ID"
+// @Success 200 {array} models.IssueTrackerIssue "List of issues"
+// @Failure 404 {object} gin.H "Issue tracker not configured"
+// @Router /applications/{id}/issue-tracker/issues [get]
 func ListIssueTrackerIssues(c *gin.Context) {
 	appID := c.Param("id")
 	var tracker models.IssueTracker

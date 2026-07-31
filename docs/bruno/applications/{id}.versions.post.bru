@@ -1,0 +1,29 @@
+meta {
+  name: {id}.versions.post
+  type: http
+}
+
+post {
+  url: {{base_url}}{{api_prefix}}/applications/{{app_id}}/versions
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  X-CSRF-Token: {{csrf_token}}
+}
+
+body:json {
+  {
+    "name": "v1.0.0",
+    "tag": "v1.0.0",
+    "branch": "main"
+  }
+}
+
+script:post-response {
+
+  bru.setVar("version_id", res.body.id);
+
+}

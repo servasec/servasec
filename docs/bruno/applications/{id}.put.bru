@@ -1,0 +1,22 @@
+meta {
+  name: {id}.put
+  type: http
+}
+
+put {
+  url: {{base_url}}{{api_prefix}}/applications/{{app_id}}
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  X-CSRF-Token: {{csrf_token}}
+}
+
+body:json {
+  {
+    "name": "My App Updated",
+    "description": "Updated description"
+  }
+}
