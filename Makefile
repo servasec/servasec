@@ -1,4 +1,4 @@
-.PHONY: dev down down-clean prod down-prod community pro down-prod logs ps help swagger swagger-copy podman-build podman-install podman-up podman-down podman-logs migrate-create migrate-status
+.PHONY: dev down down-clean prod down-prod community pro logs ps help swagger swagger-copy podman-build podman-install podman-up podman-down podman-logs migrate-create migrate-status
 
 COMPOSE_DEV  := USER_UID=$(shell id -u) USER_GID=$(shell id -g) docker compose -f docker-compose.dev.yml
 COMPOSE_PROD := docker compose -f docker-compose.prod.yml
