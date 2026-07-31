@@ -13,7 +13,6 @@
 <a href="https://discord.com/invite/NJTWHfyjr" target="_blank"><picture><source media="(prefers-color-scheme: dark)" srcset="https://shieldcn.dev/discord/members/NJTWHfyjr.svg?variant=secondary&amp;mode=dark"><img alt="badge" src="https://shieldcn.dev/discord/members/NJTWHfyjr.svg?variant=secondary&amp;mode=light"></picture></a>
 <a href="https://docs.servasec.com" target="_blank"><picture><source media="(prefers-color-scheme: dark)" srcset="https://shieldcn.dev/badge/docs.servasec.com.svg?variant=ghost&color=6f4599"><img alt="badge" src="https://shieldcn.dev/badge/docs.servasec.com.svg?variant=ghost&color=6f4599"></picture></a>
 </p>
-https://shieldcn.dev/badge/docs.servasec.com.svg?variant=ghost&color=6f4599
 
 **Application Security Posture Management (ASPM)** platform that aggregates SAST/DAST/SCA scanner findings into a unified dashboard for triaging, tracking, and remediating security vulnerabilities across your application portfolio.
 
