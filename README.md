@@ -43,7 +43,7 @@ curl -fsSL https://servasec.com/install.sh | sh
 
 Default admin: `admin` / password displayed at the end of the install.
 
-**Interactive mode** (prompts for admin password, domain, SSO, registration):
+**Interactive mode** (prompts for admin password, domain, registration):
 
 ```bash
 curl -fsSL https://servasec.com/install.sh | sh -s -- -i
