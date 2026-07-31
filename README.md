@@ -8,18 +8,10 @@
 <h1 align="center">servasec</h1>
 
 <p align="center">
-<a href="" target="">
 <picture><source media="(prefers-color-scheme: dark)" srcset="https://www.shieldcn.dev/github/stars/servasec/servasec.svg?variant=secondary&amp;size=sm&amp;mode=dark"><img alt="GitHub Stars" src="https://www.shieldcn.dev/github/stars/servasec/servasec.svg?variant=secondary&amp;size=sm&amp;mode=light"></picture>
-</a>
-<a href="https://github.com/servasec/servasec/releases" target="_blank">
-<picture><source media="(prefers-color-scheme: dark)" srcset="https://www.shieldcn.dev/github/release/servasec/servasec.svg?size=sm&amp;mode=dark"><img alt="Release" src="https://www.shieldcn.dev/github/release/servasec/servasec.svg?size=sm&amp;mode=light"></picture>
-</a>
-<a href="https://discord.com/invite/NJTWHfyjr" target="_blank">
-<picture><source media="(prefers-color-scheme: dark)" srcset="https://shieldcn.dev/discord/members/NJTWHfyjr.svg?variant=secondary&amp;mode=dark"><img alt="badge" src="https://shieldcn.dev/discord/members/NJTWHfyjr.svg?variant=secondary&amp;mode=light"></picture>
-</a>
-<a href="https://docs.servasec.com" target="_blank">
-<picture><source media="(prefers-color-scheme: dark)" srcset="https://shieldcn.dev/badge/docs.servasec.com.svg?variant=ghost&color=6f4599"><img alt="badge" src="https://shieldcn.dev/badge/docs.servasec.com.svg?variant=ghost&color=6f4599"></picture>
-</a>
+<a style="text-decoration:none" href="https://github.com/servasec/servasec/releases" target="_blank"><picture><source media="(prefers-color-scheme: dark)" srcset="https://www.shieldcn.dev/github/release/servasec/servasec.svg?size=sm&amp;mode=dark"><img alt="Release" src="https://www.shieldcn.dev/github/release/servasec/servasec.svg?size=sm&amp;mode=light"></picture></a>
+<a href="https://discord.com/invite/NJTWHfyjr" target="_blank"><picture><source media="(prefers-color-scheme: dark)" srcset="https://shieldcn.dev/discord/members/NJTWHfyjr.svg?variant=secondary&amp;mode=dark"><img alt="badge" src="https://shieldcn.dev/discord/members/NJTWHfyjr.svg?variant=secondary&amp;mode=light"></picture></a>
+<a href="https://docs.servasec.com" target="_blank"><picture><source media="(prefers-color-scheme: dark)" srcset="https://shieldcn.dev/badge/docs.servasec.com.svg?variant=ghost&color=6f4599"><img alt="badge" src="https://shieldcn.dev/badge/docs.servasec.com.svg?variant=ghost&color=6f4599"></picture></a>
 </p>
 https://shieldcn.dev/badge/docs.servasec.com.svg?variant=ghost&color=6f4599
 
