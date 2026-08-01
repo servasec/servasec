@@ -1,8 +1,8 @@
 // @title Servasec API
 // @version 1.0
-// @description Security scanner management platform API
-// @contact.name API Support
-// @contact.email support@servasec.local
+// @description servasec platform API
+// @contact.name servasec support
+// @contact.email contact@servasec.com
 // @host localhost:8080
 // @BasePath /
 // @securityDefinitions.apikey ApiKeyAuth
