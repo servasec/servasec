@@ -4,6 +4,7 @@
 FROM golang:1.25-alpine AS go_builder
 
 ARG BUILD_TAGS=""
+ARG GIT_VERSION="dev"
 
 WORKDIR /app
 
@@ -11,7 +12,7 @@ COPY go.mod go.sum ./
 COPY . .
 RUN go mod download
 
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -tags "${BUILD_TAGS}" -o servasec
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -tags "${BUILD_TAGS}" -ldflags "-X github.com/servasec/servasec/backend/version.Version=${GIT_VERSION}" -o servasec
 
 # ============================================
 # Dev stage

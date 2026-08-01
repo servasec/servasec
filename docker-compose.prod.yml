@@ -23,6 +23,7 @@ services:
       target: prod
       args:
         BUILD_TAGS: ${BUILD_TAGS:-}
+        GIT_VERSION: ${GIT_VERSION:-dev}
     depends_on:
       db:
         condition: service_healthy

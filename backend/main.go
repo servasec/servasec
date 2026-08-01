@@ -31,6 +31,7 @@ import (
 	"github.com/servasec/servasec/backend/pro"
 	"github.com/servasec/servasec/backend/routes"
 	"github.com/servasec/servasec/backend/utils"
+	"github.com/servasec/servasec/backend/version"
 )
 
 func getTrustedProxies() []string {
@@ -91,7 +92,7 @@ func main() {
 			c.JSON(503, gin.H{"status": "unhealthy"})
 			return
 		}
-		c.JSON(200, gin.H{"status": "healthy"})
+		c.JSON(200, gin.H{"status": "healthy", "version": version.Version})
 	})
 
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
