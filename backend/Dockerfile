@@ -4,6 +4,7 @@
 FROM golang:1.25-alpine AS go_builder
 
 ARG BUILD_TAGS=""
+ARG GIT_VERSION="develop"
 
 WORKDIR /app
 
@@ -11,7 +12,7 @@ COPY go.mod go.sum ./
 COPY . .
 RUN go mod download
 
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -tags "${BUILD_TAGS}" -o servasec
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -tags "${BUILD_TAGS}" -ldflags "-X github.com/servasec/servasec/backend/version.Version=${GIT_VERSION}" -o servasec
 
 # ============================================
 # Dev stage
@@ -19,12 +20,14 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -tags "${BUILD_TAGS}" -o serv
 FROM golang:1.25-alpine AS dev
 
 ARG BUILD_TAGS=""
+ARG GIT_VERSION="develop"
 
 WORKDIR /app
 
 RUN apk --no-cache add ca-certificates
 
 ENV BUILD_TAGS=${BUILD_TAGS}
+ENV GIT_VERSION=${GIT_VERSION}
 
 RUN adduser -D -u 1000 -s /sbin/nologin app && \
     mkdir -p /home/app/.ssh && \

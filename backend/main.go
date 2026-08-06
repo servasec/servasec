@@ -21,16 +21,17 @@ import (
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-	swaggerFiles "github.com/swaggo/files"
-	ginSwagger "github.com/swaggo/gin-swagger"
 	"github.com/servasec/servasec/backend/config"
-	_ "github.com/servasec/servasec/backend/docs"
 	"github.com/servasec/servasec/backend/debug"
+	_ "github.com/servasec/servasec/backend/docs"
 	"github.com/servasec/servasec/backend/features"
 	"github.com/servasec/servasec/backend/middleware"
 	"github.com/servasec/servasec/backend/pro"
 	"github.com/servasec/servasec/backend/routes"
 	"github.com/servasec/servasec/backend/utils"
+	"github.com/servasec/servasec/backend/version"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 func getTrustedProxies() []string {
@@ -91,7 +92,7 @@ func main() {
 			c.JSON(503, gin.H{"status": "unhealthy"})
 			return
 		}
-		c.JSON(200, gin.H{"status": "healthy"})
+		c.JSON(200, gin.H{"status": "healthy", "version": version.NormalizeVersion()})
 	})
 
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))

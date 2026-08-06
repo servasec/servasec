@@ -30,6 +30,7 @@ services:
       target: dev
       args:
         BUILD_TAGS: ${BUILD_TAGS:-}
+        GIT_VERSION: ${GIT_VERSION:-develop}
     depends_on:
       db:
         condition: service_healthy
