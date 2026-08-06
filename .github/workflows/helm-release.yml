@@ -4,6 +4,12 @@ on:
   push:
     tags:
       - "v*"
+  workflow_dispatch:
+    inputs:
+      chart_version:
+        description: "Chart version to publish for a chart-only fix (e.g. 2.4.1). Required on manual runs."
+        required: false
+        type: string
 
 permissions:
   contents: read
@@ -30,10 +36,23 @@ jobs:
           helm lint deploy/helm/servasec
 
       - name: Package Helm chart
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          MANUAL_CHART_VERSION: ${{ inputs.chart_version }}
         run: |
-          VERSION="${GITHUB_REF_NAME#v}"
+          APP_VERSION="$(awk -F': ' '/^appVersion:/{print $2}' deploy/helm/servasec/Chart.yaml | tr -d '"')"
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            if [ -z "$MANUAL_CHART_VERSION" ]; then
+              echo "::error::chart_version input is required for manual (workflow_dispatch) publish"
+              exit 1
+            fi
+            CHART_VERSION="$MANUAL_CHART_VERSION"
+          else
+            CHART_VERSION="${GITHUB_REF_NAME#v}"
+          fi
           helm package deploy/helm/servasec \
-            --app-version "$VERSION" \
+            --version "$CHART_VERSION" \
+            --app-version "$APP_VERSION" \
             --destination /tmp/helm-chart
 
       - name: Push to OCI registry
