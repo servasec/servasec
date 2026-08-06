@@ -10,6 +10,18 @@
       "pull-request-title-pattern": "chore(main): release v${version}",
       "changelog-path": "CHANGELOG.md",
       "changelog-host": "https://github.com",
+      "extra-files": [
+        {
+          "type": "yaml",
+          "path": "deploy/helm/servasec/Chart.yaml",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "yaml",
+          "path": "deploy/helm/servasec/Chart.yaml",
+          "jsonpath": "$.appVersion"
+        }
+      ],
       "changelog-sections": [
         { "type": "feat", "section": "🧩 Features" },
         { "type": "fix", "section": "🐛 Bug fixes" },
