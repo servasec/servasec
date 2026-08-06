@@ -60,7 +60,9 @@ jobs:
         with:
           context: ./backend
           target: prod
-          build-args: BUILD_TAGS=pro
+          build-args: |
+            BUILD_TAGS=pro
+            GIT_VERSION=${{ github.ref_name }}
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}

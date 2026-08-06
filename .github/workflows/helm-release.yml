@@ -2,13 +2,8 @@ name: Helm Chart
 
 on:
   push:
-    branches:
-      - main
     tags:
       - "v*"
-    paths:
-      - deploy/helm/**
-      - Chart.yaml
 
 permissions:
   contents: read
@@ -30,9 +25,16 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Lint Helm chart
+        run: |
+          helm lint deploy/helm/servasec
+
       - name: Package Helm chart
         run: |
+          VERSION="${GITHUB_REF_NAME#v}"
           helm package deploy/helm/servasec \
+            --version "$VERSION" \
+            --app-version "$VERSION" \
             --destination /tmp/helm-chart
 
       - name: Push to OCI registry
