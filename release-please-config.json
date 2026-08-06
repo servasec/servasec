@@ -14,11 +14,6 @@
         {
           "type": "yaml",
           "path": "deploy/helm/servasec/Chart.yaml",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "yaml",
-          "path": "deploy/helm/servasec/Chart.yaml",
           "jsonpath": "$.appVersion"
         }
       ],

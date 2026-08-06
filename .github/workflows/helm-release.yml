@@ -33,7 +33,6 @@ jobs:
         run: |
           VERSION="${GITHUB_REF_NAME#v}"
           helm package deploy/helm/servasec \
-            --version "$VERSION" \
             --app-version "$VERSION" \
             --destination /tmp/helm-chart
 
