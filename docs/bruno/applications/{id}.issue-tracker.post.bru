@@ -1,0 +1,23 @@
+meta {
+  name: {id}.issue-tracker.post
+  type: http
+}
+
+post {
+  url: {{base_url}}{{api_prefix}}/applications/{{app_id}}/issue-tracker
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  X-CSRF-Token: {{csrf_token}}
+}
+
+body:json {
+  {
+    "provider": "github",
+    "repository": "my-org/my-repo",
+    "token": "ghp_xxxxxxxxxxxx"
+  }
+}

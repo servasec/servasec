@@ -1,0 +1,29 @@
+meta {
+  name: {id}.webhooks.post
+  type: http
+}
+
+post {
+  url: {{base_url}}{{api_prefix}}/applications/{{app_id}}/webhooks
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  X-CSRF-Token: {{csrf_token}}
+}
+
+body:json {
+  {
+    "url": "https://hooks.example.com/scan-complete",
+    "events": "scan.completed",
+    "isActive": true
+  }
+}
+
+script:post-response {
+
+  bru.setVar("webhook_id", res.body.id);
+
+}

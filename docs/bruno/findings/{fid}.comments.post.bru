@@ -1,0 +1,21 @@
+meta {
+  name: {fid}.comments.post
+  type: http
+}
+
+post {
+  url: {{base_url}}{{api_prefix}}/findings/{{finding_id}}/comments
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  X-CSRF-Token: {{csrf_token}}
+}
+
+body:json {
+  {
+    "body": "Investigating this finding."
+  }
+}

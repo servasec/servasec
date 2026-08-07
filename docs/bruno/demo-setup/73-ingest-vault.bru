@@ -1,0 +1,17 @@
+meta {
+  name: 73-ingest-vault
+  type: http
+  seq: 46
+}
+post {
+  url: {{base_url}}{{api_prefix}}/applications/{{vault_service_1_app_id}}/ingest
+  body: multipartForm
+  auth: none
+}
+headers {
+  X-CSRF-Token: {{csrf_token}}
+}
+body:multipart-form {
+  file: @file(demo-setup/samples/semgrep-secrets.json)
+  version: main
+}

@@ -1,0 +1,17 @@
+meta {
+  name: 76-ingest-webapp2
+  type: http
+  seq: 49
+}
+post {
+  url: {{base_url}}{{api_prefix}}/applications/{{web_app_2_app_id}}/ingest
+  body: multipartForm
+  auth: none
+}
+headers {
+  X-CSRF-Token: {{csrf_token}}
+}
+body:multipart-form {
+  file: @file(demo-setup/samples/trivy-deps.json)
+  version: staging
+}

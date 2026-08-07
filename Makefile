@@ -1,7 +1,7 @@
-.PHONY: dev down down-clean prod down-prod community pro down-prod logs ps help swagger swagger-copy podman-build podman-install podman-up podman-down podman-logs migrate-create migrate-status
+.PHONY: dev down down-clean prod down-prod community pro logs ps help swagger swagger-copy podman-build podman-install podman-up podman-down podman-logs migrate-create migrate-status
 
-COMPOSE_DEV  := USER_UID=$(shell id -u) USER_GID=$(shell id -g) docker compose -f docker-compose.dev.yml
-COMPOSE_PROD := docker compose -f docker-compose.prod.yml
+COMPOSE_DEV  := USER_UID=$(shell id -u) USER_GID=$(shell id -g) GIT_VERSION=$(shell ./scripts/version.sh) docker compose -f docker-compose.dev.yml
+COMPOSE_PROD := GIT_VERSION=$(shell ./scripts/version.sh) docker compose -f docker-compose.prod.yml
 
 PODMAN_QUADLET_DIR := $(HOME)/.config/containers/systemd
 SSC_PUBLIC_DOMAIN  ?= servasec.local
@@ -46,7 +46,7 @@ swagger-copy: swagger ## Copy swagger.json to servasec-docs and regenerate API d
 	$(MAKE) -C ../servasec-docs gen-api
 
 podman-build: ## Build all Podman images
-	podman build -t servasec-backend:latest -f backend/Dockerfile --target prod backend/
+	podman build -t servasec-backend:latest --build-arg GIT_VERSION=$(shell ./scripts/version.sh) -f backend/Dockerfile --target prod backend/
 	podman build -t servasec-frontend:latest -f frontend/Dockerfile --target prod frontend/
 	podman build -t servasec-caddy:latest \
 		-f caddy/Dockerfile \

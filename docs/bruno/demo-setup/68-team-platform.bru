@@ -1,0 +1,23 @@
+meta {
+  name: 68-team-platform
+  type: http
+  seq: 38
+}
+post {
+  url: {{base_url}}{{api_prefix}}/teams
+  body: json
+  auth: none
+}
+headers {
+  Content-Type: application/json
+  X-CSRF-Token: {{csrf_token}}
+}
+body:json {
+  {
+    "name": "Platform Engineering {{run_id}}",
+    "description": "Platform engineering & SRE team"
+  }
+}
+script:post-response {
+  bru.setVar("platform_team_id", res.body.id);
+}

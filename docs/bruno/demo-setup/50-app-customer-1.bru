@@ -1,0 +1,27 @@
+meta {
+  name: 50-app-customer-1
+  type: http
+  seq: 20
+}
+post {
+  url: {{base_url}}{{api_prefix}}/applications
+  body: json
+  auth: none
+}
+headers {
+  Content-Type: application/json
+  X-CSRF-Token: {{csrf_token}}
+}
+body:json {
+  {
+    "name": "Customer Portal 1 {{run_id}}",
+    "slug": "customer-portal-1-{{run_id}}",
+    "description": "Customer Portal 1 instance",
+    "groupId": {{product_group_id}},
+    "repositoryUrl": "https://github.com/servasec/customer-portal-1-{{run_id}}",
+    "assetCriticality": "high"
+  }
+}
+script:post-response {
+  bru.setVar("customer_portal_1_app_id", res.body.id);
+}

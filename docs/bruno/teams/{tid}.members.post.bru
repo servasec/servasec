@@ -1,0 +1,22 @@
+meta {
+  name: {tid}.members.post
+  type: http
+}
+
+post {
+  url: {{base_url}}{{api_prefix}}/teams/{{team_id}}/members
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  X-CSRF-Token: {{csrf_token}}
+}
+
+body:json {
+  {
+    "userId": 2,
+    "role": "member"
+  }
+}

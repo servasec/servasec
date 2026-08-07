@@ -1,0 +1,10 @@
+meta {
+  name: {fid}.comments.get
+  type: http
+}
+
+get {
+  url: {{base_url}}{{api_prefix}}/findings/{{finding_id}}/comments
+  body: none
+  auth: none
+}

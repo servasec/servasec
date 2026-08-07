@@ -1,0 +1,10 @@
+meta {
+  name: {id}.webhooks.get
+  type: http
+}
+
+get {
+  url: {{base_url}}{{api_prefix}}/applications/{{app_id}}/webhooks
+  body: none
+  auth: none
+}

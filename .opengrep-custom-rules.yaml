@@ -1,0 +1,83 @@
+rules:
+  - id: go-raw-sql-concatenation
+    languages: [go]
+    message: "Raw SQL query concatenation detected - potential SQL injection"
+    severity: ERROR
+    patterns:
+      - pattern-either:
+          - pattern: db.Raw($X + ...)
+          - pattern: db.Exec($X + ...)
+          - pattern: db.Where($X + ...)
+          - pattern: sqlDB.Query($X + ...)
+          - pattern: sqlDB.Exec($X + ...)
+          - pattern: "$DB.Raw(fmt.Sprintf(...))"
+          - pattern: "$DB.Exec(fmt.Sprintf(...))"
+
+  - id: go-json-sql-concat
+    languages: [go]
+    message: "Potential SQL injection via string concatenation"
+    severity: ERROR
+    patterns:
+      - pattern-either:
+          - pattern: '"SELECT " + $X + ...'
+          - pattern: '"select " + $X + ...'
+          - pattern: '"INSERT " + $X + ...'
+          - pattern: '"insert " + $X + ...'
+          - pattern: '"UPDATE " + $X + ...'
+          - pattern: '"update " + $X + ...'
+          - pattern: '"DELETE " + $X + ...'
+          - pattern: '"delete " + $X + ...'
+      - metavariable-regex:
+          metavariable: $X
+          regex: (?i).*(user|request|input|param|query|form|body|cookie|header|arg).*
+
+  - id: go-os-exec-detected
+    languages: [go]
+    message: "Use of os/exec command execution detected"
+    severity: WARNING
+    patterns:
+      - pattern-either:
+          - pattern: exec.Command(...)
+          - pattern: exec.CommandContext(...)
+
+  - id: go-weak-crypto
+    languages: [go]
+    message: "Use of weak cryptographic primitive"
+    severity: WARNING
+    patterns:
+      - pattern-either:
+          - pattern: '"crypto/md5"'
+          - pattern: '"crypto/sha1"'
+          - pattern: md5.New()
+          - pattern: sha1.New()
+
+  - id: go-gorm-automigrate
+    languages: [go]
+    message: "GORM AutoMigrate in production can cause data loss"
+    severity: WARNING
+    patterns:
+      - pattern: db.AutoMigrate(...)
+
+  - id: go-gorm-raw-sql
+    languages: [go]
+    message: "Raw SQL via GORM detected"
+    severity: INFO
+    patterns:
+      - pattern: '$DB.Raw(...)'
+      - pattern: '$DB.Exec(...)'
+
+  - id: go-insecure-tls
+    languages: [go]
+    message: "Insecure TLS configuration"
+    severity: WARNING
+    patterns:
+      - pattern-either:
+          - pattern: tls.VersionTLS10
+          - pattern: tls.VersionTLS11
+
+  - id: go-unsafe-reflect
+    languages: [go]
+    message: "Use of unsafe or reflect package"
+    severity: WARNING
+    patterns:
+      - pattern: '"unsafe"'

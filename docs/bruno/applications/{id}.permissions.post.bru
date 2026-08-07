@@ -1,0 +1,22 @@
+meta {
+  name: {id}.permissions.post
+  type: http
+}
+
+post {
+  url: {{base_url}}{{api_prefix}}/applications/{{app_id}}/permissions
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  X-CSRF-Token: {{csrf_token}}
+}
+
+body:json {
+  {
+    "subject": "user:2",
+    "action": "read"
+  }
+}

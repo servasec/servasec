@@ -1,0 +1,27 @@
+meta {
+  name: 48-app-auth-1
+  type: http
+  seq: 18
+}
+post {
+  url: {{base_url}}{{api_prefix}}/applications
+  body: json
+  auth: none
+}
+headers {
+  Content-Type: application/json
+  X-CSRF-Token: {{csrf_token}}
+}
+body:json {
+  {
+    "name": "Auth Service 1 {{run_id}}",
+    "slug": "auth-service-1-{{run_id}}",
+    "description": "Auth Service 1 instance",
+    "groupId": {{security_group_id}},
+    "repositoryUrl": "https://github.com/servasec/auth-service-1-{{run_id}}",
+    "assetCriticality": "high"
+  }
+}
+script:post-response {
+  bru.setVar("auth_service_1_app_id", res.body.id);
+}

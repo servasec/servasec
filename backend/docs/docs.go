@@ -186,67 +186,92 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/ingest": {
+        "/api-keys": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "API Keys"
+                ],
+                "summary": "List API keys for the current user",
+                "responses": {
+                    "200": {
+                        "description": "List of API keys",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.UserApiKey"
+                            }
+                        }
+                    }
+                }
+            },
             "post": {
-                "description": "Upload a scan results file. Authenticate via API token header, application ID in path, or application slug in path.",
                 "consumes": [
-                    "multipart/form-data"
+                    "application/json"
                 ],
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "Scans"
+                    "API Keys"
                 ],
-                "summary": "Ingest scan results",
+                "summary": "Create API key for the current user",
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "Version name",
-                        "name": "version",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Branch name",
-                        "name": "branch",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Scanner type name",
-                        "name": "scannerType",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "file",
-                        "description": "Scan results file (SARIF, etc.)",
-                        "name": "file",
-                        "in": "formData",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "API token (alternative to id/slug auth)",
-                        "name": "X-Api-Token",
-                        "in": "header"
+                        "description": "API key name",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/controllers.createApiKeyInput"
+                        }
                     }
                 ],
                 "responses": {
                     "201": {
-                        "description": "Scan created with findings count",
+                        "description": "Created API key with raw key value",
                         "schema": {
                             "$ref": "#/definitions/gin.H"
                         }
                     },
                     "400": {
-                        "description": "Bad request",
+                        "description": "Invalid input",
+                        "schema": {
+                            "$ref": "#/definitions/gin.H"
+                        }
+                    }
+                }
+            }
+        },
+        "/api-keys/{id}": {
+            "delete": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "API Keys"
+                ],
+                "summary": "Revoke an API key",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "API key ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "API key revoked",
                         "schema": {
                             "$ref": "#/definitions/gin.H"
                         }
                     },
                     "404": {
-                        "description": "Application not found",
+                        "description": "API key not found",
                         "schema": {
                             "$ref": "#/definitions/gin.H"
                         }
@@ -324,8 +349,8 @@ const docTemplate = `{
                 "summary": "Get application",
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "Application ID or slug",
+                        "type": "integer",
+                        "description": "Application ID",
                         "name": "id",
                         "in": "path",
                         "required": true
@@ -496,6 +521,202 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "Application not found",
+                        "schema": {
+                            "$ref": "#/definitions/gin.H"
+                        }
+                    }
+                }
+            }
+        },
+        "/applications/{id}/issue-tracker": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Issue Tracker"
+                ],
+                "summary": "Get issue tracker configuration",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Application ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Issue tracker config",
+                        "schema": {
+                            "$ref": "#/definitions/gin.H"
+                        }
+                    },
+                    "404": {
+                        "description": "Application or issue tracker not found",
+                        "schema": {
+                            "$ref": "#/definitions/gin.H"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Issue Tracker"
+                ],
+                "summary": "Upsert issue tracker configuration",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Application ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Issue tracker config (provider, authType, token, severityThreshold, etc.)",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Updated issue tracker",
+                        "schema": {
+                            "$ref": "#/definitions/gin.H"
+                        }
+                    },
+                    "201": {
+                        "description": "Created issue tracker",
+                        "schema": {
+                            "$ref": "#/definitions/gin.H"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid input",
+                        "schema": {
+                            "$ref": "#/definitions/gin.H"
+                        }
+                    },
+                    "404": {
+                        "description": "Application not found",
+                        "schema": {
+                            "$ref": "#/definitions/gin.H"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Issue Tracker"
+                ],
+                "summary": "Delete issue tracker configuration",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Application ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No content"
+                    },
+                    "404": {
+                        "description": "Issue tracker not found",
+                        "schema": {
+                            "$ref": "#/definitions/gin.H"
+                        }
+                    }
+                }
+            }
+        },
+        "/applications/{id}/issue-tracker/issues": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Issue Tracker"
+                ],
+                "summary": "List issue tracker issues associated with findings",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Application ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of issues",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.IssueTrackerIssue"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Issue tracker not configured",
+                        "schema": {
+                            "$ref": "#/definitions/gin.H"
+                        }
+                    }
+                }
+            }
+        },
+        "/applications/{id}/issue-tracker/test": {
+            "post": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Issue Tracker"
+                ],
+                "summary": "Test issue tracker connection",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Application ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Connection successful",
+                        "schema": {
+                            "$ref": "#/definitions/gin.H"
+                        }
+                    },
+                    "400": {
+                        "description": "Connection failed",
+                        "schema": {
+                            "$ref": "#/definitions/gin.H"
+                        }
+                    },
+                    "404": {
+                        "description": "Application or issue tracker not found",
                         "schema": {
                             "$ref": "#/definitions/gin.H"
                         }
@@ -1704,6 +1925,74 @@ const docTemplate = `{
                 }
             }
         },
+        "/ingest": {
+            "post": {
+                "description": "Upload a scan results file. Authenticate via API token header, application ID in path, or application slug in path.",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Scans"
+                ],
+                "summary": "Ingest scan results",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Version name",
+                        "name": "version",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Branch name",
+                        "name": "branch",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Scanner type name",
+                        "name": "scannerType",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "file",
+                        "description": "Scan results file (SARIF, etc.)",
+                        "name": "file",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "API token (alternative to id/slug auth)",
+                        "name": "X-Api-Token",
+                        "in": "header"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Scan created with findings count",
+                        "schema": {
+                            "$ref": "#/definitions/gin.H"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/gin.H"
+                        }
+                    },
+                    "404": {
+                        "description": "Application not found",
+                        "schema": {
+                            "$ref": "#/definitions/gin.H"
+                        }
+                    }
+                }
+            }
+        },
         "/login": {
             "post": {
                 "consumes": [
@@ -1829,6 +2118,31 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "User not found",
+                        "schema": {
+                            "$ref": "#/definitions/gin.H"
+                        }
+                    }
+                }
+            }
+        },
+        "/me/onboarding": {
+            "patch": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Mark onboarding as seen",
+                "responses": {
+                    "200": {
+                        "description": "Onboarding marked as seen",
+                        "schema": {
+                            "$ref": "#/definitions/gin.H"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
                         "schema": {
                             "$ref": "#/definitions/gin.H"
                         }
@@ -3240,6 +3554,18 @@ const docTemplate = `{
                 }
             }
         },
+        "controllers.createApiKeyInput": {
+            "type": "object",
+            "required": [
+                "name"
+            ],
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "maxLength": 100
+                }
+            }
+        },
         "dto.LoginInput": {
             "type": "object",
             "required": [
@@ -3323,6 +3649,9 @@ const docTemplate = `{
         "models.ApplicationVersion": {
             "type": "object",
             "properties": {
+                "application": {
+                    "$ref": "#/definitions/models.Application"
+                },
                 "applicationId": {
                     "type": "integer"
                 },
@@ -3474,6 +3803,35 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "path": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.IssueTrackerIssue": {
+            "type": "object",
+            "properties": {
+                "createdAt": {
+                    "type": "string"
+                },
+                "externalIssueId": {
+                    "type": "string"
+                },
+                "externalIssueUrl": {
+                    "type": "string"
+                },
+                "findingId": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "issueTrackerId": {
+                    "type": "integer"
+                },
+                "status": {
                     "type": "string"
                 },
                 "updatedAt": {
@@ -3659,6 +4017,9 @@ const docTemplate = `{
                 "email": {
                     "type": "string"
                 },
+                "hasSeenOnboarding": {
+                    "type": "boolean"
+                },
                 "id": {
                     "type": "integer"
                 },
@@ -3676,6 +4037,32 @@ const docTemplate = `{
                 },
                 "username": {
                     "type": "string"
+                }
+            }
+        },
+        "models.UserApiKey": {
+            "type": "object",
+            "properties": {
+                "createdAt": {
+                    "type": "string"
+                },
+                "expiresAt": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "keyPrefix": {
+                    "type": "string"
+                },
+                "lastUsedAt": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "userId": {
+                    "type": "integer"
                 }
             }
         },

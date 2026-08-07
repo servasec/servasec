@@ -16,6 +16,14 @@ type createApiKeyInput struct {
 	Name string `json:"name" binding:"required,max=100"`
 }
 
+// @Summary Create API key for the current user
+// @Tags API Keys
+// @Accept json
+// @Produce json
+// @Param input body createApiKeyInput true "API key name"
+// @Success 201 {object} gin.H "Created API key with raw key value"
+// @Failure 400 {object} gin.H "Invalid input"
+// @Router /api-keys [post]
 func CreateApiKey(c *gin.Context) {
 	user, exists := c.Get("user")
 	if !exists {
@@ -59,6 +67,11 @@ func CreateApiKey(c *gin.Context) {
 	})
 }
 
+// @Summary List API keys for the current user
+// @Tags API Keys
+// @Produce json
+// @Success 200 {array} models.UserApiKey "List of API keys"
+// @Router /api-keys [get]
 func ListApiKeys(c *gin.Context) {
 	user, exists := c.Get("user")
 	if !exists {
@@ -76,6 +89,13 @@ func ListApiKeys(c *gin.Context) {
 	utils.OKResponse(c, keys)
 }
 
+// @Summary Revoke an API key
+// @Tags API Keys
+// @Produce json
+// @Param id path string true "API key ID"
+// @Success 200 {object} gin.H "API key revoked"
+// @Failure 404 {object} gin.H "API key not found"
+// @Router /api-keys/{id} [delete]
 func RevokeApiKey(c *gin.Context) {
 	user, exists := c.Get("user")
 	if !exists {

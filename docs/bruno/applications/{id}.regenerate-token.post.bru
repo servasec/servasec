@@ -1,0 +1,20 @@
+meta {
+  name: {id}.regenerate-token.post
+  type: http
+}
+
+post {
+  url: {{base_url}}{{api_prefix}}/applications/{{app_id}}/regenerate-token
+  body: none
+  auth: none
+}
+
+headers {
+  X-CSRF-Token: {{csrf_token}}
+}
+
+script:post-response {
+
+  bru.setVar("api_token", res.body.apiToken);
+
+}

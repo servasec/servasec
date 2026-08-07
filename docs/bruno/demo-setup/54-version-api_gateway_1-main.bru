@@ -1,0 +1,21 @@
+meta {
+  name: 54-version-api_gateway_1-main
+  type: http
+  seq: 24
+}
+post {
+  url: {{base_url}}{{api_prefix}}/applications/{{api_gateway_1_app_id}}/versions
+  body: json
+  auth: none
+}
+headers {
+  Content-Type: application/json
+  X-CSRF-Token: {{csrf_token}}
+}
+body:json {
+  {
+    "name": "main",
+    "tag": "main",
+    "branch": "main"
+  }
+}

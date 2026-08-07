@@ -1,0 +1,22 @@
+meta {
+  name: {pid}.put
+  type: http
+}
+
+put {
+  url: {{base_url}}{{api_prefix}}/policies/{{policy_id}}
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  X-CSRF-Token: {{csrf_token}}
+}
+
+body:json {
+  {
+    "description": "Updated description",
+    "priority": 2
+  }
+}

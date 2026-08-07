@@ -1,0 +1,10 @@
+meta {
+  name: {id}.versions.compare.get
+  type: http
+}
+
+get {
+  url: {{base_url}}{{api_prefix}}/applications/{{app_id}}/versions/compare?from={{from_version_id}}&to={{to_version_id}}
+  body: none
+  auth: none
+}

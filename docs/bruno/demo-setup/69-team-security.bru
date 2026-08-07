@@ -1,0 +1,23 @@
+meta {
+  name: 69-team-security
+  type: http
+  seq: 39
+}
+post {
+  url: {{base_url}}{{api_prefix}}/teams
+  body: json
+  auth: none
+}
+headers {
+  Content-Type: application/json
+  X-CSRF-Token: {{csrf_token}}
+}
+body:json {
+  {
+    "name": "Security Team {{run_id}}",
+    "description": "Security operations & compliance team"
+  }
+}
+script:post-response {
+  bru.setVar("security_team_id", res.body.id);
+}

@@ -1,0 +1,21 @@
+meta {
+  name: 54-version-web_app_1-develop
+  type: http
+  seq: 35
+}
+post {
+  url: {{base_url}}{{api_prefix}}/applications/{{web_app_1_app_id}}/versions
+  body: json
+  auth: none
+}
+headers {
+  Content-Type: application/json
+  X-CSRF-Token: {{csrf_token}}
+}
+body:json {
+  {
+    "name": "develop",
+    "tag": "develop",
+    "branch": "develop"
+  }
+}

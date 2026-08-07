@@ -1,0 +1,27 @@
+meta {
+  name: 53-app-analytics-2
+  type: http
+  seq: 23
+}
+post {
+  url: {{base_url}}{{api_prefix}}/applications
+  body: json
+  auth: none
+}
+headers {
+  Content-Type: application/json
+  X-CSRF-Token: {{csrf_token}}
+}
+body:json {
+  {
+    "name": "Analytics Engine 2 {{run_id}}",
+    "slug": "analytics-2-{{run_id}}",
+    "description": "Analytics Engine 2 instance",
+    "groupId": {{product_group_id}},
+    "repositoryUrl": "https://github.com/servasec/analytics-2-{{run_id}}",
+    "assetCriticality": "medium"
+  }
+}
+script:post-response {
+  bru.setVar("analytics_2_app_id", res.body.id);
+}

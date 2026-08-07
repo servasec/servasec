@@ -1,0 +1,20 @@
+meta {
+  name: {id}.ingest.post
+  type: http
+}
+
+post {
+  url: {{base_url}}{{api_prefix}}/applications/{{app_id}}/ingest
+  body: multipartForm
+  auth: none
+}
+
+headers {
+  X-CSRF-Token: {{csrf_token}}
+}
+
+body:multipart-form {
+  file: @file(../../test/reports/semgrep.json)
+  version: v1.0.0
+  branch: main
+}
