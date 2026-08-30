@@ -1,0 +1,22 @@
+meta {
+  name: {tid}.put
+  type: http
+}
+
+put {
+  url: {{base_url}}{{api_prefix}}/teams/{{team_id}}
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  X-CSRF-Token: {{csrf_token}}
+}
+
+body:json {
+  {
+    "name": "Security Team Updated",
+    "description": "Updated description"
+  }
+}

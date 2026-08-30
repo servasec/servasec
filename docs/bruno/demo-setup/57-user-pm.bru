@@ -1,0 +1,24 @@
+meta {
+  name: 57-user-pm
+  type: http
+  seq: 9
+}
+post {
+  url: {{base_url}}{{api_prefix}}/register
+  body: json
+  auth: none
+}
+headers {
+  Content-Type: application/json
+  X-CSRF-Token: {{csrf_token}}
+}
+body:json {
+  {
+    "username": "pm-{{run_id}}",
+    "email": "pm-{{run_id}}@example.com",
+    "password": "Demo123!"
+  }
+}
+script:post-response {
+  bru.setVar("pm_user_id", res.body.id);
+}

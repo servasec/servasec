@@ -1,0 +1,86 @@
+{
+  "Results": [
+    {
+      "Target": "deployment.yaml",
+      "Type": "kubernetes",
+      "Misconfigurations": [
+        {
+          "ID": "KSV001",
+          "Title": "Container runs as root",
+          "Severity": "HIGH",
+          "Message": "Container should run as non-root user",
+          "CauseMetadata": {
+            "StartLine": 10,
+            "EndLine": 15
+          }
+        },
+        {
+          "ID": "KSV002",
+          "Title": "Privileged container",
+          "Severity": "CRITICAL",
+          "Message": "Container should not run in privileged mode",
+          "CauseMetadata": {
+            "StartLine": 12,
+            "EndLine": 12
+          }
+        },
+        {
+          "ID": "KSV003",
+          "Title": "No resource limits",
+          "Severity": "MEDIUM",
+          "Message": "Container should have resource limits defined",
+          "CauseMetadata": {
+            "StartLine": 10,
+            "EndLine": 25
+          }
+        },
+        {
+          "ID": "KSV004",
+          "Title": "readOnlyRootFilesystem not set",
+          "Severity": "LOW",
+          "Message": "Container root filesystem should be read-only",
+          "CauseMetadata": {
+            "StartLine": 10,
+            "EndLine": 25
+          }
+        }
+      ]
+    },
+    {
+      "Target": "terraform/main.tf",
+      "Type": "terraform",
+      "Misconfigurations": [
+        {
+          "ID": "AVD-AWS-0001",
+          "Title": "S3 bucket without encryption",
+          "Severity": "HIGH",
+          "Message": "S3 bucket should have server-side encryption enabled",
+          "CauseMetadata": {
+            "StartLine": 20,
+            "EndLine": 35
+          }
+        },
+        {
+          "ID": "AVD-AWS-0002",
+          "Title": "Security group overly permissive",
+          "Severity": "CRITICAL",
+          "Message": "Security group allows 0.0.0.0/0 inbound on port 22",
+          "CauseMetadata": {
+            "StartLine": 50,
+            "EndLine": 60
+          }
+        },
+        {
+          "ID": "AVD-AWS-0003",
+          "Title": "EBS volume not encrypted",
+          "Severity": "HIGH",
+          "Message": "EBS volume encryption should be enabled",
+          "CauseMetadata": {
+            "StartLine": 70,
+            "EndLine": 75
+          }
+        }
+      ]
+    }
+  ]
+}

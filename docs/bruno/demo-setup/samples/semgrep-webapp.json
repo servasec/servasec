@@ -1,0 +1,89 @@
+{
+  "results": [
+    {
+      "check_id": "javascript.express.security.audit.xss",
+      "path": "src/web/routes/users.js",
+      "start": {
+        "line": 15
+      },
+      "end": {
+        "line": 22
+      },
+      "extra": {
+        "message": "Reflected XSS via unsanitized user input in search query",
+        "severity": "ERROR",
+        "metadata": {
+          "cwe": "CWE-79"
+        }
+      }
+    },
+    {
+      "check_id": "javascript.express.security.audit.xss",
+      "path": "src/web/views/comments.ejs",
+      "start": {
+        "line": 42
+      },
+      "end": {
+        "line": 48
+      },
+      "extra": {
+        "message": "Stored XSS in comment rendering",
+        "severity": "ERROR",
+        "metadata": {
+          "cwe": "CWE-79"
+        }
+      }
+    },
+    {
+      "check_id": "javascript.react.security.audit.dangerouslysetinnerhtml",
+      "path": "src/web/components/Profile.jsx",
+      "start": {
+        "line": 88
+      },
+      "end": {
+        "line": 92
+      },
+      "extra": {
+        "message": "dangerouslySetInnerHTML used with unsanitized input",
+        "severity": "WARNING",
+        "metadata": {
+          "cwe": "CWE-79"
+        }
+      }
+    },
+    {
+      "check_id": "javascript.lang.security.audit.insecure-randomness",
+      "path": "src/utils/tokens.js",
+      "start": {
+        "line": 15
+      },
+      "end": {
+        "line": 15
+      },
+      "extra": {
+        "message": "Insecure Math.random() used for token generation",
+        "severity": "WARNING",
+        "metadata": {
+          "cwe": "CWE-330"
+        }
+      }
+    },
+    {
+      "check_id": "javascript.express.security.audit.path-traversal",
+      "path": "src/web/routes/files.js",
+      "start": {
+        "line": 34
+      },
+      "end": {
+        "line": 38
+      },
+      "extra": {
+        "message": "Path traversal via user-controlled filename",
+        "severity": "ERROR",
+        "metadata": {
+          "cwe": "CWE-22"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+meta {
+  name: {id}.issue-tracker.test.post
+  type: http
+}
+
+post {
+  url: {{base_url}}{{api_prefix}}/applications/{{app_id}}/issue-tracker/test
+  body: none
+  auth: none
+}
+
+headers {
+  X-CSRF-Token: {{csrf_token}}
+}

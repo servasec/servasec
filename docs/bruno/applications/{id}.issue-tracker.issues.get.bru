@@ -1,0 +1,10 @@
+meta {
+  name: {id}.issue-tracker.issues.get
+  type: http
+}
+
+get {
+  url: {{base_url}}{{api_prefix}}/applications/{{app_id}}/issue-tracker/issues
+  body: none
+  auth: none
+}

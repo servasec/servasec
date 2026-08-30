@@ -1,0 +1,22 @@
+meta {
+  name: patch.me
+  type: http
+}
+
+patch {
+  url: {{base_url}}{{api_prefix}}/me
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  X-CSRF-Token: {{csrf_token}}
+}
+
+body:json {
+  {
+    "username": "admin",
+    "email": "admin@example.com"
+  }
+}

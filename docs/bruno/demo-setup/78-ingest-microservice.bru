@@ -1,0 +1,17 @@
+meta {
+  name: 78-ingest-microservice
+  type: http
+  seq: 51
+}
+post {
+  url: {{base_url}}{{api_prefix}}/applications/{{microservice_1_app_id}}/ingest
+  body: multipartForm
+  auth: none
+}
+headers {
+  X-CSRF-Token: {{csrf_token}}
+}
+body:multipart-form {
+  file: @file(demo-setup/samples/semgrep-api.json)
+  version: main
+}

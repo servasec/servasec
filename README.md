@@ -1,18 +1,17 @@
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="frontend/public/assets/servasec-mark.svg">
-    <img src="frontend/public/assets/servasec-mark.svg" alt="servasec" width="100" height="100">
+    <img src="frontend/public/assets/servasec-mark.svg" alt="servasec open source ASPM" width="100" height="100">
   </picture>
 </p>
 
-<h1 align="center">servasec</h1>
+<h1 align="center">servasec — Open Source ASPM Platform</h1>
 
 <p align="center">
-  <a href="./LICENSE"><img src="https://img.shields.io/badge/license-AGPLv3%20%7C%20Commercial-blue" alt="License"></a>
-  <a href="https://github.com/servasec/servasec/releases"><img src="https://img.shields.io/github/v/release/servasec/servasec" alt="Release"></a>
-  <a href="https://github.com/servasec/servasec/stargazers"><img src="https://img.shields.io/github/stars/servasec/servasec" alt="GitHub Stars"></a>
-  <a href="https://discord.gg/jqFmBEPQz"><img src="https://img.shields.io/badge/chat-Discord-5865F2" alt="Discord"></a>
-  <a href="https://docs.servasec.com"><img src="https://img.shields.io/badge/docs-docs.servasec.com-blue" alt="Documentation"></a>
+<picture><source media="(prefers-color-scheme: dark)" srcset="https://www.shieldcn.dev/github/stars/servasec/servasec.svg?variant=secondary&amp;size=sm&amp;mode=dark"><img alt="GitHub Stars" src="https://www.shieldcn.dev/github/stars/servasec/servasec.svg?variant=secondary&amp;size=sm&amp;mode=light"></picture>
+<a style="text-decoration:none" href="https://github.com/servasec/servasec/releases" target="_blank"><picture><source media="(prefers-color-scheme: dark)" srcset="https://www.shieldcn.dev/github/release/servasec/servasec.svg?size=sm&amp;mode=dark"><img alt="Release" src="https://www.shieldcn.dev/github/release/servasec/servasec.svg?size=sm&amp;mode=light"></picture></a>
+<a href="https://discord.com/invite/wJZ2v5YNtD" target="_blank"><picture><source media="(prefers-color-scheme: dark)" srcset="https://shieldcn.dev/discord/members/wJZ2v5YNtD.svg?variant=secondary&amp;mode=dark"><img alt="badge" src="https://shieldcn.dev/discord/members/wJZ2v5YNtD.svg?variant=secondary&amp;mode=light"></picture></a>
+<a href="https://docs.servasec.com" target="_blank"><picture><source media="(prefers-color-scheme: dark)" srcset="https://shieldcn.dev/badge/docs.servasec.com.svg?variant=ghost&color=6f4599"><img alt="badge" src="https://shieldcn.dev/badge/docs.servasec.com.svg?variant=ghost&color=6f4599"></picture></a>
 </p>
 
 **Application Security Posture Management (ASPM)** platform that aggregates SAST/DAST/SCA scanner findings into a unified dashboard for triaging, tracking, and remediating security vulnerabilities across your application portfolio.
@@ -44,17 +43,32 @@ curl -fsSL https://servasec.com/install.sh | sh
 
 Default admin: `admin` / password displayed at the end of the install.
 
-**Interactive mode** (prompts for admin password, domain, SSO, registration):
+**Interactive mode** (prompts for admin password, domain, registration):
 
 ```bash
 curl -fsSL https://servasec.com/install.sh | sh -s -- -i
 ```
 
-**Install with pro features** (requires `servasec-pro` repo):
+**Build from source** (local build instead of pulling published images):
 
 ```bash
-curl -fsSL https://servasec.com/install.sh | sh -s -- --pro --pro-repo ../servasec-pro
+curl -fsSL https://servasec.com/install.sh | sh -s -- --local-build
 ```
+
+**Install with pro features**:
+
+```bash
+# Pull mode: uses the private backend-pro image (authenticate first)
+docker login registry.gitlab.com
+curl -fsSL https://servasec.com/install.sh | sh -s -- --pro
+
+# Local build mode: requires the servasec-pro repo
+curl -fsSL https://servasec.com/install.sh | sh -s -- --local-build --pro --pro-repo ../servasec-pro
+```
+
+The installer downloads only the deploy files, then pulls the container images
+from `registry.gitlab.com` (no full git clone). Prefix the image tag with
+`--version <tag>` to install a specific release.
 
 **Manual setup** (without the install script):
 
@@ -63,14 +77,27 @@ git clone https://github.com/servasec/servasec.git
 cd servasec
 cp .env.example .env
 # Edit secrets (JWT_SECRET, REFRESH_SECRET, CSRF_SECRET, SSC_ADMIN_PASSWORD)
-make community
-```
 
-See [Environment Variables](#environment-variables) for all available options.
+# Pull the published images from registry.gitlab.com
+make community
+
+# Or build from source instead
+make community-build
+```
 
 ## Scanner Support
 
 Look at https://docs.servasec.com/scanners/overview/ for the complete list of scanners supported.
+
+## Frequently Asked Questions
+
+### Is servasec free and open source?
+
+Yes, servasec is licensed under AGPLv3. Self-host it for free, forever. A separate commercial license is required only for Pro features (audit log, MCP Server, SSO, etc).
+
+### Which scanners does servasec support?
+
+servasec ingests Semgrep, Trivy, Gitleaks, OSV-Scanner, tfsec, SARIF exports and a lot more ! See [supported scanners](https://servasec.com/scanners) for details.
 
 ## Environment Variables
 

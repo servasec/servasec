@@ -293,7 +293,7 @@ func DeletePolicy(c *gin.Context) {
 			return err
 		}
 		return tx.Delete(&policy).Error
-	}).Error; err != nil {
+	}); err != nil {
 		utils.InternalServerError(c, "Failed to delete policy")
 		return
 	}

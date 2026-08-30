@@ -1,0 +1,22 @@
+meta {
+  name: {fid}.assign.patch
+  type: http
+}
+
+patch {
+  url: {{base_url}}{{api_prefix}}/findings/{{finding_id}}/assign
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  X-CSRF-Token: {{csrf_token}}
+}
+
+body:json {
+  {
+    "userId": 1,
+    "dueDate": "2026-08-15T00:00:00Z"
+  }
+}

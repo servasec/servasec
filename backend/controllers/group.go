@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/servasec/servasec/backend/config"
 	"github.com/servasec/servasec/backend/models"
+	"github.com/servasec/servasec/backend/services"
 	"github.com/servasec/servasec/backend/utils"
 )
 
@@ -68,6 +69,11 @@ func CreateGroup(c *gin.Context) {
 	}
 	if err := c.ShouldBindJSON(&input); err != nil {
 		utils.BadRequestError(c, "Invalid input")
+		return
+	}
+
+	if err := services.CheckGroupQuota(); err != nil {
+		services.RespondQuotaExceeded(c, err)
 		return
 	}
 

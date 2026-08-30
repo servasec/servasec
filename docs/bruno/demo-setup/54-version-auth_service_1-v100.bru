@@ -1,0 +1,21 @@
+meta {
+  name: 54-version-auth_service_1-v100
+  type: http
+  seq: 37
+}
+post {
+  url: {{base_url}}{{api_prefix}}/applications/{{auth_service_1_app_id}}/versions
+  body: json
+  auth: none
+}
+headers {
+  Content-Type: application/json
+  X-CSRF-Token: {{csrf_token}}
+}
+body:json {
+  {
+    "name": "v1.0.0",
+    "tag": "v1.0.0",
+    "branch": "main"
+  }
+}

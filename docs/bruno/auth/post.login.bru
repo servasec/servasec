@@ -1,0 +1,23 @@
+meta {
+  name: post.login
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{base_url}}{{api_prefix}}/login
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  X-CSRF-Token: {{csrf_token}}
+}
+
+body:json {
+  {
+    "username": "admin",
+    "password": "{{admin_password}}"
+  }
+}

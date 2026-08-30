@@ -109,7 +109,13 @@ func CreateTeam(c *gin.Context) {
 		return
 	}
 
-	// Phase 1.1: Transaction for team + member creation
+	var existing models.Team
+	errEx := config.DB.Where("name = ?", input.Name).First(&existing).Error
+	if errEx == nil {
+		utils.ConflictError(c, "Team with this name already exists")
+		return
+	}
+
 	var team models.Team
 	err := config.DB.Transaction(func(tx *gorm.DB) error {
 		team = models.Team{
@@ -297,5 +303,3 @@ func RemoveTeamMember(c *gin.Context) {
 
 	utils.OKResponse(c, gin.H{"message": "Member removed"})
 }
-
-

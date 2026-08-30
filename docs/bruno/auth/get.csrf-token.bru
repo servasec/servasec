@@ -1,0 +1,27 @@
+meta {
+  name: get.csrf-token
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{base_url}}{{api_prefix}}/csrf-token
+  body: none
+  auth: none
+}
+
+script:post-response {
+  function onResponse(res) {
+    if (res.getStatus() === 200) {
+      let data = res.getBody();
+      bru.setVar("csrf_token", data.csrfToken);
+      console.log("✓ CSRF token stored:", data.csrfToken.substring(0, 20) + "...");
+      console.log("✓ You can now login or make other requests");
+    } else {
+      console.error("✗ Failed to fetch CSRF token:", res.getStatus(), res.getBody());
+    }
+  }
+  
+  onResponse(res);
+  
+}

@@ -1,0 +1,20 @@
+meta {
+  name: 80-team-platform-member
+  type: http
+  seq: 41
+}
+post {
+  url: {{base_url}}{{api_prefix}}/teams/{{platform_team_id}}/members
+  body: json
+  auth: none
+}
+headers {
+  Content-Type: application/json
+  X-CSRF-Token: {{csrf_token}}
+}
+body:json {
+  {
+    "userId": {{dev_user_id}},
+    "role": "member"
+  }
+}

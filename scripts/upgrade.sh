@@ -1,8 +1,13 @@
 #!/bin/sh
 # Servasec Upgrade Script
 # Usage:
-#   ./scripts/upgrade.sh              # build latest
-#   ./scripts/upgrade.sh v1.1.0       # build and tag v1.1.0
+#   ./scripts/upgrade.sh              # upgrade to latest (pull images from registry.gitlab.com)
+#   ./scripts/upgrade.sh 2.4.3        # upgrade to v2.4.3
+#   ./scripts/upgrade.sh --version 2.4.3
+#   ./scripts/upgrade.sh --local-build  # rebuild from source
+#
+# Default: pulls the published container images from registry.gitlab.com.
+# Add --local-build to rebuild the containers from source.
 #
 # Automatically handles PostgreSQL major version upgrades
 # (dump old PG, remove volume, start new PG, restore).
@@ -11,9 +16,52 @@
 
 set -e
 
-SSC_VERSION="${1:-latest}"
-SSC_COMPOSE="docker compose -f docker-compose.prod.yml"
+BUILD_LOCAL=false
+SSC_VERSION="latest"
+
+while [ $# -gt 0 ]; do
+	case "$1" in
+		--local-build) BUILD_LOCAL=true ;;
+		--version) SSC_VERSION="$2"; shift ;;
+		-h|--help)
+			echo "Usage: $0 [--local-build] [--version <tag>] [<version>]"
+			exit 0
+			;;
+		-*)
+			echo "Unknown option: $1 (use --help)"
+			exit 1
+			;;
+		*)
+			SSC_VERSION="$1"
+			;;
+	esac
+	shift
+done
+
+COMPOSE_FILE="docker-compose.prod.yml"
+COMPOSE_BUILD_FILE="docker-compose.build.yml"
+if [ "$BUILD_LOCAL" = true ]; then
+	SSC_COMPOSE="docker compose -f $COMPOSE_FILE -f $COMPOSE_BUILD_FILE"
+else
+	SSC_COMPOSE="docker compose -f $COMPOSE_FILE"
+fi
 SSC_ENV_FILE=".env"
+
+# Resolve the latest release tag (pull upgrades)
+resolve_latest_tag() {
+	if command -v curl >/dev/null 2>&1; then
+		_tag=$(curl -fsSL --max-time 15 "https://api.github.com/repos/servasec/servasec/releases/latest" 2>/dev/null \
+			| sed -n 's/.*"tag_name"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' | head -1)
+		[ -n "$_tag" ] && { printf '%s' "$_tag"; return 0; }
+	fi
+	if command -v git >/dev/null 2>&1; then
+		_tag=$(git ls-remote --tags --refs "https://github.com/servasec/servasec.git" 2>/dev/null \
+			| awk -F/ '$NF ~ /^v[0-9]+\.[0-9]+\.[0-9]+$/ { v=$NF; sub(/^v/, "", v); print v "\t" $NF }' \
+			| sort -V | tail -1 | cut -f2)
+		[ -n "$_tag" ] && { printf '%s' "$_tag"; return 0; }
+	fi
+	return 1
+}
 
 TS=$(date +%Y%m%d_%H%M%S)
 BACKUP_FILE="servasec_backup_${TS}.sql"
@@ -57,6 +105,11 @@ if [ ! -f "$SSC_ENV_FILE" ]; then
 fi
 
 info "Upgrading Servasec to ${SSC_VERSION}"
+if [ "$BUILD_LOCAL" = true ]; then
+	info "Mode: local build (from source)"
+else
+	info "Mode: images from registry.gitlab.com"
+fi
 echo ""
 
 # ──────────────────────────────────────────────
@@ -128,21 +181,43 @@ else
 fi
 
 # ──────────────────────────────────────────────
-#  3. Pull base images
+#  3. Pull images
 # ──────────────────────────────────────────────
 
 echo ""
-info "[3/5] Pulling base images..."
+info "[3/5] Pulling images..."
+if [ "$BUILD_LOCAL" = false ]; then
+	if [ "$SSC_VERSION" = "latest" ]; then
+		IMAGE_TAG="$(resolve_latest_tag)"
+	else
+		IMAGE_TAG="$(printf '%s' "$SSC_VERSION" | sed 's/^v//')"
+	fi
+	[ -n "$IMAGE_TAG" ] || fail "Could not determine the latest version. Pass an explicit version (e.g. ./scripts/upgrade.sh 2.4.3)."
+
+	if [ -f "$SSC_ENV_FILE" ]; then
+		if grep -q "^SSC_IMAGE_TAG=" "$SSC_ENV_FILE" 2>/dev/null; then
+			sed -i.bak "s|^SSC_IMAGE_TAG=.*|SSC_IMAGE_TAG=$IMAGE_TAG|" "$SSC_ENV_FILE" && rm -f "$SSC_ENV_FILE.bak"
+		else
+			echo "SSC_IMAGE_TAG=$IMAGE_TAG" >> "$SSC_ENV_FILE"
+		fi
+	fi
+	info "Upgrading to image tag: ${IMAGE_TAG}"
+fi
 $SSC_COMPOSE pull --quiet 2>/dev/null || true
 ok "Images pulled"
 
 # ──────────────────────────────────────────────
-#  4. Build & restart
+#  4. Restart (pull) or build & restart (local)
 # ──────────────────────────────────────────────
 
 echo ""
-info "[4/5] Building servasec:${SSC_VERSION} and restarting..."
-SSC_VERSION="$SSC_VERSION" $SSC_COMPOSE up --build -d
+if [ "$BUILD_LOCAL" = true ]; then
+	info "[4/5] Building servasec:${SSC_VERSION} and restarting..."
+	SSC_VERSION="$SSC_VERSION" $SSC_COMPOSE up --build -d
+else
+	info "[4/5] Restarting with servasec:${IMAGE_TAG}..."
+	$SSC_COMPOSE up -d
+fi
 ok "Services restarted"
 
 # ──────────────────────────────────────────────

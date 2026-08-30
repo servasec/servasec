@@ -1,0 +1,23 @@
+meta {
+  name: {uid}.put
+  type: http
+}
+
+put {
+  url: {{base_url}}{{api_prefix}}/users/{{user_id}}
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  X-CSRF-Token: {{csrf_token}}
+}
+
+body:json {
+  {
+    "username": "admin",
+    "email": "admin@example.com",
+    "role": "admin"
+  }
+}

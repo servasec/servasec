@@ -4,6 +4,7 @@ import (
 	"crypto/ecdsa"
 	"crypto/x509"
 	"encoding/hex"
+	"os"
 	"strings"
 	"time"
 
@@ -14,12 +15,22 @@ var ecdsaPublicKeyHex = "3059301306072a8648ce3d020106082a8648ce3d030107034200047
 
 var cachedPublicKey *ecdsa.PublicKey
 
+// PublicKeyHex returns the license signing public key in DER PKIX hex.
+// SSC_LICENSE_PUBLIC_KEY_HEX overrides the compiled-in default so managed
+// instances can validate licenses issued by the control plane.
+func PublicKeyHex() string {
+	if v := os.Getenv("SSC_LICENSE_PUBLIC_KEY_HEX"); v != "" {
+		return v
+	}
+	return ecdsaPublicKeyHex
+}
+
 func publicKey() *ecdsa.PublicKey {
 	if cachedPublicKey != nil {
 		return cachedPublicKey
 	}
 
-	der, err := hex.DecodeString(ecdsaPublicKeyHex)
+	der, err := hex.DecodeString(PublicKeyHex())
 	if err != nil {
 		return nil
 	}
@@ -38,12 +49,25 @@ func publicKey() *ecdsa.PublicKey {
 	return key
 }
 
+type Quota struct {
+	Groups       int `json:"groups"`
+	Applications int `json:"applications"`
+	Versions     int `json:"versions"`
+	Users        int `json:"users"`
+}
+
 type licenseClaims struct {
 	Features []string `json:"features"`
+	Quota    *Quota   `json:"quota,omitempty"`
 	jwt.RegisteredClaims
 }
 
-func ParseLicense(licenseKey string) []string {
+type parsedLicense struct {
+	Features []string
+	Quota    *Quota
+}
+
+func ParseLicenseFull(licenseKey string) *parsedLicense {
 	key := strings.TrimSpace(licenseKey)
 	if key == "" {
 		return nil
@@ -73,5 +97,16 @@ func ParseLicense(licenseKey string) []string {
 		return nil
 	}
 
-	return claims.Features
+	return &parsedLicense{
+		Features: claims.Features,
+		Quota:    claims.Quota,
+	}
+}
+
+func ParseLicense(licenseKey string) []string {
+	pl := ParseLicenseFull(licenseKey)
+	if pl == nil {
+		return nil
+	}
+	return pl.Features
 }

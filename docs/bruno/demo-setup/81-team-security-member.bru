@@ -1,0 +1,20 @@
+meta {
+  name: 81-team-security-member
+  type: http
+  seq: 42
+}
+post {
+  url: {{base_url}}{{api_prefix}}/teams/{{security_team_id}}/members
+  body: json
+  auth: none
+}
+headers {
+  Content-Type: application/json
+  X-CSRF-Token: {{csrf_token}}
+}
+body:json {
+  {
+    "userId": {{sec_user_id}},
+    "role": "member"
+  }
+}

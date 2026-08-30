@@ -8,6 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/servasec/servasec/backend/config"
 	"github.com/servasec/servasec/backend/models"
+	"github.com/servasec/servasec/backend/services"
 	"github.com/servasec/servasec/backend/utils"
 	"gorm.io/gorm"
 )
@@ -97,6 +98,11 @@ func CreateApplication(c *gin.Context) {
 		return
 	}
 
+	if err := services.CheckApplicationQuota(); err != nil {
+		services.RespondQuotaExceeded(c, err)
+		return
+	}
+
 	var group models.Group
 	if err := config.DB.First(&group, input.GroupID).Error; err != nil {
 		utils.NotFoundError(c, "Group not found")
@@ -109,13 +115,14 @@ func CreateApplication(c *gin.Context) {
 		return
 	}
 
+	rawToken := generateApiToken()
 	app := models.Application{
 		Name:             input.Name,
 		Description:      input.Description,
 		Slug:             input.Slug,
 		GroupID:          input.GroupID,
 		RepositoryURL:    input.RepositoryURL,
-		ApiToken:         generateApiToken(),
+		ApiToken:         utils.HashToHex(rawToken),
 		AssetCriticality: input.AssetCriticality,
 	}
 	if app.AssetCriticality == "" {
@@ -138,7 +145,7 @@ func CreateApplication(c *gin.Context) {
 		"slug":             app.Slug,
 		"groupId":          app.GroupID,
 		"repositoryUrl":    app.RepositoryURL,
-		"apiToken":         app.ApiToken,
+		"apiToken":         rawToken,
 		"assetCriticality": app.AssetCriticality,
 		"createdAt":        app.CreatedAt,
 		"updatedAt":        app.UpdatedAt,
@@ -248,10 +255,11 @@ func RegenerateApiToken(c *gin.Context) {
 		return
 	}
 
-	app.ApiToken = generateApiToken()
+	rawToken := generateApiToken()
+	app.ApiToken = utils.HashToHex(rawToken)
 	if err := config.DB.Save(&app).Error; err != nil {
 		utils.InternalServerError(c, "failed to regenerate API token")
 		return
 	}
-	utils.OKResponse(c, gin.H{"apiToken": app.ApiToken})
+	utils.OKResponse(c, gin.H{"apiToken": rawToken})
 }

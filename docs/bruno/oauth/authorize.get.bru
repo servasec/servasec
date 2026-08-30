@@ -1,0 +1,10 @@
+meta {
+  name: authorize.get
+  type: http
+}
+
+get {
+  url: {{base_url}}/oauth/authorize?client_id={{client_id}}&redirect_uri={{redirect_uri}}&response_type=code&code_challenge={{code_challenge}}&code_challenge_method=S256&state={{state}}
+  body: none
+  auth: none
+}

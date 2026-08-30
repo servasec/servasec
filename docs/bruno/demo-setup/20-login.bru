@@ -1,0 +1,25 @@
+meta {
+  name: 20-login
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{base_url}}{{api_prefix}}/login
+  body: json
+  auth: none
+}
+headers {
+  X-CSRF-Token: {{csrf_token}}
+  Content-Type: application/json
+}
+body:json {
+  {
+    "username": "admin",
+    "password": "{{admin_password}}"
+  }
+}
+script:post-response {
+  bru.setVar("access_token", res.body.accessToken);
+  bru.setEnvVar("access_token", res.body.accessToken);
+}

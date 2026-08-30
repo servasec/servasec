@@ -1,8 +1,9 @@
 image:
   backend:
-    repository: ghcr.io/servasec/servasec/backend-pro
+    repository: registry.gitlab.com/servasec/servasec/backend-pro
     tag: ""
     pullPolicy: Always
 
 secrets:
   licenseKey: "ssc_xxxxx"
+  licensePublicKey: ""

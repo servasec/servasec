@@ -1,0 +1,23 @@
+meta {
+  name: post
+  type: http
+}
+
+post {
+  url: {{base_url}}{{api_prefix}}/groups
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  X-CSRF-Token: {{csrf_token}}
+}
+
+body:json {
+  {
+    "name": "My Group",
+    "description": "Group description",
+    "path": "my-group"
+  }
+}

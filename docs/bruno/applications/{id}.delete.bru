@@ -1,0 +1,14 @@
+meta {
+  name: {id}.delete
+  type: http
+}
+
+delete {
+  url: {{base_url}}{{api_prefix}}/applications/{{app_id}}
+  body: none
+  auth: none
+}
+
+headers {
+  X-CSRF-Token: {{csrf_token}}
+}

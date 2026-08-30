@@ -1,0 +1,23 @@
+meta {
+  name: post
+  type: http
+}
+
+post {
+  url: {{base_url}}{{api_prefix}}/admin/permissions
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  X-CSRF-Token: {{csrf_token}}
+}
+
+body:json {
+  {
+    "subject": "user:2",
+    "resource": "/applications/1",
+    "action": "read"
+  }
+}

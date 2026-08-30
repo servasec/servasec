@@ -23,8 +23,14 @@ func ValidateSecrets() {
 	if len(AccessSecret) == 0 {
 		log.Fatal("JWT_SECRET environment variable is required but not set")
 	}
+	if len(AccessSecret) < 32 {
+		log.Fatal("JWT_SECRET must be at least 32 bytes (256 bits) for HS256")
+	}
 	if len(RefreshSecret) == 0 {
 		log.Fatal("REFRESH_SECRET environment variable is required but not set")
+	}
+	if len(RefreshSecret) < 32 {
+		log.Fatal("REFRESH_SECRET must be at least 32 bytes (256 bits) for HS256")
 	}
 }
 

@@ -2,10 +2,7 @@ services:
   frontend:
     container_name: frontend
     restart: unless-stopped
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-      target: prod
+    image: registry.gitlab.com/servasec/servasec/frontend:${SSC_IMAGE_TAG:-latest}
     environment:
       - INTERNAL_API_URL=http://backend:8080
       - NODE_ENV=production
@@ -17,12 +14,7 @@ services:
   backend:
     container_name: backend
     restart: unless-stopped
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-      target: prod
-      args:
-        BUILD_TAGS: ${BUILD_TAGS:-}
+    image: registry.gitlab.com/servasec/servasec/${SSC_BACKEND_IMAGE:-backend}:${SSC_IMAGE_TAG:-latest}
     depends_on:
       db:
         condition: service_healthy
@@ -75,9 +67,7 @@ services:
     container_name: caddy
     restart: unless-stopped
     hostname: servasec.local
-    build:
-      context: caddy/
-      dockerfile: Dockerfile
+    image: registry.gitlab.com/servasec/servasec/caddy:${SSC_IMAGE_TAG:-latest}
     environment:
       - SSC_PUBLIC_DOMAIN=${SSC_PUBLIC_DOMAIN}
     ports:

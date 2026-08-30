@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/dialog";
 import axios from "@/lib/api";
 import { toast } from "sonner";
+import { quotaErrorMessage } from "@/lib/utils";
 import type { Application, Group } from "@/lib/types";
 
 interface FormData {
@@ -116,7 +117,7 @@ export default function ApplicationsListPage() {
       setDialogOpen(false);
       fetchData();
     } catch (error: any) {
-      toast.error(error?.response?.data?.error || "Failed to save application");
+      toast.error(quotaErrorMessage(error, "Failed to save application"));
     } finally {
       setSaving(false);
     }

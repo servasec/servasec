@@ -1,0 +1,23 @@
+meta {
+  name: 70-team-product
+  type: http
+  seq: 40
+}
+post {
+  url: {{base_url}}{{api_prefix}}/teams
+  body: json
+  auth: none
+}
+headers {
+  Content-Type: application/json
+  X-CSRF-Token: {{csrf_token}}
+}
+body:json {
+  {
+    "name": "Product Delivery {{run_id}}",
+    "description": "Product delivery & release management"
+  }
+}
+script:post-response {
+  bru.setVar("product_team_id", res.body.id);
+}

@@ -1,0 +1,22 @@
+meta {
+  name: {gid}.put
+  type: http
+}
+
+put {
+  url: {{base_url}}{{api_prefix}}/groups/{{group_id}}
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  X-CSRF-Token: {{csrf_token}}
+}
+
+body:json {
+  {
+    "name": "My Group Updated",
+    "description": "Updated description"
+  }
+}

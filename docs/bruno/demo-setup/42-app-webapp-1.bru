@@ -1,0 +1,27 @@
+meta {
+  name: 42-app-webapp-1
+  type: http
+  seq: 12
+}
+post {
+  url: {{base_url}}{{api_prefix}}/applications
+  body: json
+  auth: none
+}
+headers {
+  Content-Type: application/json
+  X-CSRF-Token: {{csrf_token}}
+}
+body:json {
+  {
+    "name": "Web Application 1 {{run_id}}",
+    "slug": "web-app-1-{{run_id}}",
+    "description": "Web Application 1 instance",
+    "groupId": {{engineering_group_id}},
+    "repositoryUrl": "https://github.com/servasec/web-app-1-{{run_id}}",
+    "assetCriticality": "high"
+  }
+}
+script:post-response {
+  bru.setVar("web_app_1_app_id", res.body.id);
+}

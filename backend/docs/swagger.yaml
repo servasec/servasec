@@ -107,6 +107,14 @@ definitions:
       title:
         type: string
     type: object
+  controllers.createApiKeyInput:
+    properties:
+      name:
+        maxLength: 100
+        type: string
+    required:
+    - name
+    type: object
   dto.LoginInput:
     properties:
       password:
@@ -164,6 +172,8 @@ definitions:
     type: object
   models.ApplicationVersion:
     properties:
+      application:
+        $ref: '#/definitions/models.Application'
       applicationId:
         type: integer
       branch:
@@ -264,6 +274,25 @@ definitions:
       name:
         type: string
       path:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  models.IssueTrackerIssue:
+    properties:
+      createdAt:
+        type: string
+      externalIssueId:
+        type: string
+      externalIssueUrl:
+        type: string
+      findingId:
+        type: integer
+      id:
+        type: integer
+      issueTrackerId:
+        type: integer
+      status:
         type: string
       updatedAt:
         type: string
@@ -385,6 +414,8 @@ definitions:
         type: string
       email:
         type: string
+      hasSeenOnboarding:
+        type: boolean
       id:
         type: integer
       oauthId:
@@ -397,6 +428,23 @@ definitions:
         type: string
       username:
         type: string
+    type: object
+  models.UserApiKey:
+    properties:
+      createdAt:
+        type: string
+      expiresAt:
+        type: string
+      id:
+        type: integer
+      keyPrefix:
+        type: string
+      lastUsedAt:
+        type: string
+      name:
+        type: string
+      userId:
+        type: integer
     type: object
   models.Webhook:
     properties:
@@ -564,52 +612,66 @@ paths:
       summary: Update scanner type
       tags:
       - Scanner Types
-  /api/ingest:
+  /api-keys:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of API keys
+          schema:
+            items:
+              $ref: '#/definitions/models.UserApiKey'
+            type: array
+      summary: List API keys for the current user
+      tags:
+      - API Keys
     post:
       consumes:
-      - multipart/form-data
-      description: Upload a scan results file. Authenticate via API token header,
-        application ID in path, or application slug in path.
+      - application/json
       parameters:
-      - description: Version name
-        in: formData
-        name: version
-        type: string
-      - description: Branch name
-        in: formData
-        name: branch
-        type: string
-      - description: Scanner type name
-        in: formData
-        name: scannerType
-        type: string
-      - description: Scan results file (SARIF, etc.)
-        in: formData
-        name: file
+      - description: API key name
+        in: body
+        name: input
         required: true
-        type: file
-      - description: API token (alternative to id/slug auth)
-        in: header
-        name: X-Api-Token
-        type: string
+        schema:
+          $ref: '#/definitions/controllers.createApiKeyInput'
       produces:
       - application/json
       responses:
         "201":
-          description: Scan created with findings count
+          description: Created API key with raw key value
           schema:
             $ref: '#/definitions/gin.H'
         "400":
-          description: Bad request
+          description: Invalid input
+          schema:
+            $ref: '#/definitions/gin.H'
+      summary: Create API key for the current user
+      tags:
+      - API Keys
+  /api-keys/{id}:
+    delete:
+      parameters:
+      - description: API key ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: API key revoked
           schema:
             $ref: '#/definitions/gin.H'
         "404":
-          description: Application not found
+          description: API key not found
           schema:
             $ref: '#/definitions/gin.H'
-      summary: Ingest scan results
+      summary: Revoke an API key
       tags:
-      - Scans
+      - API Keys
   /applications:
     get:
       produces:
@@ -672,11 +734,11 @@ paths:
       - Applications
     get:
       parameters:
-      - description: Application ID or slug
+      - description: Application ID
         in: path
         name: id
         required: true
-        type: string
+        type: integer
       produces:
       - application/json
       responses:
@@ -774,6 +836,135 @@ paths:
       summary: Ingest scan results
       tags:
       - Scans
+  /applications/{id}/issue-tracker:
+    delete:
+      parameters:
+      - description: Application ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No content
+        "404":
+          description: Issue tracker not found
+          schema:
+            $ref: '#/definitions/gin.H'
+      summary: Delete issue tracker configuration
+      tags:
+      - Issue Tracker
+    get:
+      parameters:
+      - description: Application ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Issue tracker config
+          schema:
+            $ref: '#/definitions/gin.H'
+        "404":
+          description: Application or issue tracker not found
+          schema:
+            $ref: '#/definitions/gin.H'
+      summary: Get issue tracker configuration
+      tags:
+      - Issue Tracker
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Application ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Issue tracker config (provider, authType, token, severityThreshold,
+          etc.)
+        in: body
+        name: input
+        required: true
+        schema:
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Updated issue tracker
+          schema:
+            $ref: '#/definitions/gin.H'
+        "201":
+          description: Created issue tracker
+          schema:
+            $ref: '#/definitions/gin.H'
+        "400":
+          description: Invalid input
+          schema:
+            $ref: '#/definitions/gin.H'
+        "404":
+          description: Application not found
+          schema:
+            $ref: '#/definitions/gin.H'
+      summary: Upsert issue tracker configuration
+      tags:
+      - Issue Tracker
+  /applications/{id}/issue-tracker/issues:
+    get:
+      parameters:
+      - description: Application ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of issues
+          schema:
+            items:
+              $ref: '#/definitions/models.IssueTrackerIssue'
+            type: array
+        "404":
+          description: Issue tracker not configured
+          schema:
+            $ref: '#/definitions/gin.H'
+      summary: List issue tracker issues associated with findings
+      tags:
+      - Issue Tracker
+  /applications/{id}/issue-tracker/test:
+    post:
+      parameters:
+      - description: Application ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Connection successful
+          schema:
+            $ref: '#/definitions/gin.H'
+        "400":
+          description: Connection failed
+          schema:
+            $ref: '#/definitions/gin.H'
+        "404":
+          description: Application or issue tracker not found
+          schema:
+            $ref: '#/definitions/gin.H'
+      summary: Test issue tracker connection
+      tags:
+      - Issue Tracker
   /applications/{id}/permissions:
     delete:
       consumes:
@@ -1562,6 +1753,52 @@ paths:
       summary: Update group
       tags:
       - Groups
+  /ingest:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Upload a scan results file. Authenticate via API token header,
+        application ID in path, or application slug in path.
+      parameters:
+      - description: Version name
+        in: formData
+        name: version
+        type: string
+      - description: Branch name
+        in: formData
+        name: branch
+        type: string
+      - description: Scanner type name
+        in: formData
+        name: scannerType
+        type: string
+      - description: Scan results file (SARIF, etc.)
+        in: formData
+        name: file
+        required: true
+        type: file
+      - description: API token (alternative to id/slug auth)
+        in: header
+        name: X-Api-Token
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Scan created with findings count
+          schema:
+            $ref: '#/definitions/gin.H'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/gin.H'
+        "404":
+          description: Application not found
+          schema:
+            $ref: '#/definitions/gin.H'
+      summary: Ingest scan results
+      tags:
+      - Scans
   /login:
     post:
       consumes:
@@ -1645,6 +1882,22 @@ paths:
           schema:
             $ref: '#/definitions/gin.H'
       summary: Update current user profile
+      tags:
+      - Auth
+  /me/onboarding:
+    patch:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Onboarding marked as seen
+          schema:
+            $ref: '#/definitions/gin.H'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/gin.H'
+      summary: Mark onboarding as seen
       tags:
       - Auth
   /me/password:

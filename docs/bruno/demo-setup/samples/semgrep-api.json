@@ -1,0 +1,106 @@
+{
+  "results": [
+    {
+      "check_id": "python.lang.security.audit.dangerous-system-call.dangerous-system-call",
+      "path": "src/api/deploy.py",
+      "start": {
+        "line": 30
+      },
+      "end": {
+        "line": 30
+      },
+      "extra": {
+        "message": "Command injection via os.system() in deploy script",
+        "severity": "ERROR",
+        "metadata": {
+          "cwe": "CWE-78"
+        }
+      }
+    },
+    {
+      "check_id": "python.lang.security.audit.dangerous-system-call.dangerous-system-call",
+      "path": "src/api/backup.py",
+      "start": {
+        "line": 45
+      },
+      "end": {
+        "line": 45
+      },
+      "extra": {
+        "message": "Shell injection in backup command",
+        "severity": "ERROR",
+        "metadata": {
+          "cwe": "CWE-78"
+        }
+      }
+    },
+    {
+      "check_id": "python.lang.security.audit.exec-unsafe",
+      "path": "src/api/exec.py",
+      "start": {
+        "line": 22
+      },
+      "end": {
+        "line": 22
+      },
+      "extra": {
+        "message": "Unsafe eval() of user-controlled input",
+        "severity": "ERROR",
+        "metadata": {
+          "cwe": "CWE-95"
+        }
+      }
+    },
+    {
+      "check_id": "python.flask.security.audit.flask-secure-cookie",
+      "path": "src/web/session.py",
+      "start": {
+        "line": 15
+      },
+      "end": {
+        "line": 15
+      },
+      "extra": {
+        "message": "Session cookie without Secure/HttpOnly flags",
+        "severity": "WARNING",
+        "metadata": {
+          "cwe": "CWE-614"
+        }
+      }
+    },
+    {
+      "check_id": "python.flask.security.audit.flask-debug-mode",
+      "path": "src/api/app.py",
+      "start": {
+        "line": 5
+      },
+      "end": {
+        "line": 5
+      },
+      "extra": {
+        "message": "Flask debug mode enabled in production",
+        "severity": "HIGH",
+        "metadata": {
+          "cwe": "CWE-489"
+        }
+      }
+    },
+    {
+      "check_id": "python.lang.security.audit.sql-injection",
+      "path": "src/api/users.py",
+      "start": {
+        "line": 60
+      },
+      "end": {
+        "line": 65
+      },
+      "extra": {
+        "message": "SQL injection via f-string in query",
+        "severity": "ERROR",
+        "metadata": {
+          "cwe": "CWE-89"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+meta {
+  name: post.refresh
+  type: http
+}
+
+post {
+  url: {{base_url}}{{api_prefix}}/refresh
+  body: none
+  auth: none
+}
+
+headers {
+  X-CSRF-Token: {{csrf_token}}
+}

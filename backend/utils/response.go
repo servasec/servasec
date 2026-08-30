@@ -54,6 +54,21 @@ func TooManyRequestsError(c *gin.Context, message string) {
 	ErrorResponse(c, http.StatusTooManyRequests, message)
 }
 
+func PaymentRequiredError(c *gin.Context, message string) {
+	ErrorResponse(c, http.StatusPaymentRequired, message)
+}
+
+// QuotaExceededResponse returns a 402 with structured quota details so the
+// frontend can surface upgrade prompts per resource.
+func QuotaExceededResponse(c *gin.Context, resource string, limit, usage int) {
+	c.JSON(http.StatusPaymentRequired, gin.H{
+		"error":    "quota_exceeded",
+		"resource": resource,
+		"limit":    limit,
+		"usage":    usage,
+	})
+}
+
 func ServiceUnavailableError(c *gin.Context, message string) {
 	ErrorResponse(c, http.StatusServiceUnavailable, message)
 }

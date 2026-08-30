@@ -1,0 +1,10 @@
+meta {
+  name: {id}.versions.{vid}.findings.get
+  type: http
+}
+
+get {
+  url: {{base_url}}{{api_prefix}}/applications/{{app_id}}/versions/{{version_id}}/findings
+  body: none
+  auth: none
+}

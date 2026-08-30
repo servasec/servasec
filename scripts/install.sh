@@ -1,13 +1,16 @@
 #!/bin/sh
 # Servasec Install Script
 # Usage:
-#   curl -fsSL https://servasec.com/install.sh | sh          # one-liner (clones repo)
-#   curl -fsSL https://servasec.com/install.sh | sh -s -- -i  # interactive
-#   ./scripts/install.sh                                      # from repo root
-#   ./scripts/install.sh -i                                   # interactive
-#   ./scripts/install.sh --no-check                           # skip git check
+#   curl -fsSL https://servasec.com/install.sh | sh            # one-liner: pulls images
+#   curl -fsSL https://servasec.com/install.sh | sh -s -- -i    # interactive
+#   curl -fsSL https://servasec.com/install.sh | sh -s -- --local-build
+#   ./scripts/install.sh                                        # from repo root
+#   ./scripts/install.sh -i                                     # interactive
+#   ./scripts/install.sh --no-check                             # skip git check
 #
-# Builds the stack using docker-compose.prod.yml.
+# By default only the deploy files are downloaded (no full git clone) and the
+# container images are pulled from registry.gitlab.com. Add --local-build to
+# build the images from source (requires the full repository).
 
 set -e
 
@@ -43,11 +46,18 @@ INTERACTIVE=false
 CHECK_GIT=true
 PRO_ENABLED=false
 PRO_REPO_DIR=""
+BUILD_LOCAL=false
+SSC_VERSION=""
 
 while [ $# -gt 0 ]; do
     case "$1" in
         -i|--interactive) INTERACTIVE=true ;;
         --no-check)       CHECK_GIT=false ;;
+        --local-build)    BUILD_LOCAL=true ;;
+        --version)
+            SSC_VERSION="$2"
+            shift
+            ;;
         --pro)            PRO_ENABLED=true ;;
         --pro-repo)
             PRO_ENABLED=true
@@ -64,8 +74,10 @@ while [ $# -gt 0 ]; do
             echo "Options:"
             echo "  -i, --interactive        Ask questions before install"
             echo "  --no-check               Skip git branch/tag verification"
-            echo "  --pro                    Build with pro features (requires servasec-pro repo)"
-            echo "  --pro-repo <path>        Path to servasec-pro repo (default: ../servasec-pro)"
+            echo "  --local-build            Build images from source (default: pull from registry.gitlab.com)"
+            echo "  --version <tag>          Install a specific release (default: latest)"
+            echo "  --pro                    Enable pro features (backend-pro image, requires docker login)"
+            echo "  --pro-repo <path>        Path to servasec-pro repo (local build only)"
             echo "  --dir <path>             Install directory (default: /opt/servasec)"
             echo "  -h, --help               Show this help"
             exit 0
@@ -104,7 +116,9 @@ dim()   { printf "${DIM}%s${NC}" "$1"; }
 # ──────────────────────────────────────────────
 
 COMPOSE_FILE="docker-compose.prod.yml"
+COMPOSE_BUILD_FILE="docker-compose.build.yml"
 SSC_COMPOSE="docker compose -f $COMPOSE_FILE"
+SSC_COMPOSE_BUILD="docker compose -f $COMPOSE_FILE -f $COMPOSE_BUILD_FILE"
 SSC_ENV_FILE=".env"
 SSC_EXAMPLE=".env.example"
 
@@ -112,10 +126,29 @@ DEFAULT_DOMAIN="servasec.local"
 DEFAULT_PRO_REPO="../servasec-pro"
 
 # ──────────────────────────────────────────────
-#  If not in a repo, clone it
+#  Resolve the latest release tag (pull installs)
 # ──────────────────────────────────────────────
 
-# For remote interactive installs, ask install dir BEFORE cloning
+resolve_latest_tag() {
+    if command -v curl >/dev/null 2>&1; then
+        _tag=$(curl -fsSL --max-time 15 "https://api.github.com/repos/servasec/servasec/releases/latest" 2>/dev/null \
+            | sed -n 's/.*"tag_name"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' | head -1)
+        [ -n "$_tag" ] && { printf '%s' "$_tag"; return 0; }
+    fi
+    if command -v git >/dev/null 2>&1; then
+        _tag=$(git ls-remote --tags --refs "$REPO_URL" 2>/dev/null \
+            | awk -F/ '$NF ~ /^v[0-9]+\.[0-9]+\.[0-9]+$/ { v=$NF; sub(/^v/, "", v); print v "\t" $NF }' \
+            | sort -V | tail -1 | cut -f2)
+        [ -n "$_tag" ] && { printf '%s' "$_tag"; return 0; }
+    fi
+    return 1
+}
+
+# ──────────────────────────────────────────────
+#  If not in a repo: get the deploy files
+# ──────────────────────────────────────────────
+
+# For remote interactive installs, ask install dir BEFORE fetching
 if [ -z "$REPO_ROOT" ] && [ "$INTERACTIVE" = true ]; then
     printf "\n"
     prompt "Install directory"
@@ -127,39 +160,100 @@ if [ -z "$REPO_ROOT" ] && [ "$INTERACTIVE" = true ]; then
     fi
 fi
 
-if [ -z "$REPO_ROOT" ]; then
-    printf "\n"
-    printf "\033[0;34mi\033[0m  Not inside Servasec repo - cloning latest release...\n"
+REMOTE_DOWNLOAD=false
 
-    command -v git >/dev/null 2>&1 || {
-        printf "\033[0;31m✗\033[0m  git is required for remote install. Install git first.\n"
+if [ -z "$REPO_ROOT" ]; then
+    command -v curl >/dev/null 2>&1 || command -v git >/dev/null 2>&1 || {
+        printf "\033[0;31m✗\033[0m  curl or git is required for remote install. Install one of them first.\n"
         exit 1
     }
 
-    # Create parent directory if needed
-    mkdir -p "$(dirname "$INSTALL_DIR")"
+    # Default path: download only the deploy files (no git clone) - container
+    # images are pulled from registry.gitlab.com.
+    if [ "$BUILD_LOCAL" = false ] && command -v curl >/dev/null 2>&1; then
+        printf "\n"
+        printf "\033[0;34mi\033[0m  Not inside Servasec repo - downloading release files (images will be pulled from registry.gitlab.com)...\n"
 
-    if [ -d "$INSTALL_DIR/.git" ]; then
-        printf "\033[0;34mi\033[0m  Updating existing clone at %s...\n" "$INSTALL_DIR"
-        git -C "$INSTALL_DIR" fetch --tags --quiet 2>/dev/null || true
+        if [ -n "$SSC_VERSION" ]; then
+            case "$SSC_VERSION" in
+                v*) TAG="$SSC_VERSION" ;;
+                *)  TAG="v$SSC_VERSION" ;;
+            esac
+        else
+            TAG="$(resolve_latest_tag)"
+        fi
+        [ -n "$TAG" ] || fail "Could not determine the latest release. Use --version <tag> to pin one."
+        IMAGE_TAG="${TAG#v}"
+
+        mkdir -p "$INSTALL_DIR/scripts"
+        for f in docker-compose.prod.yml docker-compose.build.yml .env.example; do
+            curl -fsSL --max-time 30 "https://raw.githubusercontent.com/servasec/servasec/$TAG/$f" -o "$INSTALL_DIR/$f" \
+                || fail "Failed to download $f for $TAG (check --version)."
+        done
+        if curl -fsSL --max-time 30 "https://raw.githubusercontent.com/servasec/servasec/$TAG/scripts/upgrade.sh" -o "$INSTALL_DIR/scripts/upgrade.sh" 2>/dev/null; then
+            chmod +x "$INSTALL_DIR/scripts/upgrade.sh"
+        fi
+
+        REPO_ROOT="$INSTALL_DIR"
+        REMOTE_DOWNLOAD=true
+        printf "\033[0;32m✓\033[0m  Release %s\033[0m\n" "$TAG"
     else
-        rm -rf "$INSTALL_DIR"
-        git clone --quiet --no-checkout "$REPO_URL" "$INSTALL_DIR"
-    fi
+        [ "$BUILD_LOCAL" = true ] || warn "curl not found - falling back to a full git clone for the deploy files."
+        printf "\n"
+        printf "\033[0;34mi\033[0m  Not inside Servasec repo - cloning latest release...\n"
 
-    # Always checkout latest release tag, never default branch
-    LATEST_TAG=$(git -C "$INSTALL_DIR" tag --list --sort=-version:refname | head -1)
-    if [ -n "$LATEST_TAG" ]; then
-        git -C "$INSTALL_DIR" checkout --quiet "$LATEST_TAG"
-        printf "\033[0;32m✓\033[0m  On release %s\n" "$LATEST_TAG"
-    else
-        fail "No release tags found. Cannot install from remote."
-    fi
+        command -v git >/dev/null 2>&1 || {
+            printf "\033[0;31m✗\033[0m  git is required for remote install. Install git first.\n"
+            exit 1
+        }
 
-    REPO_ROOT="$INSTALL_DIR"
+        # Create parent directory if needed
+        mkdir -p "$(dirname "$INSTALL_DIR")"
+
+        if [ -d "$INSTALL_DIR/.git" ]; then
+            printf "\033[0;34mi\033[0m  Updating existing clone at %s...\n" "$INSTALL_DIR"
+            git -C "$INSTALL_DIR" fetch --tags --quiet 2>/dev/null || true
+        else
+            rm -rf "$INSTALL_DIR"
+            git clone --quiet --no-checkout "$REPO_URL" "$INSTALL_DIR"
+        fi
+
+        # Always checkout latest release tag, never default branch
+        if [ -n "$SSC_VERSION" ]; then
+            case "$SSC_VERSION" in
+                v*) CHECKOUT_TAG="$SSC_VERSION" ;;
+                *)  CHECKOUT_TAG="v$SSC_VERSION" ;;
+            esac
+        else
+            CHECKOUT_TAG=$(git -C "$INSTALL_DIR" tag --list --sort=-version:refname | head -1)
+        fi
+        if [ -n "$CHECKOUT_TAG" ]; then
+            git -C "$INSTALL_DIR" checkout --quiet "$CHECKOUT_TAG"
+            printf "\033[0;32m✓\033[0m  On release %s\n" "$CHECKOUT_TAG"
+        else
+            fail "No release tags found. Cannot install from remote."
+        fi
+
+        REPO_ROOT="$INSTALL_DIR"
+    fi
 fi
 
 cd "$REPO_ROOT" || { printf "\033[0;31m✗\033[0m  Cannot cd to %s\n" "$REPO_ROOT"; exit 1; }
+
+# Resolve the container image tag: from the git checkout when available,
+# otherwise from the release pinned at download time.
+if [ "$REMOTE_DOWNLOAD" = false ]; then
+    IMAGE_TAG="latest"
+    if git rev-parse --git-dir >/dev/null 2>&1; then
+        _tag=$(git describe --tags --exact HEAD 2>/dev/null || true)
+        [ -z "$_tag" ] && _tag=$(git describe --tags --abbrev=0 2>/dev/null || true)
+        if [ -n "$_tag" ]; then
+            IMAGE_TAG="${_tag#v}"
+        fi
+    else
+        warn "No git checkout detected - using image tag 'latest'."
+    fi
+fi
 
 # ──────────────────────────────────────────────
 #  1. Check prerequisites
@@ -450,31 +544,29 @@ if [ "$PRO_ENABLED" = true ]; then
     printf "\n"
     info "Setting up pro features..."
 
-    if [ -z "$PRO_REPO_DIR" ]; then
-        PRO_REPO_DIR="$DEFAULT_PRO_REPO"
-    fi
-
-    if [ ! -d "$PRO_REPO_DIR" ]; then
-        fail "Pro repo not found at: $PRO_REPO_DIR"
-    fi
-
-    if [ ! -d "$PRO_REPO_DIR/backend/pro" ]; then
-        fail "Pro backend not found at: $PRO_REPO_DIR/backend/pro/"
-    fi
-
-    mkdir -p backend/pro
-    cp "$PRO_REPO_DIR"/backend/pro/*.go backend/pro/
-    ok "Pro files copied from $PRO_REPO_DIR"
-
-    if [ -f "$SSC_ENV_FILE" ]; then
-        if grep -q "^BUILD_TAGS=" "$SSC_ENV_FILE" 2>/dev/null; then
-            sed -i.bak 's|^BUILD_TAGS=.*|BUILD_TAGS=pro|' "$SSC_ENV_FILE" && rm -f "$SSC_ENV_FILE.bak"
-        else
-            echo "BUILD_TAGS=pro" >> "$SSC_ENV_FILE"
+    if [ "$BUILD_LOCAL" = true ]; then
+        # Local build: requires the servasec-pro sources to compile the pro backend.
+        if [ -z "$PRO_REPO_DIR" ]; then
+            PRO_REPO_DIR="$DEFAULT_PRO_REPO"
         fi
-    fi
 
-    ok "BUILD_TAGS=pro configured"
+        if [ ! -d "$PRO_REPO_DIR" ]; then
+            fail "Pro repo not found at: $PRO_REPO_DIR (required with --local-build)"
+        fi
+
+        if [ ! -d "$PRO_REPO_DIR/backend/pro" ]; then
+            fail "Pro backend not found at: $PRO_REPO_DIR/backend/pro/"
+        fi
+
+        mkdir -p backend/pro
+        cp "$PRO_REPO_DIR"/backend/pro/*.go backend/pro/
+        ok "Pro files copied from $PRO_REPO_DIR"
+    else
+        # Pull mode: use the private backend-pro image from registry.gitlab.com.
+        warn "Pro image is private - authenticate first:"
+        warn "  docker login registry.gitlab.com -u <gitlab-username> -p <deploy-or-personal-token>"
+        ok "Will use the backend-pro image"
+    fi
 fi
 
 # ──────────────────────────────────────────────
@@ -529,6 +621,16 @@ if [ -f "$SSC_ENV_FILE" ]; then
     update_env "SSC_SITE_NAME" "servasec"
     update_env "SSC_REGISTRATION_ENABLED" "$REGISTRATION_ENABLED"
     update_env "SSC_SEED_DATABASE" "true"
+    update_env "SSC_IMAGE_TAG" "${IMAGE_TAG:-latest}"
+
+    # Pro / build mode
+    if [ "$PRO_ENABLED" = true ]; then
+        if [ "$BUILD_LOCAL" = true ]; then
+            update_env "BUILD_TAGS" "pro"
+        else
+            update_env "SSC_BACKEND_IMAGE" "backend-pro"
+        fi
+    fi
 
     # SSO
     if [ "$SSO_ENABLED" = true ]; then
@@ -563,14 +665,20 @@ fi
 # ──────────────────────────────────────────────
 
 printf "\n"
-info "Building and starting Servasec..."
-info "This may take a few minutes on first run..."
-echo ""
-
-if [ "$PRO_ENABLED" = true ]; then
-    BUILD_TAGS=pro $SSC_COMPOSE up --build -d
+if [ "$BUILD_LOCAL" = true ]; then
+    info "Building and starting Servasec..."
+    info "This may take a few minutes on first run..."
+    echo ""
+    if [ "$PRO_ENABLED" = true ]; then
+        BUILD_TAGS=pro $SSC_COMPOSE_BUILD up --build -d
+    else
+        $SSC_COMPOSE_BUILD up --build -d
+    fi
 else
-    $SSC_COMPOSE up --build -d
+    info "Pulling images and starting Servasec..."
+    info "Image tag: ${IMAGE_TAG:-latest}"
+    echo ""
+    $SSC_COMPOSE up -d
 fi
 
 ok "Services started"
@@ -605,14 +713,21 @@ else
     printf "  ${GREEN}${BOLD}servasec is running!${NC}\n"
 fi
 echo ""
-echo "  URL:      https://${DOMAIN}"
-echo "  Login:    admin"
-echo "  Password: ${ADMIN_PASSWORD}"
+echo "  Deployment direcory: ${INSTALL_DIR}"
+echo "  URL:                 https://${DOMAIN}"
+echo "  Login:               admin"
+echo "  Password:            ${ADMIN_PASSWORD}"
+echo ""
+if [ "$BUILD_LOCAL" = true ]; then
+    echo "  Mode:                built locally from source"
+else
+    echo "  Mode:                images pulled from registry.gitlab.com (tag: ${IMAGE_TAG:-latest})"
+fi
 echo ""
 echo "  Useful commands:"
-echo "    View logs:    $SSC_COMPOSE logs -f"
-echo "    Stop:         $SSC_COMPOSE down"
-echo "    Upgrade:      bash ./scripts/upgrade.sh"
+echo "    View logs:    cd ${INSTALL_DIR} && $SSC_COMPOSE logs -f"
+echo "    Stop:         cd ${INSTALL_DIR} && $SSC_COMPOSE down"
+echo "    Upgrade:      cd ${INSTALL_DIR} && bash ./scripts/upgrade.sh"
 echo ""
 echo "  Note: Change the admin password after first login."
 echo ""

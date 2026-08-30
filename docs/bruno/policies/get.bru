@@ -1,0 +1,14 @@
+meta {
+  name: get
+  type: http
+}
+
+get {
+  url: {{base_url}}{{api_prefix}}/policies
+  body: none
+  auth: none
+}
+
+headers {
+  X-CSRF-Token: {{csrf_token}}
+}
