@@ -42,7 +42,7 @@ swagger: ## Generate swagger.json from Go annotations
 	cd backend && swag init --parseDependency --parseInternal --output docs
 
 swagger-copy: swagger ## Copy swagger.json to servasec-docs and regenerate API docs
-	cp backend/docs/swagger.json ../servasec-docs/openapi/swagger.json
+	cp backend/docs/swagger.json ../servasec-docs/static/openapi/swagger.json
 	$(MAKE) -C ../servasec-docs gen-api
 
 podman-build: ## Build all Podman images
