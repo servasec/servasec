@@ -49,11 +49,26 @@ Default admin: `admin` / password displayed at the end of the install.
 curl -fsSL https://servasec.com/install.sh | sh -s -- -i
 ```
 
-**Install with pro features** (requires `servasec-pro` repo):
+**Build from source** (local build instead of pulling published images):
 
 ```bash
-curl -fsSL https://servasec.com/install.sh | sh -s -- --pro --pro-repo ../servasec-pro
+curl -fsSL https://servasec.com/install.sh | sh -s -- --local-build
 ```
+
+**Install with pro features**:
+
+```bash
+# Pull mode: uses the private backend-pro image (authenticate first)
+docker login registry.gitlab.com
+curl -fsSL https://servasec.com/install.sh | sh -s -- --pro
+
+# Local build mode: requires the servasec-pro repo
+curl -fsSL https://servasec.com/install.sh | sh -s -- --local-build --pro --pro-repo ../servasec-pro
+```
+
+The installer downloads only the deploy files, then pulls the container images
+from `registry.gitlab.com` (no full git clone). Prefix the image tag with
+`--version <tag>` to install a specific release.
 
 **Manual setup** (without the install script):
 
@@ -62,7 +77,12 @@ git clone https://github.com/servasec/servasec.git
 cd servasec
 cp .env.example .env
 # Edit secrets (JWT_SECRET, REFRESH_SECRET, CSRF_SECRET, SSC_ADMIN_PASSWORD)
+
+# Pull the published images from registry.gitlab.com
 make community
+
+# Or build from source instead
+make community-build
 ```
 
 ## Scanner Support

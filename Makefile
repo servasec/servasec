@@ -1,9 +1,9 @@
-.PHONY: dev down down-clean prod down-prod community pro logs ps help swagger swagger-copy podman-build podman-install podman-up podman-down podman-logs migrate-create migrate-status
+.PHONY: dev down down-clean prod down-prod community community-build pro pro-build dev-pro logs ps help swagger swagger-copy migrate-create migrate-status
 
 COMPOSE_DEV  := USER_UID=$(shell id -u) USER_GID=$(shell id -g) GIT_VERSION=$(shell ./scripts/version.sh) docker compose -f docker-compose.dev.yml
 COMPOSE_PROD := GIT_VERSION=$(shell ./scripts/version.sh) docker compose -f docker-compose.prod.yml
+COMPOSE_BUILD := GIT_VERSION=$(shell ./scripts/version.sh) docker compose -f docker-compose.prod.yml -f docker-compose.build.yml
 
-PODMAN_QUADLET_DIR := $(HOME)/.config/containers/systemd
 SSC_PUBLIC_DOMAIN  ?= servasec.local
 PRO_REPO_DIR       ?= ../servasec-pro
 
@@ -16,14 +16,20 @@ down: ## Stop dev stack
 down-clean: ## Stop dev stack and remove volumes
 	$(COMPOSE_DEV) down -v --remove-orphans
 
-prod: community ## (alias) Build and start community prod stack
+prod: community ## (alias) Pull and start community prod stack
 
-community: ## Build and start community prod stack (free features only)
-	$(COMPOSE_PROD) up --build -d
+community: ## Pull and start community prod images (registry.gitlab.com)
+	$(COMPOSE_PROD) up -d
 
-pro: ## Build and start enterprise prod stack (requires servasec-pro repo)
+community-build: ## Build and start community prod stack from source
+	$(COMPOSE_BUILD) up --build -d
+
+pro: ## Pull and start pro prod stack (requires docker login registry.gitlab.com)
+	SSC_BACKEND_IMAGE=backend-pro $(COMPOSE_PROD) up -d
+
+pro-build: ## Build and start pro prod stack (requires servasec-pro repo)
 	cp $(PRO_REPO_DIR)/backend/pro/*.go backend/pro/
-	BUILD_TAGS=pro $(COMPOSE_PROD) up --build -d
+	BUILD_TAGS=pro $(COMPOSE_BUILD) up --build -d
 
 dev-pro: ## Start dev stack with pro features (requires servasec-pro repo)
 	cp $(PRO_REPO_DIR)/backend/pro/*.go backend/pro/
@@ -44,32 +50,6 @@ swagger: ## Generate swagger.json from Go annotations
 swagger-copy: swagger ## Copy swagger.json to servasec-docs and regenerate API docs
 	cp backend/docs/swagger.json ../servasec-docs/static/openapi/swagger.json
 	$(MAKE) -C ../servasec-docs gen-api
-
-podman-build: ## Build all Podman images
-	podman build -t servasec-backend:latest --build-arg GIT_VERSION=$(shell ./scripts/version.sh) -f backend/Dockerfile --target prod backend/
-	podman build -t servasec-frontend:latest -f frontend/Dockerfile --target prod frontend/
-	podman build -t servasec-caddy:latest \
-		-f caddy/Dockerfile \
-		caddy/
-
-podman-install: ## Install Quadlet files for current user
-	@mkdir -p $(PODMAN_QUADLET_DIR)
-	cp deploy/podman/* $(PODMAN_QUADLET_DIR)/
-	@echo "Files installed to $(PODMAN_QUADLET_DIR)"
-	@echo "Edit secrets in $(PODMAN_QUADLET_DIR)/servasec-backend.container (JWT_SECRET, REFRESH_SECRET, CSRF_SECRET, SSC_ADMIN_PASSWORD)"
-	@echo "Then run: make podman-up"
-
-podman-up: podman-build podman-install ## Build, install and start all Quadlet units
-	systemctl --user daemon-reload
-	systemctl --user start servasec-caddy.service
-	@echo "Started. Check status with: systemctl --user status servasec-*"
-
-podman-down: ## Stop all Quadlet units
-	systemctl --user stop servasec-caddy.service servasec-frontend.service servasec-backend.service servasec-db.service 2>/dev/null || true
-	systemctl --user daemon-reload
-
-podman-logs: ## Tail logs from all servasec units
-	journalctl --user -u servasec-caddy -u servasec-frontend -u servasec-backend -u servasec-db -f
 
 migrate-create: ## Create a new migration: make migrate-create NAME=add_scan_metadata
 	@cd backend && bash -c '\

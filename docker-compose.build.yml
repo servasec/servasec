@@ -1,0 +1,21 @@
+# The install script exposes this as:  ./scripts/install.sh --local-build
+services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: prod
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: prod
+      args:
+        BUILD_TAGS: ${BUILD_TAGS:-}
+        GIT_VERSION: ${GIT_VERSION:-develop}
+
+  caddy:
+    build:
+      context: caddy/
+      dockerfile: Dockerfile
