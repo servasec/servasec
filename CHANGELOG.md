@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.5.1](https://github.com/servasec/servasec/compare/v2.5.0...v2.5.1) (2026-08-30)
+
+
+### 🐛 Bug fixes
+
+* **pro:** Container image repo moved ([afcfe52](https://github.com/servasec/servasec/commit/afcfe52e9ba2e97c0eb115ac81acd0bda1dffea8))
+
 ## [2.5.0](https://github.com/servasec/servasec/compare/v2.4.3...v2.5.0) (2026-08-30)
 
 
