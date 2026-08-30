@@ -76,7 +76,7 @@ while [ $# -gt 0 ]; do
             echo "  --no-check               Skip git branch/tag verification"
             echo "  --local-build            Build images from source (default: pull from registry.gitlab.com)"
             echo "  --version <tag>          Install a specific release (default: latest)"
-            echo "  --pro                    Enable pro features (backend-pro image, requires docker login)"
+            echo "  --pro                    Enable pro features (private backend-pro image, requires docker login)"
             echo "  --pro-repo <path>        Path to servasec-pro repo (local build only)"
             echo "  --dir <path>             Install directory (default: /opt/servasec)"
             echo "  -h, --help               Show this help"
@@ -563,8 +563,8 @@ if [ "$PRO_ENABLED" = true ]; then
         ok "Pro files copied from $PRO_REPO_DIR"
     else
         # Pull mode: use the private backend-pro image from registry.gitlab.com.
-        warn "Pro image is private - authenticate first:"
-        warn "  docker login registry.gitlab.com -u <gitlab-username> -p <deploy-or-personal-token>"
+        warn "Pro image is private and hosted in the servasec/servasec-pro project - authenticate first:"
+        warn "  docker login registry.gitlab.com -u deploy_token -p <deploy-token-of-servasec-pro>"
         ok "Will use the backend-pro image"
     fi
 fi
@@ -628,7 +628,7 @@ if [ -f "$SSC_ENV_FILE" ]; then
         if [ "$BUILD_LOCAL" = true ]; then
             update_env "BUILD_TAGS" "pro"
         else
-            update_env "SSC_BACKEND_IMAGE" "backend-pro"
+            update_env "SSC_BACKEND_IMAGE" "registry.gitlab.com/servasec/servasec-pro/backend"
         fi
     fi
 

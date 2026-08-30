@@ -14,7 +14,7 @@ services:
   backend:
     container_name: backend
     restart: unless-stopped
-    image: registry.gitlab.com/servasec/servasec/${SSC_BACKEND_IMAGE:-backend}:${SSC_IMAGE_TAG:-latest}
+    image: ${SSC_BACKEND_IMAGE:-registry.gitlab.com/servasec/servasec/backend}:${SSC_IMAGE_TAG:-latest}
     depends_on:
       db:
         condition: service_healthy

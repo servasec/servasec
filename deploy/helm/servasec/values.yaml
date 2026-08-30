@@ -5,7 +5,7 @@ imagePullSecrets: []
 image:
   backend:
     # Community version (default). Pro users must point to the pro image
-    # provided with their license (e.g. registry.gitlab.com/servasec/servasec/backend-pro).
+    # provided with their license (e.g. registry.gitlab.com/servasec/servasec-pro/backend).
     repository: registry.gitlab.com/servasec/servasec/backend
     tag: ""
     pullPolicy: IfNotPresent
