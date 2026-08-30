@@ -1,16 +1,16 @@
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="frontend/public/assets/servasec-mark.svg">
-    <img src="frontend/public/assets/servasec-mark.svg" alt="servasec" width="100" height="100">
+    <img src="frontend/public/assets/servasec-mark.svg" alt="servasec open source ASPM" width="100" height="100">
   </picture>
 </p>
 
-<h1 align="center">servasec</h1>
+<h1 align="center">servasec — Open Source ASPM Platform</h1>
 
 <p align="center">
 <picture><source media="(prefers-color-scheme: dark)" srcset="https://www.shieldcn.dev/github/stars/servasec/servasec.svg?variant=secondary&amp;size=sm&amp;mode=dark"><img alt="GitHub Stars" src="https://www.shieldcn.dev/github/stars/servasec/servasec.svg?variant=secondary&amp;size=sm&amp;mode=light"></picture>
 <a style="text-decoration:none" href="https://github.com/servasec/servasec/releases" target="_blank"><picture><source media="(prefers-color-scheme: dark)" srcset="https://www.shieldcn.dev/github/release/servasec/servasec.svg?size=sm&amp;mode=dark"><img alt="Release" src="https://www.shieldcn.dev/github/release/servasec/servasec.svg?size=sm&amp;mode=light"></picture></a>
-<a href="https://discord.com/invite/NJTWHfyjr" target="_blank"><picture><source media="(prefers-color-scheme: dark)" srcset="https://shieldcn.dev/discord/members/NJTWHfyjr.svg?variant=secondary&amp;mode=dark"><img alt="badge" src="https://shieldcn.dev/discord/members/NJTWHfyjr.svg?variant=secondary&amp;mode=light"></picture></a>
+<a href="https://discord.com/invite/wJZ2v5YNtD" target="_blank"><picture><source media="(prefers-color-scheme: dark)" srcset="https://shieldcn.dev/discord/members/wJZ2v5YNtD.svg?variant=secondary&amp;mode=dark"><img alt="badge" src="https://shieldcn.dev/discord/members/wJZ2v5YNtD.svg?variant=secondary&amp;mode=light"></picture></a>
 <a href="https://docs.servasec.com" target="_blank"><picture><source media="(prefers-color-scheme: dark)" srcset="https://shieldcn.dev/badge/docs.servasec.com.svg?variant=ghost&color=6f4599"><img alt="badge" src="https://shieldcn.dev/badge/docs.servasec.com.svg?variant=ghost&color=6f4599"></picture></a>
 </p>
 
@@ -65,11 +65,19 @@ cp .env.example .env
 make community
 ```
 
-See [Environment Variables](#environment-variables) for all available options.
-
 ## Scanner Support
 
 Look at https://docs.servasec.com/scanners/overview/ for the complete list of scanners supported.
+
+## Frequently Asked Questions
+
+### Is servasec free and open source?
+
+Yes, servasec is licensed under AGPLv3. Self-host it for free, forever. A separate commercial license is required only for Pro features (audit log, MCP Server, SSO, etc).
+
+### Which scanners does servasec support?
+
+servasec ingests Semgrep, Trivy, Gitleaks, OSV-Scanner, tfsec, SARIF exports and a lot more ! See [supported scanners](https://servasec.com/scanners) for details.
 
 ## Environment Variables
 
