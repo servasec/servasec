@@ -176,7 +176,7 @@ export function OnboardingModal({ open, onComplete, user }: OnboardingModalProps
                   <div className="flex flex-col items-center text-center pt-4">
                     <div className="mb-5">
                       <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center">
-                        <img src={markSrc} alt="ServaSec" className="w-9 h-9" />
+                        <img src={markSrc} alt="servasec" className="w-9 h-9" />
                       </div>
                     </div>
                     <h2 className="text-lg font-semibold mb-2">{slide.title}</h2>
