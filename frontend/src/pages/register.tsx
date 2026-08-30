@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import axios from "@/lib/api";
 import { toast } from "sonner";
+import { quotaErrorMessage } from "@/lib/utils";
 import { CheckCircle } from "lucide-react";
 import { AuthLayout } from "@/components/auth-layout";
 
@@ -38,7 +39,7 @@ const RegisterPage = () => {
       });
       router.push("/login");
     } catch (error: any) {
-      const errMsg = error?.response?.data?.error || "An error has occurred";
+      const errMsg = quotaErrorMessage(error, "An error has occurred");
       toast.error(errMsg);
     } finally {
       setLoading(false);

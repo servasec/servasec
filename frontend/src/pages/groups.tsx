@@ -8,6 +8,7 @@ import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageHeader } from "@/components/page-header";
 import { Plus, Pencil, Trash2, FolderKanban } from "lucide-react";
+import { quotaErrorMessage } from "@/lib/utils";
 import {
   Dialog,
   DialogContent,
@@ -97,7 +98,7 @@ export default function GroupsPage() {
       setDialogOpen(false);
       fetchGroups();
     } catch (error: any) {
-      toast.error(error?.response?.data?.error || "Failed to save group");
+      toast.error(quotaErrorMessage(error, "Failed to save group"));
     } finally {
       setSaving(false);
     }

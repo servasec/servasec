@@ -19,7 +19,14 @@ export interface User {
   theme?: string;
   hasSeenOnboarding: boolean;
   features?: string[];
+  quota?: Record<string, number>;
   createdAt: string;
+}
+
+export interface QuotaStatus {
+  resource: "groups" | "applications" | "versions" | "users";
+  limit: number | null;
+  usage: number;
 }
 
 export interface Application {

@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/dialog";
 import axios from "@/lib/api";
 import { toast } from "sonner";
+import { quotaErrorMessage } from "@/lib/utils";
 import type { Webhook, ScanItem, ApplicationVersion, Application, Group, ScannerType, AppPermission } from "@/lib/types";
 import { statusScanColors } from "@/lib/constants";
 import { UserSearch } from "@/components/user-search";
@@ -145,7 +146,7 @@ export default function ApplicationDetailPage() {
       setVersionDialogOpen(false);
       fetchApp();
     } catch (error: any) {
-      toast.error(error?.response?.data?.error || "Failed to save version");
+      toast.error(quotaErrorMessage(error, "Failed to save version"));
     } finally {
       setSavingVersion(false);
     }

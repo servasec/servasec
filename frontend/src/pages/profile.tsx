@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/dialog";
 import { User, Mail, Lock, Save, Key, Plus, Trash2, Copy, Check, Palette } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
+import QuotaCard from "@/components/quota-card";
 import axios from "@/lib/api";
 import { toast } from "sonner";
 import { useTheme } from "next-themes";
@@ -338,6 +339,8 @@ export default function ProfilePage() {
           </div>
         </CardContent>
       </Card>
+
+      <QuotaCard />
 
       {!authUser?.oauthProvider && (
         <Card>
