@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/servasec/servasec/backend/config"
 	"github.com/servasec/servasec/backend/models"
+	"github.com/servasec/servasec/backend/services"
 	"github.com/servasec/servasec/backend/utils"
 	"gorm.io/gorm"
 )
@@ -70,14 +71,18 @@ func CreateVersion(c *gin.Context) {
 		return
 	}
 
+	appIDUint, _ := strconv.ParseUint(appID, 10, 64)
+	if err := services.CheckVersionQuota(uint(appIDUint)); err != nil {
+		services.RespondQuotaExceeded(c, err)
+		return
+	}
+
 	var existing models.ApplicationVersion
 	err := config.DB.Where("application_id = ? AND name = ?", appID, input.Name).First(&existing).Error
 	if err == nil {
 		utils.ConflictError(c, "Version with this name already exists")
 		return
 	}
-
-	appIDUint, _ := strconv.ParseUint(appID, 10, 64)
 
 	var version models.ApplicationVersion
 	err = config.DB.Transaction(func(tx *gorm.DB) error {

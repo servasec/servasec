@@ -8,6 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/servasec/servasec/backend/config"
 	"github.com/servasec/servasec/backend/models"
+	"github.com/servasec/servasec/backend/services"
 	"github.com/servasec/servasec/backend/utils"
 	"gorm.io/gorm"
 )
@@ -94,6 +95,11 @@ func CreateApplication(c *gin.Context) {
 	}
 	if err := c.ShouldBindJSON(&input); err != nil {
 		utils.BadRequestError(c, "Invalid input")
+		return
+	}
+
+	if err := services.CheckApplicationQuota(); err != nil {
+		services.RespondQuotaExceeded(c, err)
 		return
 	}
 

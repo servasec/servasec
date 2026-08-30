@@ -8,18 +8,29 @@ var ProImplsLoaded bool
 
 type Registry struct {
 	enabled map[string]bool
+	quota   *Quota
 }
 
 func NewRegistry(enabled []string) *Registry {
+	return NewRegistryWithQuota(enabled, nil)
+}
+
+func NewRegistryWithQuota(enabled []string, quota *Quota) *Registry {
 	m := make(map[string]bool, len(enabled))
 	for _, f := range enabled {
 		m[f] = true
 	}
-	return &Registry{enabled: m}
+	return &Registry{enabled: m, quota: quota}
 }
 
 func (r *Registry) IsEnabled(name string) bool {
 	return r.enabled[name]
+}
+
+// Quota returns the quota limits carried by the license, or nil when
+// unlimited (community build or license without quota claims).
+func (r *Registry) Quota() *Quota {
+	return r.quota
 }
 
 func (r *Registry) EnabledFeatures() []string {
@@ -35,9 +46,9 @@ func Init(licenseKey string) *Registry {
 		F = NewRegistry(FreeFeatures())
 		return F
 	}
-	pro := ParseLicense(licenseKey)
-	if len(pro) > 0 {
-		F = NewRegistry(append(FreeFeatures(), pro...))
+	pl := ParseLicenseFull(licenseKey)
+	if pl != nil {
+		F = NewRegistryWithQuota(append(FreeFeatures(), pl.Features...), pl.Quota)
 	} else {
 		F = NewRegistry(FreeFeatures())
 	}

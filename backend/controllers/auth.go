@@ -13,6 +13,7 @@ import (
 	"github.com/servasec/servasec/backend/dto"
 	"github.com/servasec/servasec/backend/features"
 	"github.com/servasec/servasec/backend/models"
+	"github.com/servasec/servasec/backend/services"
 	"github.com/servasec/servasec/backend/utils"
 	"gorm.io/gorm"
 )
@@ -36,6 +37,11 @@ func Register(c *gin.Context) {
 
 	if errKey := utils.ValidateUsername(input.Username); errKey != "" {
 		utils.BadRequestError(c, errKey)
+		return
+	}
+
+	if err := services.CheckUserQuota(); err != nil {
+		services.RespondQuotaExceeded(c, err)
 		return
 	}
 
@@ -260,6 +266,16 @@ func GetCurrentUser(c *gin.Context) {
 		enabledFeatures = features.F.EnabledFeatures()
 	}
 
+	quota := gin.H{}
+	if q := services.QuotaLimits(); q != nil {
+		quota = gin.H{
+			"groups":       q.Groups,
+			"applications": q.Applications,
+			"versions":     q.Versions,
+			"users":        q.Users,
+		}
+	}
+
 	resp := gin.H{
 		"id":                 user.ID,
 		"username":           user.Username,
@@ -269,6 +285,7 @@ func GetCurrentUser(c *gin.Context) {
 		"avatarUrl":          user.AvatarURL,
 		"hasSeenOnboarding":  user.HasSeenOnboarding,
 		"features":           enabledFeatures,
+		"quota":              quota,
 	}
 	if user.OAuthProvider != "" {
 		resp["oauthProvider"] = user.OAuthProvider

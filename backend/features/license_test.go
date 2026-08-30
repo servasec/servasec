@@ -6,6 +6,7 @@ import (
 	"crypto/rand"
 	"crypto/x509"
 	"encoding/pem"
+	"os"
 	"testing"
 	"time"
 
@@ -31,8 +32,13 @@ func parseTestPrivateKey() *ecdsa.PrivateKey {
 }
 
 func signTestLicense(features []string, expiresAt *time.Time) string {
+	return signTestLicenseWithQuota(features, nil, expiresAt)
+}
+
+func signTestLicenseWithQuota(features []string, quota *Quota, expiresAt *time.Time) string {
 	claims := licenseClaims{
 		Features: features,
+		Quota:    quota,
 	}
 	if expiresAt != nil {
 		claims.ExpiresAt = jwt.NewNumericDate(*expiresAt)
@@ -154,5 +160,47 @@ func TestParseLicense_NoFeatures(t *testing.T) {
 	}
 	if len(result) != 0 {
 		t.Errorf("expected empty slice, got %v", result)
+	}
+}
+
+func TestParseLicenseFull_Quota(t *testing.T) {
+	quota := &Quota{Groups: 3, Applications: 5, Versions: 5, Users: 5}
+	token := signTestLicenseWithQuota([]string{FeatureAuditLog}, quota, nil)
+	result := ParseLicenseFull(token)
+	if result == nil {
+		t.Fatal("expected parsed license")
+	}
+	if result.Quota == nil {
+		t.Fatal("expected quota claims")
+	}
+	if result.Quota.Groups != 3 || result.Quota.Applications != 5 || result.Quota.Versions != 5 || result.Quota.Users != 5 {
+		t.Errorf("unexpected quota: %+v", result.Quota)
+	}
+	if len(result.Features) != 1 || result.Features[0] != FeatureAuditLog {
+		t.Errorf("expected [audit_log], got %v", result.Features)
+	}
+}
+
+func TestParseLicenseFull_NoQuota(t *testing.T) {
+	token := signTestLicense([]string{FeatureAuditLog}, nil)
+	result := ParseLicenseFull(token)
+	if result == nil {
+		t.Fatal("expected parsed license")
+	}
+	if result.Quota != nil {
+		t.Errorf("expected nil quota, got %+v", result.Quota)
+	}
+}
+
+func TestPublicKeyHex_EnvOverride(t *testing.T) {
+	cachedPublicKey = nil
+	t.Setenv("SSC_LICENSE_PUBLIC_KEY_HEX", "abcd")
+	if got := PublicKeyHex(); got != "abcd" {
+		t.Errorf("expected env override, got %s", got)
+	}
+	cachedPublicKey = nil
+	os.Unsetenv("SSC_LICENSE_PUBLIC_KEY_HEX")
+	if got := PublicKeyHex(); got != ecdsaPublicKeyHex {
+		t.Errorf("expected compiled-in default, got %s", got)
 	}
 }

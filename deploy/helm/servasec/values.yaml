@@ -61,6 +61,7 @@ secrets:
   csrfSecret: ""
   adminPassword: ""
   licenseKey: ""
+  licensePublicKey: ""
   sso:
     githubClientId: ""
     githubClientSecret: ""
