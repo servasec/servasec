@@ -13,7 +13,6 @@ on:
 
 permissions:
   contents: read
-  packages: write
 
 jobs:
   publish:
@@ -24,12 +23,12 @@ jobs:
       - name: Set up Helm
         uses: azure/setup-helm@v4
 
-      - name: Log in to GitHub Container Registry
+      - name: Log in to GitLab Container Registry
         uses: docker/login-action@v3
         with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          registry: registry.gitlab.com
+          username: ${{ secrets.GITLAB_REGISTRY_USERNAME }}
+          password: ${{ secrets.GITLAB_REGISTRY_PASSWORD }}
 
       - name: Lint Helm chart
         run: |
@@ -58,4 +57,4 @@ jobs:
       - name: Push to OCI registry
         run: |
           helm push /tmp/helm-chart/servasec-*.tgz \
-            oci://ghcr.io/${{ github.repository }}/helm
+            oci://registry.gitlab.com/${{ github.repository }}/helm
