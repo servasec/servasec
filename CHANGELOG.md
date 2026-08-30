@@ -1,5 +1,33 @@
 # Changelog
 
+## [2.5.0](https://github.com/servasec/servasec/compare/v2.4.3...v2.5.0) (2026-08-30)
+
+
+### 🧩 Features
+
+* Add version management in backend ([c35c072](https://github.com/servasec/servasec/commit/c35c07207d3c4150968bb9b5e55d4dd06c3623f5))
+* **backend:** Enforce license-based quotas and accept control-plane signing key ([b013bd7](https://github.com/servasec/servasec/commit/b013bd7a4ef074824fd8f8fdf7ea4e63f0c312c7))
+* **frontend:** Quota card and 402 quota-exceeded hints ([e70398e](https://github.com/servasec/servasec/commit/e70398ea662cbd08d60e82d204acc75aa14b5efa))
+
+
+### 🐛 Bug fixes
+
+* **backend:** Wrong condition policy controller ([b323188](https://github.com/servasec/servasec/commit/b323188053f75b10bc9368a035d32dd2cc2756be))
+* **install:** Pull images from GitLab registry by default ([1ec2f08](https://github.com/servasec/servasec/commit/1ec2f08c015346be65c875dd999d9ff111f9dc53))
+
+
+### 📝 Documentation
+
+* Full bruno collection + demo env runner ([bb81b5a](https://github.com/servasec/servasec/commit/bb81b5ae57dd1db4cfd8307b7d56443ac16dc595))
+* Readme enhance ([6035d59](https://github.com/servasec/servasec/commit/6035d59ccb0b91899eaec5d7bee382a8aaf24379))
+* **readme:** Refresh branding, FAQ and community links ([ef3223a](https://github.com/servasec/servasec/commit/ef3223ac3715c41badd07e3c3eea230e69a16042))
+
+
+### 🤖 Continuous integration
+
+* Auto bump Helm Chart appVersion prop on release ([fa2f9fa](https://github.com/servasec/servasec/commit/fa2f9fa7d6d884c562e1d8396357520a81932d4c))
+* Publish images and helm chart to GitLab registry ([f49ccc5](https://github.com/servasec/servasec/commit/f49ccc559c81ce5d8c7b1f2c9a6e005dd6f0db52))
+
 ## [2.4.3](https://github.com/servasec/servasec/compare/v2.4.2...v2.4.3) (2026-07-28)
 
 
