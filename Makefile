@@ -24,8 +24,8 @@ community: ## Pull and start community prod images (registry.gitlab.com)
 community-build: ## Build and start community prod stack from source
 	$(COMPOSE_BUILD) up --build -d
 
-pro: ## Pull and start pro prod stack (requires docker login registry.gitlab.com)
-	SSC_BACKEND_IMAGE=backend-pro $(COMPOSE_PROD) up -d
+pro: ## Pull and start pro prod stack (requires docker login for the private servasec-pro project)
+	SSC_BACKEND_IMAGE=registry.gitlab.com/servasec/servasec-pro/backend $(COMPOSE_PROD) up -d
 
 pro-build: ## Build and start pro prod stack (requires servasec-pro repo)
 	cp $(PRO_REPO_DIR)/backend/pro/*.go backend/pro/

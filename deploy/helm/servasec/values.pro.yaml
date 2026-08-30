@@ -1,6 +1,6 @@
 image:
   backend:
-    repository: registry.gitlab.com/servasec/servasec/backend-pro
+    repository: registry.gitlab.com/servasec/servasec-pro/backend
     tag: ""
     pullPolicy: Always
 

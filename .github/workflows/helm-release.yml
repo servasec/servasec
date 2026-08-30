@@ -30,6 +30,12 @@ jobs:
           username: ${{ secrets.GITLAB_REGISTRY_USERNAME }}
           password: ${{ secrets.GITLAB_REGISTRY_PASSWORD }}
 
+      - name: Log in to Helm registry
+        run: |
+          echo "${{ secrets.GITLAB_REGISTRY_PASSWORD }}" | helm registry login registry.gitlab.com \
+            --username "${{ secrets.GITLAB_REGISTRY_USERNAME }}" \
+            --password-stdin
+
       - name: Lint Helm chart
         run: |
           helm lint deploy/helm/servasec

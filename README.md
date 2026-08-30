@@ -58,8 +58,8 @@ curl -fsSL https://servasec.com/install.sh | sh -s -- --local-build
 **Install with pro features**:
 
 ```bash
-# Pull mode: uses the private backend-pro image (authenticate first)
-docker login registry.gitlab.com
+# Pull mode: uses the private backend-pro image from the servasec-pro project (authenticate first)
+docker login registry.gitlab.com -u deploy_token -p <deploy-token-of-servasec-pro>
 curl -fsSL https://servasec.com/install.sh | sh -s -- --pro
 
 # Local build mode: requires the servasec-pro repo
