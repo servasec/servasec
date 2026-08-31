@@ -35,13 +35,7 @@
 | SLA management (planned) | | ✓ |
 | Advanced reporting (planned) | | ✓ |
 
-## Quick Start
-
-```bash
-curl -fsSL https://servasec.com/install.sh | sh
-```
-
-Default admin: `admin` / password displayed at the end of the install.
+## Quick start
 
 **Interactive mode** (prompts for admin password, domain, registration):
 
@@ -59,16 +53,12 @@ curl -fsSL https://servasec.com/install.sh | sh -s -- --local-build
 
 ```bash
 # Pull mode: uses the private backend-pro image from the servasec-pro project (authenticate first)
-docker login registry.gitlab.com -u deploy_token -p <deploy-token-of-servasec-pro>
+docker login registry.gitlab.com -u $CUSTOMER_UUID -p $CUSTOMER_TOKEN
 curl -fsSL https://servasec.com/install.sh | sh -s -- --pro
-
-# Local build mode: requires the servasec-pro repo
-curl -fsSL https://servasec.com/install.sh | sh -s -- --local-build --pro --pro-repo ../servasec-pro
 ```
 
-The installer downloads only the deploy files, then pulls the container images
-from `registry.gitlab.com` (no full git clone). Prefix the image tag with
-`--version <tag>` to install a specific release.
+Pro features are available with a valid subscription of servasec.  
+Please refer to [servasec.com/pricing](https://servasec.com/pricing) to obtain one.
 
 **Manual setup** (without the install script):
 
@@ -85,7 +75,7 @@ make community
 make community-build
 ```
 
-## Scanner Support
+## Scanner support
 
 Look at https://docs.servasec.com/scanners/overview/ for the complete list of scanners supported.
 
