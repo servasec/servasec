@@ -178,7 +178,7 @@ script:post-response {
 """)
 
 # ==============================================================
-# 25-run-id.bru (seq 3) — generates random run_id
+# 25-run-id.bru (seq 3) - generates random run_id
 # ==============================================================
 w(os.path.join(OUT, "25-run-id.bru"), meta("25-run-id", next_seq()) + """
 get {
@@ -310,7 +310,7 @@ for fname, team_key, user_key, role in members:
         body={"userId": "{{" + user_key + "_user_id}}", "role": role})
 
 # ==============================================================
-# Ingests (seq 41-49) — multipart with file upload
+# Ingests (seq 41-49) - multipart with file upload
 # ==============================================================
 ingests = [
     ("71-ingest-portal",    "customer_portal_1_app_id",  "semgrep-webapp.json", "main"),

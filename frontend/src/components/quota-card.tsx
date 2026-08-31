@@ -49,7 +49,7 @@ export default function QuotaCard() {
           </div>
         ) : limited.length === 0 ? (
           <p className="text-sm text-muted-foreground">
-            Unlimited — no license quotas apply to this instance.
+            Unlimited - no license quotas apply to this instance.
           </p>
         ) : (
           <div className="space-y-5">
