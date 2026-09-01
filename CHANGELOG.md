@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.5.2](https://github.com/servasec/servasec/compare/v2.5.1...v2.5.2) (2026-09-01)
+
+
+### 🐛 Bug fixes
+
+* Docker-compose service names as env var ([630c93d](https://github.com/servasec/servasec/commit/630c93db7f336958a80b0350b26c03739d495371))
+
 ## [2.5.1](https://github.com/servasec/servasec/compare/v2.5.0...v2.5.1) (2026-08-30)
 
 
