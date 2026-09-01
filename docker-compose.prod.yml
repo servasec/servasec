@@ -1,6 +1,6 @@
 services:
   frontend:
-    container_name: frontend
+    container_name: ${SSC_CONTAINER_PREFIX:-}frontend
     restart: unless-stopped
     image: registry.gitlab.com/servasec/servasec/frontend:${SSC_IMAGE_TAG:-latest}
     environment:
@@ -12,7 +12,7 @@ services:
       public:
 
   backend:
-    container_name: backend
+    container_name: ${SSC_CONTAINER_PREFIX:-}backend
     restart: unless-stopped
     image: ${SSC_BACKEND_IMAGE:-registry.gitlab.com/servasec/servasec/backend}:${SSC_IMAGE_TAG:-latest}
     depends_on:
@@ -32,6 +32,7 @@ services:
       SSC_LICENSE_KEY: ${SSC_LICENSE_KEY:-}
       SSC_API_PREFIX: /api
       SSC_FEATURES_ENCRYPTION_KEY: ${SSC_FEATURES_ENCRYPTION_KEY}
+      TRUSTED_PROXIES_CIDR: ${TRUSTED_PROXIES_CIDR:-}
       SSO_GITHUB_CLIENT_ID: ${SSO_GITHUB_CLIENT_ID:-}
       SSO_GITHUB_CLIENT_SECRET: ${SSO_GITHUB_CLIENT_SECRET:-}
       SSO_GITLAB_CLIENT_ID: ${SSO_GITLAB_CLIENT_ID:-}
@@ -46,7 +47,7 @@ services:
       private:
 
   db:
-    container_name: db
+    container_name: ${SSC_CONTAINER_PREFIX:-}db
     restart: unless-stopped
     image: postgres:${POSTGRES_VERSION:-17}
     environment:
@@ -64,15 +65,16 @@ services:
       private:
 
   caddy:
-    container_name: caddy
+    container_name: ${SSC_CONTAINER_PREFIX:-}caddy
     restart: unless-stopped
     hostname: servasec.local
     image: registry.gitlab.com/servasec/servasec/caddy:${SSC_IMAGE_TAG:-latest}
     environment:
       - SSC_PUBLIC_DOMAIN=${SSC_PUBLIC_DOMAIN}
+      - SSC_EDGE_MODE=${SSC_EDGE_MODE:-false}
     ports:
-      - "80:80"
-      - "443:443"
+      - "${CADDY_HTTP_BIND:-0.0.0.0:80}:80"
+      - "${CADDY_HTTPS_BIND:-0.0.0.0:443}:443"
     volumes:
       - caddy_data:/data
     networks:
@@ -88,9 +90,9 @@ networks:
     driver: bridge
     ipam:
       config:
-        - subnet: 172.70.1.0/24
+        - subnet: ${SSC_NETWORK_PUBLIC_SUBNET:-172.70.1.0/24}
   private:
     driver: bridge
     ipam:
       config:
-        - subnet: 172.70.2.0/24
+        - subnet: ${SSC_NETWORK_PRIVATE_SUBNET:-172.70.2.0/24}

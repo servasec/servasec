@@ -123,3 +123,6 @@ docs/tasks
 # Runtime state
 # ==========================================================
 scripts/.pg_version
+
+# multi-tenant
+instances/
