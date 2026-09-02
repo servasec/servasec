@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.5.3](https://github.com/servasec/servasec/compare/v2.5.2...v2.5.3) (2026-09-02)
+
+
+### 🐛 Bug fixes
+
+* License compliant with SSC_SITE_NAME ([1933f05](https://github.com/servasec/servasec/commit/1933f0501516eba4d5801442670640df28686a9a))
+
 ## [2.5.2](https://github.com/servasec/servasec/compare/v2.5.1...v2.5.2) (2026-09-01)
 
 
