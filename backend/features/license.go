@@ -67,6 +67,13 @@ type parsedLicense struct {
 	Quota    *Quota
 }
 
+// expectedSubject returns the tenant slug a bound license must match. It reads
+// SSC_SITE_NAME (the instance's slug) when set. Tenant-bound licenses carry a
+// `sub` claim; an unbound license (no `sub`) is accepted on any instance.
+func expectedSubject() string {
+	return os.Getenv("SSC_SITE_NAME")
+}
+
 func ParseLicenseFull(licenseKey string) *parsedLicense {
 	key := strings.TrimSpace(licenseKey)
 	if key == "" {
@@ -95,6 +102,15 @@ func ParseLicenseFull(licenseKey string) *parsedLicense {
 
 	if claims.ExpiresAt != nil && claims.ExpiresAt.Time.Before(time.Now()) {
 		return nil
+	}
+
+	// Tenant-bound licenses (claim `sub`) must match this instance's slug.
+	// Unbound licenses (no `sub`) are accepted on any instance for
+	// backward-compatibility with standalone/self-hosted installs.
+	if claims.Subject != "" {
+		if want := expectedSubject(); want == "" || claims.Subject != want {
+			return nil
+		}
 	}
 
 	return &parsedLicense{
