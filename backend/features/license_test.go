@@ -192,6 +192,56 @@ func TestParseLicenseFull_NoQuota(t *testing.T) {
 	}
 }
 
+func signTestLicenseSubject(subject string, features []string, expiresAt *time.Time) string {
+	claims := licenseClaims{
+		Features: features,
+		RegisteredClaims: jwt.RegisteredClaims{
+			Subject: subject,
+		},
+	}
+	if expiresAt != nil {
+		claims.ExpiresAt = jwt.NewNumericDate(*expiresAt)
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodES256, claims)
+	signed, err := token.SignedString(parseTestPrivateKey())
+	if err != nil {
+		panic("failed to sign test license: " + err.Error())
+	}
+	return signed
+}
+
+func TestParseLicense_SubjectBinding(t *testing.T) {
+	t.Setenv("SSC_SITE_NAME", "atmos-test")
+
+	// Bound to the matching slug => valid.
+	token := signTestLicenseSubject("atmos-test", []string{FeatureAuditLog}, nil)
+	if result := ParseLicense(token); result == nil {
+		t.Fatal("expected license matching SSC_SITE_NAME to be accepted")
+	}
+
+	// Bound to a different slug => rejected.
+	other := signTestLicenseSubject("other-tenant", []string{FeatureAuditLog}, nil)
+	if result := ParseLicense(other); result != nil {
+		t.Errorf("expected license bound to another tenant to be rejected, got %v", result)
+	}
+}
+
+func TestParseLicense_SubjectBindingNoSiteName(t *testing.T) {
+	os.Unsetenv("SSC_SITE_NAME")
+
+	// A bound license must be rejected when the instance has no slug set.
+	token := signTestLicenseSubject("atmos-test", []string{FeatureAuditLog}, nil)
+	if result := ParseLicense(token); result != nil {
+		t.Errorf("expected bound license rejected when SSC_SITE_NAME is empty, got %v", result)
+	}
+
+	// An unbound license (no sub) is accepted regardless.
+	unbound := signTestLicense([]string{FeatureAuditLog}, nil)
+	if result := ParseLicense(unbound); result == nil {
+		t.Error("expected unbound license accepted when SSC_SITE_NAME is empty")
+	}
+}
+
 func TestPublicKeyHex_EnvOverride(t *testing.T) {
 	cachedPublicKey = nil
 	t.Setenv("SSC_LICENSE_PUBLIC_KEY_HEX", "abcd")
