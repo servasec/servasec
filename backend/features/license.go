@@ -67,9 +67,6 @@ type parsedLicense struct {
 	Quota    *Quota
 }
 
-// expectedSubject returns the tenant slug a bound license must match. It reads
-// SSC_SITE_NAME (the instance's slug) when set. Tenant-bound licenses carry a
-// `sub` claim; an unbound license (no `sub`) is accepted on any instance.
 func expectedSubject() string {
 	return os.Getenv("SSC_SITE_NAME")
 }
