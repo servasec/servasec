@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.6.0](https://github.com/servasec/servasec/compare/v2.5.3...v2.6.0) (2026-09-03)
+
+
+### 🧩 Features
+
+* **backend:** Add casbin policy for sso settings ([0f76fcf](https://github.com/servasec/servasec/commit/0f76fcf55b065db2ec5779fe06581fab614abc31))
+* Users crud  for admins ([b1db426](https://github.com/servasec/servasec/commit/b1db426f07fa3b82dff24cabf59cc31ebc2ffc9c))
+
 ## [2.5.3](https://github.com/servasec/servasec/compare/v2.5.2...v2.5.3) (2026-09-02)
 
 
