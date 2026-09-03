@@ -64,6 +64,9 @@ func UpdateUser(c *gin.Context) {
 		return
 	}
 
+	currentUser, _ := c.Get("user")
+	cu, _ := currentUser.(*models.User)
+
 	var input struct {
 		Email  *string `json:"email" binding:"omitempty,email,max=254"`
 		Role   *string `json:"role" binding:"omitempty,oneof=admin member"`
@@ -72,6 +75,17 @@ func UpdateUser(c *gin.Context) {
 	if err := c.ShouldBindJSON(&input); err != nil {
 		utils.BadRequestError(c, "Invalid input")
 		return
+	}
+
+	if cu != nil && user.ID == cu.ID {
+		if input.Role != nil && *input.Role != "admin" {
+			utils.BadRequestError(c, "You cannot remove your own admin role")
+			return
+		}
+		if input.Banned != nil && *input.Banned {
+			utils.BadRequestError(c, "You cannot ban yourself")
+			return
+		}
 	}
 
 	if input.Email != nil {
@@ -144,6 +158,12 @@ func DeleteUser(c *gin.Context) {
 
 	if err := config.DB.First(&user, id).Error; err != nil {
 		utils.NotFoundError(c, "User not found")
+		return
+	}
+
+	currentUser, _ := c.Get("user")
+	if cu, ok := currentUser.(*models.User); ok && user.ID == cu.ID {
+		utils.BadRequestError(c, "You cannot delete your own account")
 		return
 	}
 
