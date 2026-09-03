@@ -26,4 +26,6 @@ p, admin, /admin/permissions, *
 p, admin, /admin/permissions/*, *
 p, admin, /admin/scanner-types, *
 p, admin, /admin/scanner-types/*, *
+p, admin, /admin/settings/sso, *
+p, admin, /admin/settings/sso/*, *
 p, admin, /*, *

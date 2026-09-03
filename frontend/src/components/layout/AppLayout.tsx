@@ -15,6 +15,7 @@ import {
   Moon,
   ChevronLeft,
   ChevronDown,
+  KeyRound,
   User,
   LogOut,
   Scan,
@@ -59,6 +60,7 @@ const navGroups: NavGroup[] = [
         { label: "Permissions", href: "/admin/permissions", icon: <Shield className="h-4 w-4" />, adminOnly: true },
         { label: "Scanner Types", href: "/admin/scanner-types", icon: <ScanLine className="h-4 w-4" />, adminOnly: true },
         { label: "Audit Log", href: "/admin/audit-log", icon: <ScrollText className="h-4 w-4" />, adminOnly: true, feature: "audit_log" },
+        { label: "Single Sign-On", href: "/admin/sso", icon: <KeyRound className="h-4 w-4" />, adminOnly: true, feature: "sso" },
       ],
     },
 ]
